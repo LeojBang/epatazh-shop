@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Вход — Shop{% endblock %}
+{% block content %}
+    <h1>Вход</h1>
+    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+    <form method="post" action="/login" class="auth-form">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Войти</button>
+    </form>
+    <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+{% endblock %}

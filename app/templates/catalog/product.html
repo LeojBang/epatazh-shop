@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Shop{% endblock %}
+{% block content %}
+    <a href="/catalog">← Назад в каталог</a>
+    <h1>{{ product.name }}</h1>
+    <p class="product-category">Категория: {{ product.category.name }}</p>
+    <p class="product-price">{{ product.price }} ₽</p>
+    {% if product.description %}
+        <p>{{ product.description }}</p>
+    {% endif %}
+    {% if product.stock > 0 %}
+        <p>В наличии: {{ product.stock }} шт.</p>
+        <button>Добавить в корзину</button>
+    {% else %}
+        <p class="out-of-stock">Нет в наличии</p>
+    {% endif %}
+{% endblock %}

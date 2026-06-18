@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Shop{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="logo" href="/">Shop</a>
+        <nav>
+            {% if user %}
+                <span class="nav-user">{{ user.full_name or user.email }}</span>
+                <form action="/logout" method="post" class="inline-form">
+                    <button type="submit" class="link-button">Выйти</button>
+                </form>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
