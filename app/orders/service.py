@@ -70,6 +70,7 @@ async def create_order(
 
     order = Order(
         user_id=user_id,
+        status="pending",
         total=total,
         email=email,
         phone=phone,

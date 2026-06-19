@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Статус оплаты — Shop{% endblock %}
+{% block content %}
+    {% if order.status == "paid" %}
+        <h1>Оплата прошла успешно!</h1>
+        <p>Заказ <strong>{{ order.id }}</strong> оплачен.</p>
+    {% elif order.status == "pending" %}
+        <h1>Ожидаем подтверждение оплаты</h1>
+        <p>Оплата заказа <strong>{{ order.id }}</strong> ещё обрабатывается.
+           Обновите страницу через минуту или проверьте статус в личном кабинете.</p>
+    {% else %}
+        <h1>Оплата не завершена</h1>
+        <p>Статус заказа: {{ order.status }}</p>
+    {% endif %}
+
+    <h3>Состав заказа</h3>
+    {% for item in order.items %}
+        <div class="checkout-item">
+            <span>{{ item.product_name }} × {{ item.quantity }}</span>
+            <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
+        </div>
+    {% endfor %}
+    <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
+
+    <a href="/catalog" class="btn-primary">Продолжить покупки</a>
+{% endblock %}

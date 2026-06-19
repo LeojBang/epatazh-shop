@@ -26,6 +26,9 @@ class Order(UUIDMixin, TimeStampMixin, Base):
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
+    payments: Mapped[list["Payment"]] = relationship(
+        back_populates="order", cascade="all, delete-orphan"
+    )
 
     def __str__(self) -> str:
         return f"Заказ {self.email} — {self.total} ₽"

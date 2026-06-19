@@ -16,5 +16,8 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    YOOKASSA_SHOP_ID: str
+    YOOKASSA_SECRET_KEY: str
+
 
 settings = Settings()

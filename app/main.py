@@ -10,6 +10,7 @@ from app.admin.views import (
     ProductAdmin,
     UserAdmin,
 )
+import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
 from app.catalog.router import router as catalog_router
 from app.core.config import settings

@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import settings
 from app.models.base import Base
-from app.models import user  # noqa: F401  — регистрирует модель в Base.metadata
-from app.models import catalog  # noqa: F401
-from app.models import order # noqa: F401
+import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 
 config = context.config
 
