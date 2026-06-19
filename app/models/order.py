@@ -27,6 +27,9 @@ class Order(UUIDMixin, TimeStampMixin, Base):
         back_populates="order", cascade="all, delete-orphan"
     )
 
+    def __str__(self) -> str:
+        return f"Заказ {self.email} — {self.total} ₽"
+
 
 class OrderItem(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "order_items"
@@ -40,3 +43,6 @@ class OrderItem(UUIDMixin, TimeStampMixin, Base):
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     order: Mapped["Order"] = relationship(back_populates="items")
+
+    def __str__(self) -> str:
+        return f"{self.product_name} × {self.quantity}"

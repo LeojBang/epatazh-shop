@@ -15,6 +15,9 @@ class Category(UUIDMixin, TimeStampMixin, Base):
 
     products: Mapped[list["Product"]] = relationship(back_populates="category")
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Product(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "products"
@@ -28,3 +31,6 @@ class Product(UUIDMixin, TimeStampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     category: Mapped["Category"] = relationship(back_populates="products")
+
+    def __str__(self) -> str:
+        return self.name
