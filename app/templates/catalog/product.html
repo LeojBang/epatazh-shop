@@ -10,7 +10,11 @@
     {% endif %}
     {% if product.stock > 0 %}
         <p>В наличии: {{ product.stock }} шт.</p>
-        <button>Добавить в корзину</button>
+        <form method="post" action="/cart/add">
+            <input type="hidden" name="product_slug" value="{{ product.slug }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn-primary">Добавить в корзину</button>
+        </form>
     {% else %}
         <p class="out-of-stock">Нет в наличии</p>
     {% endif %}

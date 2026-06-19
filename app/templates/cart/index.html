@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Корзина — Shop{% endblock %}
+{% block content %}
+    <h1>Корзина</h1>
+
+    {% if items %}
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td><a href="/catalog/{{ item.product.slug }}">{{ item.product.name }}</a></td>
+                    <td>{{ item.product.price }} ₽</td>
+                    <td>
+                        <form method="post" action="/cart/update" class="inline-form">
+                            <input type="hidden" name="product_slug" value="{{ item.product.slug }}">
+                            <input type="number" name="quantity" value="{{ item.quantity }}"
+                                   min="1" max="{{ item.product.stock }}"
+                                   onchange="this.form.submit()" class="qty-input">
+                        </form>
+                    </td>
+                    <td>{{ item.subtotal }} ₽</td>
+                    <td>
+                        <form method="post" action="/cart/remove" class="inline-form">
+                            <input type="hidden" name="product_slug" value="{{ item.product.slug }}">
+                            <button type="submit" class="link-button">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="cart-total">Итого: <strong>{{ "%.2f"|format(total) }} ₽</strong></p>
+        <a href="/checkout" class="btn-primary">Оформить заказ</a>
+    {% else %}
+        <p>Корзина пуста. <a href="/catalog">Перейти в каталог</a></p>
+    {% endif %}
+{% endblock %}

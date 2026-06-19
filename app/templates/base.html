@@ -9,6 +9,7 @@
     <header class="site-header">
         <a class="logo" href="/">Shop</a>
         <nav>
+            <a href="/cart">Корзина</a>
             {% if user %}
                 <span class="nav-user">{{ user.full_name or user.email }}</span>
                 <form action="/logout" method="post" class="inline-form">
