@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Оформление заказа — Shop{% endblock %}
+{% block content %}
+    <h1>Оформление заказа</h1>
+
+    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+
+    <div class="checkout-summary">
+        <h3>Ваш заказ</h3>
+        {% for item in items %}
+            <div class="checkout-item">
+                <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                <span>{{ "%.2f"|format(item.subtotal) }} ₽</span>
+            </div>
+        {% endfor %}
+        <p class="cart-total">Итого: <strong>{{ "%.2f"|format(total) }} ₽</strong></p>
+    </div>
+
+    <form method="post" action="/checkout" class="auth-form">
+        <label for="full_name">ФИО</label>
+        <input type="text" id="full_name" name="full_name"
+               value="{{ user.full_name if user else '' }}" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email"
+               value="{{ user.email if user else '' }}" required>
+
+        <label for="phone">Телефон</label>
+        <input type="tel" id="phone" name="phone" required>
+
+        <label for="address">Адрес доставки</label>
+        <textarea id="address" name="address" rows="3" required></textarea>
+
+        <button type="submit" class="btn-primary">Подтвердить заказ</button>
+    </form>
+{% endblock %}

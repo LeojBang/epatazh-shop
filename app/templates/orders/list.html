@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Мои заказы — Shop{% endblock %}
+{% block content %}
+    <h1>Мои заказы</h1>
+
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order-card">
+                <div class="order-header">
+                    <span>Заказ от {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                    <span class="order-status">{{ order.status }}</span>
+                </div>
+                {% for item in order.items %}
+                    <div class="checkout-item">
+                        <span>{{ item.product_name }} × {{ item.quantity }}</span>
+                        <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
+                    </div>
+                {% endfor %}
+                <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>У вас пока нет заказов. <a href="/catalog">Перейти в каталог</a></p>
+    {% endif %}
+{% endblock %}

@@ -6,6 +6,7 @@ from app.catalog.router import router as catalog_router
 from app.users.router import router as users_router
 from app.web.router import router as web_router
 from app.cart.router import router as cart_router
+from app.orders.router import router as orders_router
 
 app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
 
@@ -15,6 +16,7 @@ app.include_router(web_router)
 app.include_router(users_router)
 app.include_router(catalog_router)
 app.include_router(cart_router)
+app.include_router(orders_router)
 
 
 @app.get("/health", tags=["system"])
