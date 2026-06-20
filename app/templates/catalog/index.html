@@ -32,6 +32,10 @@
                         <h3>{{ product.name }}</h3>
                         <span class="product-category">{{ product.category.name }}</span>
                         <span class="product-price">{{ product.price }} ₽</span>
+                        {% set total_stock = product.variants | sum(attribute="stock") %}
+                        {% if total_stock > 0 %}
+                            <span class="card-btn"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Выбрать</span>
+                        {% endif %}
                     </div>
                 </a>
             {% endfor %}
