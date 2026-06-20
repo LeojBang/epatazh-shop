@@ -5,26 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Эпатаж{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 </head>
 <body>
     <header class="site-header">
-        <div class="site-header__inner">
-            <a class="logo" href="/">Эпатаж</a>
-            <nav>
-                <a href="/catalog">Каталог</a>
-                <a href="/cart" class="cart-link">Корзина{% if request.state.cart_count %}<span class="cart-badge">{{ request.state.cart_count }}</span>{% endif %}</a>
+        <div class="site-header__main">
+            <a class="logo" href="/">
+                <svg class="logo-elephant" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+                    <ellipse cx="30" cy="38" rx="16" ry="13" fill="currentColor"/>
+                    <path d="M16 40 Q10 40 10 32 Q10 26 15 27 Q14 34 18 36 Z" fill="currentColor"/>
+                    <rect x="20" y="48" width="4" height="8" rx="2" fill="currentColor"/>
+                    <rect x="28" y="49" width="4" height="7" rx="2" fill="currentColor"/>
+                    <rect x="36" y="49" width="4" height="7" rx="2" fill="currentColor"/>
+                    <path d="M44 38 Q52 36 50 26 Q49 22 46 24 Q48 30 44 33 Z" fill="currentColor"/>
+                    <circle cx="24" cy="34" r="2" fill="var(--green)"/>
+                </svg>
+                <span class="logo-text">Эпатаж</span>
+            </a>
+
+            <div class="search-wrap">
+                <form class="header-search" action="/search" method="get">
+                    <i class="ti ti-search" aria-hidden="true"></i>
+                    <input type="text" name="q" id="searchInput" autocomplete="off"
+                           placeholder="Поиск по каталогу…"
+                           value="{{ request.query_params.get('q', '') }}">
+                </form>
+                <div class="search-suggest" id="searchSuggest"></div>
+            </div>
+
+            <nav class="header-actions">
                 {% if user %}
-                <a href="/account" class="nav-user">{{ user.full_name or user.email }}</a>
-                <a href="/account/orders">Заказы</a>
-                    <form action="/logout" method="post" class="inline-form">
-                        <button type="submit" class="link-button" style="color: var(--text-on-dark);">Выйти</button>
-                    </form>
+                    <a href="/account" class="action-item">
+                        <i class="ti ti-user" aria-hidden="true"></i>
+                        <span>Профиль</span>
+                    </a>
                 {% else %}
-                    <a href="/login">Войти</a>
-                    <a href="/register">Регистрация</a>
+                    <a href="/login" class="action-item">
+                        <i class="ti ti-user" aria-hidden="true"></i>
+                        <span>Войти</span>
+                    </a>
                 {% endif %}
+                <a href="/cart" class="action-item action-cart">
+                    <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+                    <span>Корзина</span>
+                    {% if request.state.cart_count %}
+                        <span class="cart-badge">{{ request.state.cart_count }}</span>
+                    {% endif %}
+                </a>
             </nav>
         </div>
+
+        <nav class="header-nav">
+            <a href="/catalog">Все товары</a>
+            <a href="/catalog?category=mma">ММА</a>
+            <a href="/catalog?category=muay-thai">Муай-тай</a>
+            <a href="/catalog?category=hockey">Хоккей</a>
+            {% if user %}
+                <a href="/account/orders">Мои заказы</a>
+                <form action="/logout" method="post" class="inline-form" style="margin-left:auto;">
+                    <button type="submit" class="nav-logout">Выйти</button>
+                </form>
+            {% endif %}
+        </nav>
     </header>
 
     <main class="container">

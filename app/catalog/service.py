@@ -11,8 +11,8 @@ async def get_categories(db: AsyncSession) -> list[Category]:
 
 
 async def get_products(
-    db: AsyncSession,
-    category_slug: str | None = None,
+        db: AsyncSession,
+        category_slug: str | None = None,
 ) -> list[Product]:
     query = (
         select(Product)
@@ -51,3 +51,19 @@ async def get_variant(db: AsyncSession, variant_id: str) -> ProductVariant | Non
         .options(selectinload(ProductVariant.product))
     )
     return result.scalar_one_or_none()
+
+
+async def search_products(db: AsyncSession, query: str) -> list[Product]:
+    """Поиск товаров по названию (без учёта регистра)."""
+    q = (
+        select(Product)
+        .where(Product.is_active == True, Product.name.ilike(f"%{query}%"))
+        .options(
+            selectinload(Product.category),
+            selectinload(Product.variants),
+            selectinload(Product.images),
+        )
+        .order_by(Product.name)
+    )
+    result = await db.execute(q)
+    return list(result.scalars().all())

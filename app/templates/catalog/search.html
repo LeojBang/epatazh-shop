@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Поиск: {{ query }} — Эпатаж{% endblock %}
+{% block content %}
+    <h1>Поиск{% if query %}: «{{ query }}»{% endif %}</h1>
+
+    {% if query and products %}
+        <p style="color: var(--text-muted);">Найдено: {{ products|length }}</p>
+        <div class="product-grid">
+            {% for product in products %}
+                <a href="/catalog/{{ product.slug }}" class="product-card">
+                    {% if product.images %}
+                        <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="card-img-placeholder">Нет фото</div>
+                    {% endif %}
+                    <div class="product-card__body">
+                        <h3>{{ product.name }}</h3>
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <span class="product-price">{{ product.price }} ₽</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% elif query %}
+        <p>По запросу «{{ query }}» ничего не найдено. <a href="/catalog">Смотреть весь каталог</a></p>
+    {% else %}
+        <p>Введите запрос для поиска. <a href="/catalog">Или откройте весь каталог</a></p>
+    {% endif %}
+{% endblock %}

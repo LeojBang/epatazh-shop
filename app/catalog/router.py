@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
 from app.catalog import service
 from app.core.database import get_db
@@ -14,10 +15,10 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/catalog", response_class=HTMLResponse)
 async def catalog_page(
-    request: Request,
-    category: str | None = None,
-    db: AsyncSession = Depends(get_db),
-    user: User | None = Depends(get_current_user_optional),
+        request: Request,
+        category: str | None = None,
+        db: AsyncSession = Depends(get_db),
+        user: User | None = Depends(get_current_user_optional),
 ):
     categories = await service.get_categories(db)
     products = await service.get_products(db, category_slug=category)
@@ -30,10 +31,10 @@ async def catalog_page(
 
 @router.get("/catalog/{slug}", response_class=HTMLResponse)
 async def product_page(
-    request: Request,
-    slug: str,
-    db: AsyncSession = Depends(get_db),
-    user: User | None = Depends(get_current_user_optional),
+        request: Request,
+        slug: str,
+        db: AsyncSession = Depends(get_db),
+        user: User | None = Depends(get_current_user_optional),
 ):
     product = await service.get_product_by_slug(db, slug)
     if not product:
@@ -64,3 +65,41 @@ async def product_page(
             "can_review": can_review,
         },
     )
+
+
+@router.get("/search", response_class=HTMLResponse)
+async def search(
+        request: Request,
+        q: str = "",
+        db: AsyncSession = Depends(get_db),
+        user: User | None = Depends(get_current_user_optional),
+):
+    products = await service.search_products(db, q.strip()) if q.strip() else []
+    categories = await service.get_categories(db)
+    return templates.TemplateResponse(
+        request,
+        "catalog/search.html",
+        {"products": products, "query": q, "categories": categories, "user": user},
+    )
+
+
+@router.get("/api/search-suggest")
+async def search_suggest(
+        q: str = "",
+        db: AsyncSession = Depends(get_db),
+):
+    query = q.strip()
+    if len(query) < 2:
+        return JSONResponse({"results": []})
+
+    products = await service.search_products(db, query)
+    results = []
+    for p in products[:6]:  # не больше 6 подсказок
+        results.append({
+            "name": p.name,
+            "slug": p.slug,
+            "price": f"{p.price:.0f}",
+            "category": p.category.name if p.category else "",
+            "image": f"/static/uploads/{p.images[0].path}" if p.images else None,
+        })
+    return JSONResponse({"results": results})
