@@ -12,9 +12,9 @@
             <a class="logo" href="/">Эпатаж</a>
             <nav>
                 <a href="/catalog">Каталог</a>
-                <a href="/cart">Корзина</a>
+                <a href="/cart" class="cart-link">Корзина{% if request.state.cart_count %}<span class="cart-badge">{{ request.state.cart_count }}</span>{% endif %}</a>
                 {% if user %}
-<a href="/account" class="nav-user">{{ user.full_name or user.email }}</a>
+                <a href="/account" class="nav-user">{{ user.full_name or user.email }}</a>
                 <a href="/account/orders">Заказы</a>
                     <form action="/logout" method="post" class="inline-form">
                         <button type="submit" class="link-button" style="color: var(--text-on-dark);">Выйти</button>

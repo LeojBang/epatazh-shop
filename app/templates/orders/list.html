@@ -8,8 +8,7 @@
             <div class="order-card">
                 <div class="order-header">
                     <span>Заказ от {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-                    <span class="order-status">{{ order.status }}</span>
-                </div>
+                    <span class="order-status">{{ order.status | order_status_ru }}</span>                </div>
                 {% for item in order.items %}
                     <div class="checkout-item">
                         <span>{{ item.product_name }}{% if item.size %} ({{ item.size }}){% endif %} × {{ item.quantity }}</span>
@@ -17,6 +16,11 @@
                     </div>
                 {% endfor %}
                 <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
+                {% if order.status == "pending" %}
+                    <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
+                        <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Оплатить</button>
+                    </form>
+                {% endif %}
             </div>
         {% endfor %}
     {% else %}

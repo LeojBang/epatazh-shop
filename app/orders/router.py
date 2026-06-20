@@ -15,10 +15,11 @@ from app.orders import service
 from app.orders.service import CheckoutError
 from app.schemas.order import CheckoutForm
 from app.users.dependencies import get_current_user, get_current_user_optional
+from app.web.filters import order_status_ru
 
 router = APIRouter(tags=["orders"])
 templates = Jinja2Templates(directory="app/templates")
-
+templates.env.filters["order_status_ru"] = order_status_ru
 
 @router.get("/checkout", response_class=HTMLResponse)
 async def checkout_page(
@@ -154,3 +155,28 @@ async def my_orders(
     return templates.TemplateResponse(
         request, "orders/list.html", {"orders": orders, "user": user}
     )
+
+
+@router.post("/orders/{order_id}/pay")
+async def pay_order(
+        request: Request,
+        order_id: str,
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user),
+):
+    order = await service.get_order(db, order_id)
+    if not order or order.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+
+    if order.status != "pending":
+        return RedirectResponse(url="/account/orders", status_code=303)
+
+    return_url = str(request.base_url) + f"orders/{order.id}/payment-return"
+    payment_url = await payment_service.create_payment(
+        db,
+        order_id=str(order.id),
+        amount=order.total,
+        description=f"Заказ в магазине Эпатаж на {order.total} ₽",
+        return_url=return_url,
+    )
+    return RedirectResponse(url=payment_url, status_code=303)

@@ -19,11 +19,11 @@ async def get_cart(r: redis.Redis, user_id: str) -> dict[str, int]:
 
 
 async def add_to_cart(
-    r: redis.Redis,
-    db: AsyncSession,
-    user_id: str,
-    variant_id: str,
-    quantity: int = 1,
+        r: redis.Redis,
+        db: AsyncSession,
+        user_id: str,
+        variant_id: str,
+        quantity: int = 1,
 ) -> dict:
     variant = await get_variant(db, variant_id)
     if not variant:
@@ -46,7 +46,7 @@ async def remove_from_cart(r: redis.Redis, user_id: str, variant_id: str) -> Non
 
 
 async def update_quantity(
-    r: redis.Redis, user_id: str, variant_id: str, quantity: int
+        r: redis.Redis, user_id: str, variant_id: str, quantity: int
 ) -> None:
     cart = await get_cart(r, user_id)
     if quantity <= 0:
@@ -61,7 +61,7 @@ async def clear_cart(r: redis.Redis, user_id: str) -> None:
 
 
 async def get_cart_with_products(
-    r: redis.Redis, db: AsyncSession, user_id: str
+        r: redis.Redis, db: AsyncSession, user_id: str
 ) -> tuple[list[dict], float]:
     """Возвращает список позиций с данными варианта/товара и итоговую сумму."""
     cart = await get_cart(r, user_id)
@@ -81,3 +81,9 @@ async def get_cart_with_products(
             })
 
     return items, total
+
+
+async def get_cart_count(r: redis.Redis, user_id: str) -> int:
+    """Общее количество единиц товара в корзине (сумма quantity)."""
+    cart = await get_cart(r, user_id)
+    return sum(cart.values())

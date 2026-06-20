@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
+from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.redis import redis_pool
+import redis.asyncio as redis_lib
+from fastapi import Request, status
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.admin.auth import AdminAuth
 from app.admin.views import (
@@ -26,6 +33,70 @@ from app.reviews.router import router as reviews_router
 
 app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
 
+
+class CartCountMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        # По умолчанию счётчик 0
+        request.state.cart_count = 0
+        try:
+            # Определяем id корзины: по cookie гостя или по токену пользователя
+            from app.core.security import decode_token
+            from app.cart import service as cart_service
+
+            r = redis_lib.Redis(connection_pool=redis_pool)
+            cart_id = None
+
+            access_token = request.cookies.get("access_token")
+            if access_token:
+                payload = decode_token(access_token)
+                if payload and payload.get("type") == "access":
+                    # для пользователя ключ корзины — это его user_id, но у нас
+                    # в корзине используется str(user.id). Достаём через email → id.
+                    from app.core.database import AsyncSessionLocal
+                    from app.users.service import get_user_by_email
+                    async with AsyncSessionLocal() as db:
+                        user = await get_user_by_email(db, payload["sub"])
+                        if user:
+                            cart_id = str(user.id)
+
+            if not cart_id:
+                guest_id = request.cookies.get("guest_id")
+                if guest_id:
+                    cart_id = f"guest:{guest_id}"
+
+            if cart_id:
+                request.state.cart_count = await cart_service.get_cart_count(r, cart_id)
+            await r.aclose()
+        except Exception:
+            request.state.cart_count = 0
+
+        return await call_next(request)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # 401 на обычных страницах → отправляем на вход.
+    # Для API/JSON-запросов оставляем JSON.
+    if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            return RedirectResponse(url="/login", status_code=303)
+
+    # 404 на страницах → красивая страница вместо голого JSON
+    if exc.status_code == status.HTTP_404_NOT_FOUND:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            from app.templates_env import templates
+            return templates.TemplateResponse(
+                request, "errors/404.html", {}, status_code=404
+            )
+
+    # Остальное — стандартный JSON-ответ
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+
+app.add_middleware(CartCountMiddleware)
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(web_router)
@@ -47,6 +118,7 @@ admin.add_view(ProductVariantAdmin)
 admin.add_view(ProductImageAdmin)
 admin.add_view(ReviewAdmin)
 admin.add_view(DashboardView)
+
 
 @app.get("/health", tags=["system"])
 async def health_check() -> dict[str, str]:
