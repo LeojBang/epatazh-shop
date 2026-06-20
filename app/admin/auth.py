@@ -8,14 +8,34 @@ from app.users.service import get_user_by_email
 
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
-        # Вход в админку идёт через основную форму /login, отдельной формы не делаем
-        return False
+        form = await request.form()
+        email = form.get("username", "")
+        password = form.get("password", "")
+
+        from app.core.database import AsyncSessionLocal
+        from app.core.security import create_access_token
+        from app.users.service import authenticate_user
+
+        async with AsyncSessionLocal() as db:
+            user = await authenticate_user(db, email, password)
+
+        # Пускаем только активных суперпользователей
+        if not user or not user.is_active or not user.is_superuser:
+            return False
+
+        # Кладём тот же access_token, что использует весь сайт
+        token = create_access_token(subject=user.email)
+        request.session.update({"token": token})
+        return True
 
     async def logout(self, request: Request) -> bool:
+        request.session.clear()
         return True
 
     async def authenticate(self, request: Request) -> bool:
-        token = request.cookies.get("access_token")
+        # Токен может быть либо в сессии админки (вход через форму /admin/login),
+        # либо в cookie сайта (если уже залогинен на сайте как админ)
+        token = request.session.get("token") or request.cookies.get("access_token")
         if not token:
             return False
 
