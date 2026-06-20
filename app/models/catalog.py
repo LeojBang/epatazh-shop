@@ -51,8 +51,7 @@ class ProductVariant(UUIDMixin, TimeStampMixin, Base):
     product: Mapped["Product"] = relationship(back_populates="variants")
 
     def __str__(self) -> str:
-        return f"{self.product.name if self.product else ''} — {self.size}"
-
+        return f"Размер {self.size}"
 
 class ProductImage(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "product_images"

@@ -39,6 +39,10 @@ class OrderItem(UUIDMixin, TimeStampMixin, Base):
 
     order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("product_variants.id"), nullable=True
+    )
+    size: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     # снимок данных товара на момент покупки
     product_name: Mapped[str] = mapped_column(String(255), nullable=False)

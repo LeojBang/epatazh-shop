@@ -8,6 +8,8 @@ from app.admin.views import (
     OrderAdmin,
     OrderItemAdmin,
     ProductAdmin,
+    ProductVariantAdmin,
+    ProductImageAdmin,
     UserAdmin,
 )
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
@@ -38,6 +40,8 @@ admin.add_view(CategoryAdmin)
 admin.add_view(ProductAdmin)
 admin.add_view(OrderAdmin)
 admin.add_view(OrderItemAdmin)
+admin.add_view(ProductVariantAdmin)
+admin.add_view(ProductImageAdmin)
 
 
 @app.get("/health", tags=["system"])

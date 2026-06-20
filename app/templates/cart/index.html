@@ -8,6 +8,7 @@
             <thead>
                 <tr>
                     <th>Товар</th>
+                    <th>Размер</th>
                     <th>Цена</th>
                     <th>Количество</th>
                     <th>Сумма</th>
@@ -18,19 +19,20 @@
                 {% for item in items %}
                 <tr>
                     <td><a href="/catalog/{{ item.product.slug }}">{{ item.product.name }}</a></td>
+                    <td>{{ item.variant.size }}</td>
                     <td>{{ item.product.price }} ₽</td>
                     <td>
                         <form method="post" action="/cart/update" class="inline-form">
-                            <input type="hidden" name="product_slug" value="{{ item.product.slug }}">
+                            <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}"
-                                   min="1" max="{{ item.product.stock }}"
+                                   min="1" max="{{ item.variant.stock }}"
                                    onchange="this.form.submit()" class="qty-input">
                         </form>
                     </td>
-                    <td>{{ item.subtotal }} ₽</td>
+                    <td>{{ "%.2f"|format(item.subtotal) }} ₽</td>
                     <td>
                         <form method="post" action="/cart/remove" class="inline-form">
-                            <input type="hidden" name="product_slug" value="{{ item.product.slug }}">
+                            <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
                             <button type="submit" class="link-button">Удалить</button>
                         </form>
                     </td>

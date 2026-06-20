@@ -1,8 +1,8 @@
 from sqladmin import ModelView
 
-from app.models.catalog import Category, Product
 from app.models.order import Order, OrderItem
 from app.models.user import User
+from app.models.catalog import Category, Product, ProductVariant, ProductImage
 
 
 class UserAdmin(ModelView, model=User):
@@ -25,9 +25,9 @@ class CategoryAdmin(ModelView, model=Category):
 class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
-    column_list = [Product.name, Product.price, Product.stock, Product.is_active, Product.category]
+    column_list = [Product.name, Product.price, Product.is_active, Product.category]
     column_searchable_list = [Product.name]
-    column_sortable_list = [Product.price, Product.stock]
+    column_sortable_list = [Product.price]
     form_excluded_columns = [Product.created_at, Product.updated_at]
 
 
@@ -47,3 +47,17 @@ class OrderItemAdmin(ModelView, model=OrderItem):
     column_list = [OrderItem.product_name, OrderItem.price, OrderItem.quantity]
     can_create = False
     can_edit = False
+
+
+class ProductVariantAdmin(ModelView, model=ProductVariant):
+    name = "Вариант товара"
+    name_plural = "Варианты товаров"
+    column_list = [ProductVariant.product, ProductVariant.size, ProductVariant.stock]
+    form_excluded_columns = [ProductVariant.created_at, ProductVariant.updated_at]
+
+
+class ProductImageAdmin(ModelView, model=ProductImage):
+    name = "Фото товара"
+    name_plural = "Фото товаров"
+    column_list = [ProductImage.product, ProductImage.path, ProductImage.position]
+    form_excluded_columns = [ProductImage.created_at, ProductImage.updated_at]

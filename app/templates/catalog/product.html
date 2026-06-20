@@ -2,20 +2,51 @@
 {% block title %}{{ product.name }} — Shop{% endblock %}
 {% block content %}
     <a href="/catalog">← Назад в каталог</a>
-    <h1>{{ product.name }}</h1>
-    <p class="product-category">Категория: {{ product.category.name }}</p>
-    <p class="product-price">{{ product.price }} ₽</p>
-    {% if product.description %}
-        <p>{{ product.description }}</p>
-    {% endif %}
-    {% if product.stock > 0 %}
-        <p>В наличии: {{ product.stock }} шт.</p>
-        <form method="post" action="/cart/add">
-            <input type="hidden" name="product_slug" value="{{ product.slug }}">
-            <input type="hidden" name="quantity" value="1">
-            <button type="submit" class="btn-primary">Добавить в корзину</button>
-        </form>
-    {% else %}
-        <p class="out-of-stock">Нет в наличии</p>
-    {% endif %}
+
+    <div class="product-detail">
+        <div class="product-gallery">
+            {% if product.images %}
+                <div class="gallery-main">
+                    {% for image in product.images %}
+                        <img src="/static/uploads/{{ image.path }}"
+                             class="gallery-img {% if loop.first %}active{% endif %}"
+                             data-index="{{ loop.index0 }}"
+                             alt="{{ product.name }}">
+                    {% endfor %}
+
+                    {% if product.images|length > 1 %}
+                        <button class="gallery-arrow gallery-prev" onclick="changeImage(-1)">‹</button>
+                        <button class="gallery-arrow gallery-next" onclick="changeImage(1)">›</button>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="gallery-placeholder">Нет фото</div>
+            {% endif %}
+        </div>
+
+        <div class="product-info">
+            <h1>{{ product.name }}</h1>
+            <p class="product-category">{{ product.category.name }}</p>
+            <p class="product-price">{{ product.price }} ₽</p>
+            {% if product.description %}
+                <p>{{ product.description }}</p>
+            {% endif %}
+
+            {% set available = product.variants | selectattr("stock", "gt", 0) | list %}
+            {% if available %}
+                <form method="post" action="/cart/add" class="add-form">
+                    <label for="variant_id">Размер</label>
+                    <select name="variant_id" id="variant_id" required>
+                        {% for variant in available %}
+                            <option value="{{ variant.id }}">{{ variant.size }} (в наличии: {{ variant.stock }})</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn-primary">Добавить в корзину</button>
+                </form>
+            {% else %}
+                <p class="out-of-stock">Нет в наличии</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

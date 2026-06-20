@@ -50,7 +50,7 @@ async def cart_page(
 
 @router.post("/cart/add")
 async def add_to_cart(
-    product_slug: str = Form(...),
+    variant_id: str = Form(...),
     quantity: int = Form(1),
     guest_id: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
@@ -58,7 +58,7 @@ async def add_to_cart(
     user: User | None = Depends(get_current_user_optional),
 ):
     user_id, new_guest_id = get_user_id(user, guest_id)
-    await service.add_to_cart(r, db, user_id, product_slug, quantity)
+    await service.add_to_cart(r, db, user_id, variant_id, quantity)
 
     response = RedirectResponse(url="/cart", status_code=303)
     if new_guest_id:
@@ -68,24 +68,24 @@ async def add_to_cart(
 
 @router.post("/cart/remove")
 async def remove_from_cart(
-    product_slug: str = Form(...),
+    variant_id: str = Form(...),
     guest_id: str | None = Cookie(default=None),
     r: redis.Redis = Depends(get_redis),
     user: User | None = Depends(get_current_user_optional),
 ):
     user_id, _ = get_user_id(user, guest_id)
-    await service.remove_from_cart(r, user_id, product_slug)
+    await service.remove_from_cart(r, user_id, variant_id)
     return RedirectResponse(url="/cart", status_code=303)
 
 
 @router.post("/cart/update")
 async def update_cart(
-    product_slug: str = Form(...),
+    variant_id: str = Form(...),
     quantity: int = Form(...),
     guest_id: str | None = Cookie(default=None),
     r: redis.Redis = Depends(get_redis),
     user: User | None = Depends(get_current_user_optional),
 ):
     user_id, _ = get_user_id(user, guest_id)
-    await service.update_quantity(r, user_id, product_slug, quantity)
+    await service.update_quantity(r, user_id, variant_id, quantity)
     return RedirectResponse(url="/cart", status_code=303)

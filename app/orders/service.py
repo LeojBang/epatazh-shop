@@ -30,41 +30,46 @@ async def create_order(
     if not cart:
         raise CheckoutError("Корзина пуста")
 
-    # Загружаем товары одним запросом по списку slug из корзины
+    from app.models.catalog import ProductVariant
+
+    # Загружаем варианты по id из корзины, вместе с товаром (для цены и названия)
     result = await db.execute(
-        select(Product).where(Product.slug.in_(list(cart.keys())))
+        select(ProductVariant)
+        .where(ProductVariant.id.in_(list(cart.keys())))
+        .options(selectinload(ProductVariant.product))
     )
-    products = {p.slug: p for p in result.scalars().all()}
+    variants = {str(v.id): v for v in result.scalars().all()}
 
     order_items: list[OrderItem] = []
     total = Decimal("0.00")
 
-    for slug, qty in cart.items():
-        product = products.get(slug)
-        if not product:
-            raise CheckoutError(f"Товар {slug} больше не доступен")
+    for variant_id, qty in cart.items():
+        variant = variants.get(variant_id)
+        if not variant or not variant.product:
+            raise CheckoutError("Один из товаров больше не доступен")
 
-        # АТОМАРНОЕ СПИСАНИЕ: условие stock >= qty прямо в UPDATE.
-        # rowcount == 0 означает, что товара не хватило — списание не произошло.
+        # Атомарное списание остатка ВАРИАНТА
         update_result = await db.execute(
             text(
-                "UPDATE products SET stock = stock - :qty "
+                "UPDATE product_variants SET stock = stock - :qty "
                 "WHERE id = :id AND stock >= :qty"
             ),
-            {"qty": qty, "id": product.id},
+            {"qty": qty, "id": variant.id},
         )
         if update_result.rowcount == 0:
             raise CheckoutError(
-                f"Недостаточно товара «{product.name}» на складе"
+                f"Недостаточно товара «{variant.product.name}» (размер {variant.size})"
             )
 
-        subtotal = product.price * qty
+        subtotal = variant.product.price * qty
         total += subtotal
         order_items.append(
             OrderItem(
-                product_id=product.id,
-                product_name=product.name,
-                price=product.price,
+                product_id=variant.product.id,
+                variant_id=variant.id,
+                product_name=variant.product.name,
+                size=variant.size,
+                price=variant.product.price,
                 quantity=qty,
             )
         )
@@ -80,11 +85,8 @@ async def create_order(
         items=order_items,
     )
     db.add(order)
-
     await db.commit()
     await db.refresh(order)
-
-    # Корзину очищаем только после успешного коммита
     await cart_service.clear_cart(r, cart_user_id)
 
     return order
@@ -109,16 +111,16 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> list[Order]:
     return list(result.scalars().all())
 
 
-async def cancel_order_stock(db: AsyncSession, order: Order) -> None:
-    """Отменяет заказ и возвращает товар его позиций на склад. Атомарно в транзакции."""
+async def cancel_order_return_stock(db: AsyncSession, order: Order) -> None:
+    """Отменяет заказ и возвращает товар его позиций на склад варианта."""
     from sqlalchemy import text
 
     for item in order.items:
-        # Возвращаем количество обратно на склад
-        await db.execute(
-            text("UPDATE products SET stock = stock + :qty WHERE id = :id"),
-            {"qty": item.quantity, "id": item.product_id},
-        )
+        if item.variant_id:
+            await db.execute(
+                text("UPDATE product_variants SET stock = stock + :qty WHERE id = :id"),
+                {"qty": item.quantity, "id": item.variant_id},
+            )
 
     order.status = "cancelled"
     await db.commit()
