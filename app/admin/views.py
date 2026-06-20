@@ -3,6 +3,7 @@ from sqladmin import ModelView
 from app.models.order import Order, OrderItem
 from app.models.user import User
 from app.models.catalog import Category, Product, ProductVariant, ProductImage
+from app.models.review import Review
 
 
 class UserAdmin(ModelView, model=User):
@@ -61,3 +62,12 @@ class ProductImageAdmin(ModelView, model=ProductImage):
     name_plural = "Фото товаров"
     column_list = [ProductImage.product, ProductImage.path, ProductImage.position]
     form_excluded_columns = [ProductImage.created_at, ProductImage.updated_at]
+
+
+class ReviewAdmin(ModelView, model=Review):
+    name = "Отзыв"
+    name_plural = "Отзывы"
+    column_list = [Review.product, Review.rating, Review.is_approved, Review.created_at]
+    column_sortable_list = [Review.created_at, Review.is_approved]
+    form_excluded_columns = [Review.created_at, Review.updated_at]
+    column_formatters = {Review.product: lambda m, a: m.product.name if m.product else ""}

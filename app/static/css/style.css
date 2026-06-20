@@ -46,3 +46,12 @@ textarea { padding: 0.5rem; border: 1px solid #e2e2e2; border-radius: 4px; font-
 .add-form { display: flex; flex-direction: column; max-width: 280px; gap: 0.5rem; margin-top: 1rem; }
 .add-form select { padding: 0.5rem; border: 1px solid #e2e2e2; border-radius: 4px; }
 .card-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem; }
+.reviews { margin-top: 3rem; }
+.rating-summary { font-size: 1rem; color: #f59e0b; font-weight: normal; margin-left: 0.5rem; }
+.review-notice { color: #16a34a; }
+.review-form { display: flex; flex-direction: column; max-width: 480px; gap: 0.5rem; margin-bottom: 2rem; }
+.review-form select, .review-form textarea { padding: 0.5rem; border: 1px solid #e2e2e2; border-radius: 4px; font-family: inherit; }
+.review-card { border: 1px solid #e2e2e2; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.review-header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 0.5rem; }
+.review-rating { color: #f59e0b; }
+.review-date { color: #6b6b6b; font-size: 0.85rem; }

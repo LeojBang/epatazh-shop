@@ -38,8 +38,29 @@ async def product_page(
     product = await service.get_product_by_slug(db, slug)
     if not product:
         raise HTTPException(status_code=404, detail="Товар не найден")
+
+    from app.reviews import service as review_service
+
+    reviews = await review_service.get_approved_reviews(db, str(product.id))
+    avg_rating, reviews_count = await review_service.get_rating_summary(db, str(product.id))
+
+    # Может ли текущий пользователь оставить отзыв:
+    # залогинен, купил товар, ещё не оставлял отзыв
+    can_review = False
+    if user:
+        purchased = await review_service.has_purchased(db, str(user.id), str(product.id))
+        existing = await review_service.get_existing_review(db, str(user.id), str(product.id))
+        can_review = purchased and existing is None
+
     return templates.TemplateResponse(
         request,
         "catalog/product.html",
-        {"product": product, "user": user},
+        {
+            "product": product,
+            "user": user,
+            "reviews": reviews,
+            "avg_rating": avg_rating,
+            "reviews_count": reviews_count,
+            "can_review": can_review,
+        },
     )

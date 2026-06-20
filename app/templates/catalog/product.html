@@ -48,5 +48,50 @@
                 <p class="out-of-stock">Нет в наличии</p>
             {% endif %}
         </div>
+        <section class="reviews">
+        <h2>Отзывы
+            {% if reviews_count %}
+                <span class="rating-summary">{{ avg_rating }} ★ ({{ reviews_count }})</span>
+            {% endif %}
+        </h2>
+
+        {% if request.query_params.get('review_added') %}
+            <p class="review-notice">Спасибо! Отзыв отправлен на модерацию.</p>
+        {% endif %}
+        {% if request.query_params.get('review_error') %}
+            <p class="form-error">Не удалось добавить отзыв.</p>
+        {% endif %}
+
+        {% if can_review %}
+            <form method="post" action="/catalog/{{ product.slug }}/review" class="review-form">
+                <label for="rating">Оценка</label>
+                <select name="rating" id="rating" required>
+                    <option value="5">5 — отлично</option>
+                    <option value="4">4 — хорошо</option>
+                    <option value="3">3 — нормально</option>
+                    <option value="2">2 — плохо</option>
+                    <option value="1">1 — ужасно</option>
+                </select>
+                <label for="text">Ваш отзыв</label>
+                <textarea name="text" id="text" rows="3" required></textarea>
+                <button type="submit" class="btn-primary">Отправить отзыв</button>
+            </form>
+        {% endif %}
+
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="review-author">{{ review.user.full_name or review.user.email }}</span>
+                        <span class="review-rating">{{ review.rating }} ★</span>
+                    </div>
+                    <p>{{ review.text }}</p>
+                    <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Пока нет отзывов.</p>
+        {% endif %}
+    </section>
     </div>
 {% endblock %}
