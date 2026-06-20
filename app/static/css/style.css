@@ -254,3 +254,67 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     .site-header__inner { flex-direction: column; gap: 0.75rem; }
     .product-detail { flex-direction: column; }
 }
+
+/* ===== Главная ===== */
+.hero {
+    background: var(--green);
+    border-radius: var(--radius-lg);
+    padding: 3.5rem 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(199,154,59,0.15));
+    pointer-events: none;
+}
+.hero__content { position: relative; }
+.hero__title {
+    color: var(--gold-soft);
+    font-size: 3rem;
+    font-style: italic;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+.hero__subtitle {
+    color: var(--text-on-dark);
+    font-size: 1.3rem;
+    margin: 0 0 0.75rem;
+    font-weight: 500;
+}
+.hero__text {
+    color: #c8d2cc;
+    font-size: 1rem;
+    max-width: 520px;
+    margin: 0 auto 1.5rem;
+}
+.hero__btn { font-size: 1.05rem; padding: 0.85rem 2rem; }
+
+.home-section { margin-bottom: 3rem; }
+.home-section h2 { margin-bottom: 1.25rem; }
+
+.category-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+.category-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.15rem;
+    font-weight: 600;
+    transition: border-color 0.15s, transform 0.15s;
+}
+.category-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.category-card__arrow { color: var(--gold); font-size: 1.3rem; }

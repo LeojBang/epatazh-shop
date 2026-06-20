@@ -1,13 +1,51 @@
 {% extends "base.html" %}
 {% block title %}Эпатаж — экипировка для единоборств{% endblock %}
 {% block content %}
-    <div style="background: var(--green); color: var(--text-on-dark); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; margin-bottom: 2.5rem;">
-        <h1 style="color: var(--gold-soft); font-size: 2.2rem; margin-bottom: 0.5rem;">Эпатаж</h1>
-        <p style="font-size: 1.15rem; margin: 0 0 1.5rem; color: var(--text-on-dark);">Экипировка для муай-тай, ММА и бокса</p>
-        <a href="/catalog" class="btn-primary">Перейти в каталог</a>
-    </div>
 
-    {% if user %}
-        <p>С возвращением, {{ user.full_name or user.email }}!</p>
+    <section class="hero">
+        <div class="hero__content">
+            <h1 class="hero__title">Эпатаж</h1>
+            <p class="hero__subtitle">Экипировка для муай-тай, ММА и хоккея</p>
+            <p class="hero__text">Есть такая профессия — Родину защищать. Снаряжение для тех, кто тренируется всерьёз.</p>
+            <a href="/catalog" class="btn-primary hero__btn">Перейти в каталог</a>
+        </div>
+    </section>
+
+    <section class="home-section">
+        <h2>Категории</h2>
+        <div class="category-cards">
+            {% for cat in categories %}
+                <a href="/catalog?category={{ cat.slug }}" class="category-card">
+                    <span class="category-card__name">{{ cat.name }}</span>
+                    <span class="category-card__arrow">→</span>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if featured %}
+    <section class="home-section">
+        <h2>Популярное</h2>
+        <div class="product-grid">
+            {% for product in featured %}
+                <a href="/catalog/{{ product.slug }}" class="product-card">
+                    {% if product.images %}
+                        <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="card-img-placeholder">Нет фото</div>
+                    {% endif %}
+                    <div class="product-card__body">
+                        <h3>{{ product.name }}</h3>
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <span class="product-price">{{ product.price }} ₽</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="/catalog" class="btn-outline">Смотреть всё</a>
+        </div>
+    </section>
     {% endif %}
+
 {% endblock %}
