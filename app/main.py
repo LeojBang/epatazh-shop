@@ -18,7 +18,7 @@ from app.admin.views import (
     ProductVariantAdmin,
     ProductImageAdmin,
     ReviewAdmin,
-    UserAdmin, DashboardView,
+    UserAdmin, DashboardView, InfoPageAdmin,
 )
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
@@ -30,16 +30,19 @@ from app.users.router import router as users_router
 from app.web.router import router as web_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
+from app.pages.router import router as pages_router
 
 app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
 
 
 class CartCountMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
-        # По умолчанию счётчик 0
+        # Значения по умолчанию — чтобы шаблон не падал, даже если что-то пойдёт не так
         request.state.cart_count = 0
+        request.state.footer_pages = {"information": [], "company": [], "legal": []}
+
+        # --- Счётчик корзины ---
         try:
-            # Определяем id корзины: по cookie гостя или по токену пользователя
             from app.core.security import decode_token
             from app.cart import service as cart_service
 
@@ -50,8 +53,6 @@ class CartCountMiddleware(BaseHTTPMiddleware):
             if access_token:
                 payload = decode_token(access_token)
                 if payload and payload.get("type") == "access":
-                    # для пользователя ключ корзины — это его user_id, но у нас
-                    # в корзине используется str(user.id). Достаём через email → id.
                     from app.core.database import AsyncSessionLocal
                     from app.users.service import get_user_by_email
                     async with AsyncSessionLocal() as db:
@@ -69,6 +70,28 @@ class CartCountMiddleware(BaseHTTPMiddleware):
             await r.aclose()
         except Exception:
             request.state.cart_count = 0
+
+        # --- Страницы для футера ---
+        try:
+            from sqlalchemy import select
+            from app.models.page import InfoPage
+            from app.core.database import AsyncSessionLocal
+
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(
+                    select(InfoPage)
+                    .where(InfoPage.is_published == True)
+                    .order_by(InfoPage.position)
+                )
+                pages = result.scalars().all()
+
+            footer = {"information": [], "company": [], "legal": []}
+            for p in pages:
+                if p.footer_group in footer:
+                    footer[p.footer_group].append({"slug": p.slug, "title": p.title})
+            request.state.footer_pages = footer
+        except Exception:
+            request.state.footer_pages = {"information": [], "company": [], "legal": []}
 
         return await call_next(request)
 
@@ -105,6 +128,7 @@ app.include_router(catalog_router)
 app.include_router(cart_router)
 app.include_router(orders_router)
 app.include_router(payments_router)
+app.include_router(pages_router)
 app.include_router(reviews_router)
 
 # --- Админка ---
@@ -118,6 +142,7 @@ admin.add_view(ProductVariantAdmin)
 admin.add_view(ProductImageAdmin)
 admin.add_view(ReviewAdmin)
 admin.add_view(DashboardView)
+admin.add_view(InfoPageAdmin)
 
 
 @app.get("/health", tags=["system"])

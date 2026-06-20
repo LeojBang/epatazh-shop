@@ -32,7 +32,37 @@
     </main>
 
     <footer class="site-footer">
-        <p>Эпатаж — экипировка для единоборств · {{ "2026" }}</p>
+        <div class="footer__cols">
+            <div class="footer__col">
+                <h4>Информация</h4>
+                {% for p in request.state.footer_pages.information %}
+                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+                {% endfor %}
+            </div>
+            <div class="footer__col">
+                <h4>О компании</h4>
+                {% for p in request.state.footer_pages.company %}
+                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+                {% endfor %}
+            </div>
+            <div class="footer__col">
+                <h4>Документы</h4>
+                {% for p in request.state.footer_pages.legal %}
+                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+                {% endfor %}
+            </div>
+            <div class="footer__col">
+                <h4>Мы в соцсетях</h4>
+                <div class="footer__social">
+                    <a href="#" aria-label="VK">VK</a>
+                    <a href="#" aria-label="Telegram">TG</a>
+                    <a href="#" aria-label="YouTube">YT</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer__bottom">
+            <p>© 2026 Эпатаж — экипировка для единоборств. Все права защищены.</p>
+        </div>
     </footer>
 
     <script src="/static/js/app.js"></script>

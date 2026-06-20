@@ -138,6 +138,6 @@ async def cancel_expired_orders(db: AsyncSession, max_age_minutes: int = 15) -> 
     expired = list(result.scalars().all())
 
     for order in expired:
-        await cancel_order_stock(db, order)
+        await cancel_order_return_stock(db, order)
 
     return len(expired)

@@ -11,8 +11,10 @@ from app.models.order import Order, OrderItem
 from app.models.user import User
 from app.models.catalog import Category, Product, ProductVariant, ProductImage
 from app.models.review import Review
+from app.models.page import InfoPage
 
 from datetime import timezone, timedelta
+
 
 def _msk(value):
     if value is None:
@@ -20,6 +22,8 @@ def _msk(value):
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M")
+
+
 class UserAdmin(ModelView, model=User):
     name = "Пользователь"
     name_plural = "Пользователи"
@@ -180,3 +184,11 @@ class DashboardView(BaseView):
                 "revenue_by_day": revenue_by_day,
             },
         )
+
+
+class InfoPageAdmin(ModelView, model=InfoPage):
+    name = "Страница"
+    name_plural = "Страницы"
+    column_list = [InfoPage.title, InfoPage.slug, InfoPage.footer_group, InfoPage.position, InfoPage.is_published]
+    column_sortable_list = [InfoPage.footer_group, InfoPage.position]
+    form_excluded_columns = [InfoPage.created_at, InfoPage.updated_at]
