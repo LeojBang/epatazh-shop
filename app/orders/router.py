@@ -15,11 +15,15 @@ from app.orders import service
 from app.orders.service import CheckoutError
 from app.schemas.order import CheckoutForm
 from app.users.dependencies import get_current_user, get_current_user_optional
-from app.web.filters import order_status_ru
+from app.web.filters import order_status_ru, msk_datetime, msk_date
 
 router = APIRouter(tags=["orders"])
 templates = Jinja2Templates(directory="app/templates")
+
 templates.env.filters["order_status_ru"] = order_status_ru
+templates.env.filters["msk_datetime"] = msk_datetime
+templates.env.filters["msk_date"] = msk_date
+
 
 @router.get("/checkout", response_class=HTMLResponse)
 async def checkout_page(

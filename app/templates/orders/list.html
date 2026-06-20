@@ -7,9 +7,9 @@
         {% for order in orders %}
             <div class="order-card">
                 <div class="order-header">
-                    <span>Заказ от {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-                    <span class="order-status">{{ order.status | order_status_ru }}</span>                </div>
-                {% for item in order.items %}
+                    <span>Заказ от {{ order.created_at | msk_datetime }}</span>
+                    <span class="order-status">{{ order.status | order_status_ru }}</span>
+                </div>{% for item in order.items %}
                     <div class="checkout-item">
                         <span>{{ item.product_name }}{% if item.size %} ({{ item.size }}){% endif %} × {{ item.quantity }}</span>
                         <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
