@@ -9,7 +9,11 @@
                 <div class="order-header">
                     <span>Заказ от {{ order.created_at | msk_datetime }}</span>
                     <span class="order-status">{{ order.status | order_status_ru }}</span>
-                </div>{% for item in order.items %}
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.5rem;">
+                    № {{ order.id }}
+                </p>
+                    {% for item in order.items %}
                     <div class="checkout-item">
                         <span>{{ item.product_name }}{% if item.size %} ({{ item.size }}){% endif %} × {{ item.quantity }}</span>
                         <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
@@ -17,9 +21,15 @@
                 {% endfor %}
                 <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
                 {% if order.status == "pending" %}
-                    <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
-                        <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Оплатить</button>
-                    </form>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
+                            <button type="submit" class="btn-primary">Оплатить</button>
+                        </form>
+                        <form method="post" action="/orders/{{ order.id }}/cancel" class="inline-form"
+                              onsubmit="return confirm('Отменить заказ? Товар вернётся в продажу.');">
+                            <button type="submit" class="btn-outline">Отменить</button>
+                        </form>
+                    </div>
                 {% endif %}
             </div>
         {% endfor %}

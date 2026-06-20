@@ -2,7 +2,12 @@
 {% block title %}Оформление заказа — Эпатаж{% endblock %}
 {% block content %}
     <h1>Оформление заказа</h1>
-
+    {% if not user %}
+        <div class="guest-notice">
+            <a href="/login">Войдите</a> или <a href="/register">зарегистрируйтесь</a>,
+            чтобы отслеживать заказы в личном кабинете. Можно оформить и без аккаунта.
+        </div>
+    {% endif %}
     {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
 
     <div class="checkout-summary">

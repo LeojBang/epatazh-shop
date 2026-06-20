@@ -184,3 +184,56 @@ async def pay_order(
         return_url=return_url,
     )
     return RedirectResponse(url=payment_url, status_code=303)
+
+
+@router.post("/orders/{order_id}/cancel")
+async def cancel_order(
+        request: Request,
+        order_id: str,
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user),
+):
+    order = await service.get_order(db, order_id)
+    if not order or order.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+
+    # Отменить можно только неоплаченный заказ
+    if order.status == "pending":
+        await service.cancel_order_return_stock(db, order)
+
+    return RedirectResponse(url="/account/orders", status_code=303)
+
+
+@router.get("/track", response_class=HTMLResponse)
+async def track_form(
+        request: Request,
+        user: User | None = Depends(get_current_user_optional),
+):
+    return templates.TemplateResponse(request, "orders/track.html", {"user": user})
+
+
+@router.post("/track", response_class=HTMLResponse)
+async def track_order(
+        request: Request,
+        order_id: str = Form(...),
+        email: str = Form(...),
+        db: AsyncSession = Depends(get_db),
+        user: User | None = Depends(get_current_user_optional),
+):
+    order = None
+    error = None
+
+    # UUID может быть невалидным — оборачиваем поиск, чтобы не упасть
+    try:
+        found = await service.get_order(db, order_id.strip())
+        if found and found.email.lower() == email.strip().lower():
+            order = found
+        else:
+            error = "Заказ с такими данными не найден. Проверьте номер и email."
+    except Exception:
+        error = "Неверный формат номера заказа."
+
+    return templates.TemplateResponse(
+        request, "orders/track.html",
+        {"user": user, "order": order, "error": error},
+    )

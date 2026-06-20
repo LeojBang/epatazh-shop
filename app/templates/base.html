@@ -38,6 +38,10 @@
                 {% for p in request.state.footer_pages.information %}
                     <a href="/info/{{ p.slug }}">{{ p.title }}</a>
                 {% endfor %}
+                {% for p in request.state.footer_pages.information %}
+                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+                {% endfor %}
+                <a href="/track">Отследить заказ</a>
             </div>
             <div class="footer__col">
                 <h4>О компании</h4>

@@ -394,3 +394,23 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 .info-content table { border-collapse: collapse; margin: 1rem 0; }
 .info-content th, .info-content td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; }
 .info-content th { background: #f4f2ec; }
+.guest-notice {
+    background: #f4f2ec;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+}
+.guest-notice a { color: var(--green); font-weight: 600; }
+.order-number-box {
+    background: #f4f2ec;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: center;
+}
+.order-number-box strong { display: block; font-size: 1.1rem; color: var(--green); margin: 0.3rem 0; word-break: break-all; }
+.order-number-box small { color: var(--text-muted); font-size: 0.82rem; }
