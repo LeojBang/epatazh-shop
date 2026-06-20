@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика — Shop Admin</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 2rem; background: #f7f7f7; color: #1a1a1a; }
+        a.back { text-decoration: none; color: #2563eb; }
+        h1 { margin-top: 0.5rem; }
+        .period-nav { margin-bottom: 1.5rem; }
+        .period-nav a { margin-right: 0.5rem; padding: 0.3rem 0.8rem; border: 1px solid #e2e2e2; border-radius: 20px; text-decoration: none; color: #1a1a1a; background: white; }
+        .period-nav a.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .card { background: white; border-radius: 8px; padding: 1.2rem; }
+        .card .label { color: #6b6b6b; font-size: 0.85rem; }
+        .card .value { font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; }
+        .panel { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.6rem; border-bottom: 1px solid #e2e2e2; text-align: left; }
+    </style>
+</head>
+<body>
+    <a class="back" href="/admin">← В админку</a>
+    <h1>Аналитика</h1>
+
+    <div class="period-nav">
+        {% for d in [7, 30, 90] %}
+            <a href="/admin/dashboard?days={{ d }}"
+               class="{% if summary.days == d %}active{% endif %}">{{ d }} дней</a>
+        {% endfor %}
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="label">Выручка</div>
+            <div class="value">{{ "%.0f"|format(summary.revenue) }} ₽</div>
+        </div>
+        <div class="card">
+            <div class="label">Оплачено заказов</div>
+            <div class="value">{{ summary.paid_count }}</div>
+        </div>
+        <div class="card">
+            <div class="label">Средний чек</div>
+            <div class="value">{{ "%.0f"|format(summary.avg_check) }} ₽</div>
+        </div>
+        <div class="card">
+            <div class="label">Конверсия в оплату</div>
+            <div class="value">{{ summary.pay_conversion }}%</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>Выручка по дням</h3>
+        {% if revenue_by_day %}
+            <canvas id="revenueChart" height="80"></canvas>
+        {% else %}
+            <p>Нет оплаченных заказов за период.</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h3>Топ товаров</h3>
+        {% if top_products %}
+            <table>
+                <thead><tr><th>Товар</th><th>Продано, шт</th><th>Выручка</th></tr></thead>
+                <tbody>
+                    {% for p in top_products %}
+                        <tr>
+                            <td>{{ p.name }}</td>
+                            <td>{{ p.qty }}</td>
+                            <td>{{ "%.0f"|format(p.revenue) }} ₽</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Нет данных о продажах за период.</p>
+        {% endif %}
+    </div>
+
+    {% if revenue_by_day %}
+    <script>
+        const ctx = document.getElementById('revenueChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ revenue_by_day | map(attribute='day') | list | tojson }},
+                datasets: [{
+                    label: 'Выручка, ₽',
+                    data: {{ revenue_by_day | map(attribute='revenue') | list | tojson }},
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

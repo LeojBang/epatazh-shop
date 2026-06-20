@@ -11,7 +11,7 @@ from app.admin.views import (
     ProductVariantAdmin,
     ProductImageAdmin,
     ReviewAdmin,
-    UserAdmin,
+    UserAdmin, DashboardView,
 )
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
@@ -46,6 +46,7 @@ admin.add_view(OrderItemAdmin)
 admin.add_view(ProductVariantAdmin)
 admin.add_view(ProductImageAdmin)
 admin.add_view(ReviewAdmin)
+admin.add_view(DashboardView)
 
 @app.get("/health", tags=["system"])
 async def health_check() -> dict[str, str]:

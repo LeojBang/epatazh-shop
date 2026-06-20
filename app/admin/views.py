@@ -1,3 +1,9 @@
+from sqladmin import BaseView, expose
+from starlette.requests import Request
+
+from app.core.database import AsyncSessionLocal
+from app.analytics import service as analytics_service
+
 from sqladmin import ModelView
 
 from app.models.order import Order, OrderItem
@@ -71,3 +77,29 @@ class ReviewAdmin(ModelView, model=Review):
     column_sortable_list = [Review.created_at, Review.is_approved]
     form_excluded_columns = [Review.created_at, Review.updated_at]
     column_formatters = {Review.product: lambda m, a: m.product.name if m.product else ""}
+
+
+class DashboardView(BaseView):
+    name = "Аналитика"
+
+    @expose("/dashboard", methods=["GET"])
+    async def dashboard(self, request: Request):
+        from fastapi.templating import Jinja2Templates
+
+        templates = Jinja2Templates(directory="app/templates")
+        days = int(request.query_params.get("days", 30))
+
+        async with AsyncSessionLocal() as db:
+            summary = await analytics_service.get_summary(db, days)
+            top_products = await analytics_service.get_top_products(db, days)
+            revenue_by_day = await analytics_service.get_revenue_by_day(db, days)
+
+        return templates.TemplateResponse(
+            request,
+            "admin/dashboard.html",
+            {
+                "summary": summary,
+                "top_products": top_products,
+                "revenue_by_day": revenue_by_day,
+            },
+        )
