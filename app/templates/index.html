@@ -1,10 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Главная — Shop{% endblock %}
+{% block title %}Эпатаж — экипировка для единоборств{% endblock %}
 {% block content %}
-    <h1>Добро пожаловать в магазин</h1>
+    <div style="background: var(--green); color: var(--text-on-dark); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; margin-bottom: 2.5rem;">
+        <h1 style="color: var(--gold-soft); font-size: 2.2rem; margin-bottom: 0.5rem;">Эпатаж</h1>
+        <p style="font-size: 1.15rem; margin: 0 0 1.5rem; color: var(--text-on-dark);">Экипировка для муай-тай, ММА и бокса</p>
+        <a href="/catalog" class="btn-primary">Перейти в каталог</a>
+    </div>
+
     {% if user %}
-        <p>Привет, {{ user.full_name or user.email }}!</p>
-    {% else %}
-        <p>Ты не авторизован.</p>
+        <p>С возвращением, {{ user.full_name or user.email }}!</p>
     {% endif %}
 {% endblock %}

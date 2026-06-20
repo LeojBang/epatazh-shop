@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Мои заказы — Shop{% endblock %}
+{% block title %}Мои заказы — Эпатаж{% endblock %}
 {% block content %}
     <h1>Мои заказы</h1>
 
@@ -12,7 +12,7 @@
                 </div>
                 {% for item in order.items %}
                     <div class="checkout-item">
-                        <span>{{ item.product_name }} × {{ item.quantity }}</span>
+                        <span>{{ item.product_name }}{% if item.size %} ({{ item.size }}){% endif %} × {{ item.quantity }}</span>
                         <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
                     </div>
                 {% endfor %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ product.name }} — Shop{% endblock %}
+{% block title %}{{ product.name }} — Эпатаж{% endblock %}
 {% block content %}
-    <a href="/catalog">← Назад в каталог</a>
+    <a href="/catalog" class="breadcrumb">← Назад в каталог</a>
 
     <div class="product-detail">
         <div class="product-gallery">
@@ -13,7 +13,6 @@
                              data-index="{{ loop.index0 }}"
                              alt="{{ product.name }}">
                     {% endfor %}
-
                     {% if product.images|length > 1 %}
                         <button class="gallery-arrow gallery-prev" onclick="changeImage(-1)">‹</button>
                         <button class="gallery-arrow gallery-next" onclick="changeImage(1)">›</button>
@@ -48,7 +47,9 @@
                 <p class="out-of-stock">Нет в наличии</p>
             {% endif %}
         </div>
-        <section class="reviews">
+    </div>
+
+    <section class="reviews">
         <h2>Отзывы
             {% if reviews_count %}
                 <span class="rating-summary">{{ avg_rating }} ★ ({{ reviews_count }})</span>
@@ -82,7 +83,7 @@
             {% for review in reviews %}
                 <div class="review-card">
                     <div class="review-header">
-                        <span class="review-author">{{ review.user.full_name or review.user.email }}</span>
+                        <span>{{ review.user.full_name or review.user.email }}</span>
                         <span class="review-rating">{{ review.rating }} ★</span>
                     </div>
                     <p>{{ review.text }}</p>
@@ -93,5 +94,4 @@
             <p>Пока нет отзывов.</p>
         {% endif %}
     </section>
-    </div>
 {% endblock %}

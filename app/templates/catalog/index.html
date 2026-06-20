@@ -1,37 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Каталог — Shop{% endblock %}
+{% block title %}Каталог — Эпатаж{% endblock %}
 {% block content %}
-<h1>Каталог</h1>
+    <h1>Каталог</h1>
 
-<nav class="category-nav">
-    <a href="/catalog" class="{% if not active_category %}active{% endif %}">Все</a>
-    {% for cat in categories %}
-    <a href="/catalog?category={{ cat.slug }}"
-       class="{% if active_category == cat.slug %}active{% endif %}">
-        {{ cat.name }}
-    </a>
-    {% endfor %}
-</nav>
+    <nav class="category-nav">
+        <a href="/catalog" class="{% if not active_category %}active{% endif %}">Все</a>
+        {% for cat in categories %}
+            <a href="/catalog?category={{ cat.slug }}"
+               class="{% if active_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+        {% endfor %}
+    </nav>
 
-{% if products %}
-<div class="product-grid">
-    {% for product in products %}
-    <a href="/catalog/{{ product.slug }}" class="product-card">
-        {% if product.images %}
-        <img src="/static/uploads/{{ product.images[0].path }}"
-             class="card-img" alt="{{ product.name }}">
-        {% endif %}
-        <h3>{{ product.name }}</h3>
-        <p class="product-category">{{ product.category.name }}</p>
-        <p class="product-price">{{ product.price }} ₽</p>
-        {% set total_stock = product.variants | sum(attribute="stock") %}
-        {% if total_stock == 0 %}
-        <span class="out-of-stock">Нет в наличии</span>
-        {% endif %}
-    </a>
-    {% endfor %}
-</div>
-{% else %}
-<p>Товаров пока нет.</p>
-{% endif %}
+    {% if products %}
+        <div class="product-grid">
+            {% for product in products %}
+                <a href="/catalog/{{ product.slug }}" class="product-card">
+                    {% if product.images %}
+                        <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="card-img-placeholder">Нет фото</div>
+                    {% endif %}
+                    <div class="product-card__body">
+                        <h3>{{ product.name }}</h3>
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <span class="product-price">{{ product.price }} ₽</span>
+                        {% set total_stock = product.variants | sum(attribute="stock") %}
+                        {% if total_stock == 0 %}
+                            <span class="out-of-stock">Нет в наличии</span>
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Товаров пока нет.</p>
+    {% endif %}
 {% endblock %}
