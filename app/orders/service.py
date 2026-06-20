@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 import redis.asyncio as redis
@@ -106,3 +107,35 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> list[Order]:
         .order_by(Order.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def cancel_order_stock(db: AsyncSession, order: Order) -> None:
+    """Отменяет заказ и возвращает товар его позиций на склад. Атомарно в транзакции."""
+    from sqlalchemy import text
+
+    for item in order.items:
+        # Возвращаем количество обратно на склад
+        await db.execute(
+            text("UPDATE products SET stock = stock + :qty WHERE id = :id"),
+            {"qty": item.quantity, "id": item.product_id},
+        )
+
+    order.status = "cancelled"
+    await db.commit()
+
+
+async def cancel_expired_orders(db: AsyncSession, max_age_minutes: int = 15) -> int:
+    """Находит pending-заказы старше max_age_minutes и отменяет их. Возвращает число отменённых."""
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=max_age_minutes)
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.status == "pending", Order.created_at < cutoff)
+        .options(selectinload(Order.items))
+    )
+    expired = list(result.scalars().all())
+
+    for order in expired:
+        await cancel_order_stock(db, order)
+
+    return len(expired)
