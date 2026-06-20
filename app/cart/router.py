@@ -52,15 +52,23 @@ async def cart_page(
 async def add_to_cart(
     variant_id: str = Form(...),
     quantity: int = Form(1),
+    product_slug: str = Form(""),
     guest_id: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
     r: redis.Redis = Depends(get_redis),
     user: User | None = Depends(get_current_user_optional),
 ):
     user_id, new_guest_id = get_user_id(user, guest_id)
-    await service.add_to_cart(r, db, user_id, variant_id, quantity)
+    result = await service.add_to_cart(r, db, user_id, variant_id, quantity)
 
-    response = RedirectResponse(url="/cart", status_code=303)
+    # Возвращаемся на страницу товара с отметкой об успехе/ошибке
+    if product_slug:
+        ok = "1" if result.get("ok") else "0"
+        url = f"/catalog/{product_slug}?added={ok}"
+    else:
+        url = "/cart"
+
+    response = RedirectResponse(url=url, status_code=303)
     if new_guest_id:
         response.set_cookie(GUEST_COOKIE, new_guest_id, httponly=True, samesite="lax")
     return response

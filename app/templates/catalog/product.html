@@ -27,6 +27,16 @@
             <h1>{{ product.name }}</h1>
             <p class="product-category">{{ product.category.name }}</p>
             <p class="product-price">{{ product.price }} ₽</p>
+            {% if request.query_params.get('added') == '1' %}
+                <div class="cart-notice">
+                    ✓ Товар добавлен в корзину
+                    <a href="/cart">Перейти в корзину →</a>
+                </div>
+            {% elif request.query_params.get('added') == '0' %}
+                <div class="cart-notice cart-notice--error">
+                    Не удалось добавить — возможно, размер закончился
+                </div>
+            {% endif %}
             {% if product.description %}
                 <p>{{ product.description }}</p>
             {% endif %}
@@ -41,6 +51,7 @@
                         {% endfor %}
                     </select>
                     <input type="hidden" name="quantity" value="1">
+                    <input type="hidden" name="product_slug" value="{{ product.slug }}">
                     <button type="submit" class="btn-primary">Добавить в корзину</button>
                 </form>
             {% else %}

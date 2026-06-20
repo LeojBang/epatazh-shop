@@ -334,3 +334,17 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     margin-left: 4px;
     vertical-align: top;
 }
+.cart-notice {
+    background: #eaf6f0;
+    border: 1px solid var(--success);
+    color: #14785a;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    margin: 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.cart-notice a { color: var(--green); font-weight: 600; text-decoration: none; }
+.cart-notice--error { background: #fbeaea; border-color: var(--danger); color: var(--danger); }
