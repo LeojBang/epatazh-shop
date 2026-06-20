@@ -14,8 +14,8 @@
                 <a href="/catalog">Каталог</a>
                 <a href="/cart">Корзина</a>
                 {% if user %}
-                    <span class="nav-user">{{ user.full_name or user.email }}</span>
-                    <a href="/account/orders">Мои заказы</a>
+<a href="/account" class="nav-user">{{ user.full_name or user.email }}</a>
+                <a href="/account/orders">Заказы</a>
                     <form action="/logout" method="post" class="inline-form">
                         <button type="submit" class="link-button" style="color: var(--text-on-dark);">Выйти</button>
                     </form>
