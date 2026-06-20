@@ -67,8 +67,28 @@ class ProductImageAdmin(ModelView, model=ProductImage):
     name = "Фото товара"
     name_plural = "Фото товаров"
     column_list = [ProductImage.product, ProductImage.path, ProductImage.position]
-    form_excluded_columns = [ProductImage.created_at, ProductImage.updated_at]
+    column_formatters = {ProductImage.product: lambda m, a: m.product.name if m.product else ""}
+    # path заполнится автоматически из загруженного файла — скрываем из формы
+    form_excluded_columns = [ProductImage.path, ProductImage.created_at, ProductImage.updated_at]
 
+    async def scaffold_form(self, rules=None):
+        from wtforms import FileField
+
+        form_class = await super().scaffold_form(rules)
+        # Добавляем поле загрузки файла в форму
+        form_class.upload = FileField("Файл изображения")
+        return form_class
+
+    async def on_model_change(self, data, model, is_created, request):
+        from app.admin.uploads import save_upload
+
+        upload = data.get("upload")
+        if upload:
+            filename = await save_upload(upload)
+            if filename:
+                model.path = filename
+        # убираем upload из data, чтобы sqladmin не пытался записать его в модель
+        data.pop("upload", None)
 
 class ReviewAdmin(ModelView, model=Review):
     name = "Отзыв"
