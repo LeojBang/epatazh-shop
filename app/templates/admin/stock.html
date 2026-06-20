@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Склад — Эпатаж Admin</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 2rem; background: #f7f7f7; color: #1a1a1a; }
+        a.back { color: #2563eb; text-decoration: none; }
+        h1 { margin: 0.5rem 0 1.5rem; }
+        .saved { background: #eaf6f0; border: 1px solid #1d9e75; color: #14785a; padding: 0.7rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .prod { background: #fff; border-radius: 10px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
+        .prod-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.8rem; }
+        .prod-name { font-size: 1.1rem; font-weight: 700; }
+        .prod-cat { color: #888; font-size: 0.85rem; }
+        .sizes { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .size-cell { display: flex; flex-direction: column; gap: 0.3rem; }
+        .size-cell label { font-size: 0.8rem; color: #555; font-weight: 600; }
+        .size-cell input { width: 80px; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        .size-cell input.low { border-color: #e0a800; background: #fff8e6; }
+        .size-cell input.zero { border-color: #c0392b; background: #fdecea; }
+        .savebar { position: sticky; bottom: 0; background: #f7f7f7; padding: 1rem 0; }
+        .btn { background: #0f3a2e; color: #fff; border: none; padding: 0.8rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .legend { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <a class="back" href="/admin">← В админку</a>
+    <h1>Управление складом</h1>
+
+    {% if saved %}<div class="saved">Остатки сохранены.</div>{% endif %}
+
+    <p class="legend">Жёлтым подсвечены размеры с остатком ≤ 3, красным — отсутствующие.</p>
+
+    <form method="post" action="/admin/stock">
+        {% for product in products %}
+            <div class="prod">
+                <div class="prod-head">
+                    <span class="prod-name">{{ product.name }}</span>
+                    <span class="prod-cat">{{ product.category.name if product.category else '' }}</span>
+                </div>
+                <div class="sizes">
+                    {% for v in product.variants|sort(attribute='size') %}
+                        <div class="size-cell">
+                            <label>{{ v.size }}</label>
+                            <input type="number" name="stock_{{ v.id }}" value="{{ v.stock }}" min="0"
+                                   class="{% if v.stock == 0 %}zero{% elif v.stock <= 3 %}low{% endif %}">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="savebar">
+            <button type="submit" class="btn">Сохранить всё</button>
+        </div>
+    </form>
+</body>
+</html>

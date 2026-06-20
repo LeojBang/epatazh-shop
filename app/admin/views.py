@@ -118,10 +118,16 @@ class OrderItemAdmin(ModelView, model=OrderItem):
 
 class ProductVariantAdmin(ModelView, model=ProductVariant):
     name = "Вариант товара"
-    name_plural = "Варианты товаров"
+    name_plural = "Склад (размеры)"
     column_list = [ProductVariant.product, ProductVariant.size, ProductVariant.stock]
+    column_formatters = {ProductVariant.product: lambda m, a: m.product.name if m.product else ""}
     form_excluded_columns = [ProductVariant.created_at, ProductVariant.updated_at]
-
+    # Сортировка и поиск
+    column_sortable_list = [ProductVariant.size, ProductVariant.stock]
+    column_searchable_list = [ProductVariant.size]
+    # Сразу показывать побольше записей и сортировать по товару
+    page_size = 100
+    column_default_sort = [("product_id", True)]
 
 class ProductImageAdmin(ModelView, model=ProductImage):
     name = "Фото товара"
@@ -192,3 +198,49 @@ class InfoPageAdmin(ModelView, model=InfoPage):
     column_list = [InfoPage.title, InfoPage.slug, InfoPage.footer_group, InfoPage.position, InfoPage.is_published]
     column_sortable_list = [InfoPage.footer_group, InfoPage.position]
     form_excluded_columns = [InfoPage.created_at, InfoPage.updated_at]
+
+class StockView(BaseView):
+    name = "Склад"
+
+    @expose("/stock", methods=["GET", "POST"])
+    async def stock(self, request: Request):
+        from fastapi.templating import Jinja2Templates
+        from sqlalchemy import select, text
+        from sqlalchemy.orm import selectinload
+        from app.models.catalog import Product
+
+        templates = Jinja2Templates(directory="app/templates")
+        saved = False
+
+        async with AsyncSessionLocal() as db:
+            # Сохранение: пришла форма с остатками
+            if request.method == "POST":
+                form = await request.form()
+                for key, value in form.items():
+                    # поля вида stock_<variant_id>
+                    if key.startswith("stock_"):
+                        variant_id = key[len("stock_"):]
+                        try:
+                            new_stock = int(value)
+                            if new_stock < 0:
+                                new_stock = 0
+                            await db.execute(
+                                text("UPDATE product_variants SET stock = :s WHERE id = :id"),
+                                {"s": new_stock, "id": variant_id},
+                            )
+                        except (ValueError, TypeError):
+                            continue
+                await db.commit()
+                saved = True
+
+            # Загрузка всех товаров с вариантами
+            result = await db.execute(
+                select(Product)
+                .options(selectinload(Product.variants), selectinload(Product.category))
+                .order_by(Product.name)
+            )
+            products = list(result.scalars().all())
+
+        return templates.TemplateResponse(
+            request, "admin/stock.html", {"products": products, "saved": saved}
+        )
