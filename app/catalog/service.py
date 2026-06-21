@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -45,6 +47,14 @@ async def get_product_by_slug(db: AsyncSession, slug: str) -> Product | None:
 
 
 async def get_variant(db: AsyncSession, variant_id: str) -> ProductVariant | None:
+    # Явно приводим строку к UUID. В PostgreSQL драйвер делает это сам,
+    # но явное преобразование надёжнее и работает на любой БД.
+    if isinstance(variant_id, str):
+        try:
+            variant_id = uuid.UUID(variant_id)
+        except ValueError:
+            return None  # некорректный id — варианта нет
+
     result = await db.execute(
         select(ProductVariant)
         .where(ProductVariant.id == variant_id)
