@@ -9,6 +9,9 @@ from app.models.payment import Payment
 
 # Важно: импорт настраивает SDK (account_id + secret_key) при загрузке модуля
 from app.payments import yookassa_client  # noqa: F401
+from app.core.logging_config import get_logger
+
+logger = get_logger("payments")
 
 
 async def create_payment(
@@ -43,6 +46,7 @@ async def create_payment(
 
     # 3. Сохраняем id платежа от YooKassa и его статус
     payment.external_id = yoo_payment.id
+    logger.info("Создан платёж YooKassa %s для заказа %s", yoo_payment.id, order_id)
     payment.status = yoo_payment.status
     await db.commit()
 
@@ -67,6 +71,7 @@ async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | N
         order = order_result.scalar_one_or_none()
         if order:
             order.status = "paid"
+            logger.info("Заказ %s оплачен (платёж %s)", payment.order_id, external_id)
 
     await db.commit()
     return payment

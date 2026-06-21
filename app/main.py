@@ -31,6 +31,9 @@ from app.web.router import router as web_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.pages.router import router as pages_router
+from app.core.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
 

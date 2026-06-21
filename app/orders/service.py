@@ -9,6 +9,9 @@ from sqlalchemy.orm import selectinload
 from app.cart import service as cart_service
 from app.models.catalog import Product
 from app.models.order import Order, OrderItem
+from app.core.logging_config import get_logger
+
+logger = get_logger("orders")
 
 
 class CheckoutError(Exception):
@@ -89,6 +92,8 @@ async def create_order(
     await db.refresh(order)
     await cart_service.clear_cart(r, cart_user_id)
 
+    logger.info("Создан заказ %s на сумму %s (%s позиций)", order.id, total, len(order_items))
+
     return order
 
 
@@ -136,6 +141,8 @@ async def cancel_expired_orders(db: AsyncSession, max_age_minutes: int = 15) -> 
         .options(selectinload(Order.items))
     )
     expired = list(result.scalars().all())
+    if expired:
+        logger.info("Автоотмена: отменено заказов %s", len(expired))
 
     for order in expired:
         await cancel_order_return_stock(db, order)

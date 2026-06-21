@@ -5,6 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.payments import service as payment_service
+from app.core.logging_config import get_logger
+
+logger = get_logger("webhook")
 
 router = APIRouter(tags=["payments"])
 
@@ -23,6 +26,7 @@ async def yookassa_webhook(
     # sync_payment_status сам запросит реальный статус у YooKassa.
     payment_object = body.get("object", {})
     external_id = payment_object.get("id")
+    logger.info("Webhook YooKassa: платёж %s", external_id)
     if not external_id:
         return JSONResponse({"status": "ignored"}, status_code=200)
 
