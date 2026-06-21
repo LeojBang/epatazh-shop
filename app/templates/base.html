@@ -33,7 +33,11 @@
             <div class="search-suggest" id="searchSuggest"></div>
         </div>
 
-<nav class="header-actions">
+        <nav class="header-actions">
+            <a href="/catalog" class="action-item">
+                <i class="ti ti-layout-grid" aria-hidden="true"></i>
+                <span>Каталог</span>
+            </a>
             {% if user %}
             <a href="/account/orders" class="action-item">
                 <i class="ti ti-package" aria-hidden="true"></i>
@@ -59,12 +63,12 @@
         </nav>
     </div>
 
-    <nav class="header-nav">
-        <a href="/catalog">Все товары</a>
-        <a href="/catalog?category=mma">ММА</a>
-        <a href="/catalog?category=muay-thai">Муай-тай</a>
-        <a href="/catalog?category=hockey">Хоккей</a>
-    </nav>
+        <nav class="header-nav">
+            <a href="/catalog">Все товары</a>
+            {% for cat in request.state.nav_categories %}
+                <a href="/catalog?category={{ cat.slug }}">{{ cat.name }}</a>
+            {% endfor %}
+        </nav>
 </header>
 
 <main class="container">

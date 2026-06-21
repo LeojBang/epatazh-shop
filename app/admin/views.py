@@ -53,7 +53,7 @@ class CategoryAdmin(ModelView, model=Category):
             "choices": [
                 ("", "— без иконки —"),
                 ("ti-karate", "Карате / единоборства"),
-                ("ti-boxing-glove", "Боксёрская перчатка"),
+                ("ti-flame", "Огонь / муай-тай"),
                 ("ti-ice-skating", "Коньки / хоккей"),
                 ("ti-barbell", "Штанга / зал"),
                 ("ti-run", "Бег"),
@@ -62,7 +62,6 @@ class CategoryAdmin(ModelView, model=Category):
                 ("ti-shirt", "Футболка"),
                 ("ti-jacket", "Куртка / верх"),
                 ("ti-medal", "Награда / медаль"),
-                ("ti-flame", "Огонь / хит"),
                 ("ti-star", "Звезда"),
             ],
         }
