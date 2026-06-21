@@ -20,7 +20,13 @@ async def index(
 ):
     categories = await catalog_service.get_categories(db)
     products = await catalog_service.get_products(db)
-    featured = products[:4]  # первые 4 товара для витрины
+
+    # «Популярное»: сначала товары с бейджем «Хит».
+    # Если хитов нет — показываем первые товары как запасной вариант,
+    # чтобы блок не пустовал.
+    hits = [p for p in products if p.badge and "хит" in p.badge.lower()]
+    featured = hits[:4] if hits else products[:4]
+
     return templates.TemplateResponse(
         request,
         "index.html",

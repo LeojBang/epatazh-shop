@@ -2,53 +2,42 @@
 {% block title %}Эпатаж — экипировка для единоборств{% endblock %}
 {% block content %}
 
-    <section class="hero">
-        <div class="hero__content">
-            <h1 class="hero__title">Эпатаж</h1>
-            <p class="hero__subtitle">Экипировка для муай-тай, ММА и хоккея</p>
-            <p class="hero__text">Есть такая профессия — Родину защищать. Снаряжение для тех, кто тренируется всерьёз.</p>
-            <a href="/catalog" class="btn-primary hero__btn">Перейти в каталог</a>
-        </div>
-    </section>
+<section class="hero">
+    <div class="hero__content">
+        <h1 class="hero__title">Эпатаж</h1>
+        <p class="hero__subtitle">Экипировка для муай-тай, ММА и хоккея</p>
+        <p class="hero__text">Есть такая профессия — Родину защищать. Снаряжение для тех, кто тренируется всерьёз.</p>
+        <a href="/catalog" class="btn-primary hero__btn">Перейти в каталог</a>
+    </div>
+</section>
 
-    <section class="home-section">
-        <h2>Категории</h2>
-        <div class="category-tiles">
-            {% for cat in categories %}
-                <a href="/catalog?category={{ cat.slug }}" class="category-tile category-tile--{{ cat.slug }}">
+<section class="home-section">
+    <h2>Категории</h2>
+    <div class="category-tiles">
+        {% for cat in categories %}
+        <a href="/catalog?category={{ cat.slug }}" class="category-tile category-tile--{{ cat.slug }}">
                     <span class="category-tile__icon">
                         <i class="ti {{ cat.icon or 'ti-shirt-sport' }}" aria-hidden="true"></i>
                     </span>
-                    <span class="category-tile__name">{{ cat.name }}</span>
-                    <span class="category-tile__link">Смотреть →</span>
-                </a>
-            {% endfor %}
-        </div>
-    </section>
+            <span class="category-tile__name">{{ cat.name }}</span>
+            <span class="category-tile__link">Смотреть →</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
 
-    {% if featured %}
+{% if featured %}
     <section class="home-section">
         <h2>Популярное</h2>
         <div class="product-grid">
             {% for product in featured %}
-                <a href="/catalog/{{ product.slug }}" class="product-card">
-                    {% if product.images %}
-                        <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
-                    {% else %}
-                        <div class="card-img-placeholder">Нет фото</div>
-                    {% endif %}
-                    <div class="product-card__body">
-                        <h3>{{ product.name }}</h3>
-                        <span class="product-category">{{ product.category.name }}</span>
-                        <span class="product-price">{{ product.price }} ₽</span>
-                    </div>
-                </a>
+                {% include "catalog/_product_card.html" %}
             {% endfor %}
         </div>
         <div style="text-align: center; margin-top: 1.5rem;">
             <a href="/catalog" class="btn-outline">Смотреть всё</a>
         </div>
     </section>
-    {% endif %}
+{% endif %}
 
 {% endblock %}

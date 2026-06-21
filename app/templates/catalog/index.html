@@ -14,30 +14,7 @@
     {% if products %}
         <div class="product-grid">
             {% for product in products %}
-                <a href="/catalog/{{ product.slug }}" class="product-card">
-                    <div class="card-img-wrap">
-                        {% if product.images %}
-                            <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
-                        {% else %}
-                            <div class="card-img-placeholder">Нет фото</div>
-                        {% endif %}
-                        {% set total_stock = product.variants | sum(attribute="stock") %}
-                        {% if total_stock == 0 %}
-                            <span class="badge badge--out">Нет в наличии</span>
-                        {% elif product.badge %}
-                            <span class="badge badge--hit">{{ product.badge }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="product-card__body">
-                        <h3>{{ product.name }}</h3>
-                        <span class="product-category">{{ product.category.name }}</span>
-                        <span class="product-price">{{ product.price }} ₽</span>
-                        {% set total_stock = product.variants | sum(attribute="stock") %}
-                        {% if total_stock > 0 %}
-                            <span class="card-btn"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Выбрать</span>
-                        {% endif %}
-                    </div>
-                </a>
+                {% include "catalog/_product_card.html" %}
             {% endfor %}
         </div>
     {% else %}
