@@ -76,6 +76,16 @@ class ProductAdmin(ModelView, model=Product):
     column_searchable_list = [Product.name]
     column_sortable_list = [Product.price]
     form_excluded_columns = [Product.created_at, Product.updated_at]
+    form_overrides = {"badge": SelectField}
+    form_args = {
+        "badge": {
+            "choices": [
+                ("", "— без бейджа —"),
+                ("Хит", "Хит"),
+                ("Новинка", "Новинка"),
+            ],
+        }
+    }
 
 
 class OrderAdmin(ModelView, model=Order):
