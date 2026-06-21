@@ -17,9 +17,16 @@
             <h3>Состав заказа</h3>
             {% for item in order.items %}
                 <div class="order-detail-item">
-                    <div class="order-detail-item-info">
-                        <span class="order-detail-item-name">{{ item.product_name }}</span>
-                        {% if item.size %}<span class="order-detail-item-size">Размер: {{ item.size }}</span>{% endif %}
+                    <div class="order-detail-item-left">
+                        {% if item.product_image %}
+                            <img src="/static/uploads/{{ item.product_image }}" alt="{{ item.product_name }}" class="order-item-photo">
+                        {% else %}
+                            <div class="order-item-photo order-item-photo--empty"></div>
+                        {% endif %}
+                        <div class="order-detail-item-info">
+                            <span class="order-detail-item-name">{{ item.product_name }}</span>
+                            {% if item.size %}<span class="order-detail-item-size">Размер: {{ item.size }}</span>{% endif %}
+                        </div>
                     </div>
                     <div class="order-detail-item-price">
                         <span>{{ item.quantity }} × {{ "%.2f"|format(item.price) }} ₽</span>

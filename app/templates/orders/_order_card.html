@@ -3,6 +3,20 @@
         <span>Заказ от {{ order.created_at | msk_datetime }}</span>
         <span class="order-status">{{ order.status | order_status_ru }}</span>
     </div>
+
+    <div class="order-card-photos">
+        {% for item in order.items[:4] %}
+            {% if item.product_image %}
+                <img src="/static/uploads/{{ item.product_image }}" alt="" class="order-card-photo">
+            {% else %}
+                <div class="order-card-photo order-card-photo--empty"></div>
+            {% endif %}
+        {% endfor %}
+        {% if order.items|length > 4 %}
+            <span class="order-card-more-count">+{{ order.items|length - 4 }}</span>
+        {% endif %}
+    </div>
+
     <p class="order-card-summary">
         {{ order.items|length }} {{ order.items|length | plural_ru("товар", "товара", "товаров") }} на {{ "%.2f"|format(order.total) }} ₽
     </p>

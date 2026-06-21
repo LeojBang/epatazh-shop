@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.cart import service as cart_service
+from app.models import Product
 from app.models.order import Order, OrderItem
 from app.core.logging_config import get_logger
 
@@ -38,7 +39,7 @@ async def create_order(
     result = await db.execute(
         select(ProductVariant)
         .where(ProductVariant.id.in_(list(cart.keys())))
-        .options(selectinload(ProductVariant.product))
+        .options(selectinload(ProductVariant.product).selectinload(Product.images))
     )
     variants = {str(v.id): v for v in result.scalars().all()}
 
@@ -65,11 +66,13 @@ async def create_order(
 
         subtotal = variant.product.price * qty
         total += subtotal
+        image_path = variant.product.images[0].path if variant.product.images else None
         order_items.append(
             OrderItem(
                 product_id=variant.product.id,
                 variant_id=variant.id,
                 product_name=variant.product.name,
+                product_image=image_path,
                 size=variant.size,
                 price=variant.product.price,
                 quantity=qty,

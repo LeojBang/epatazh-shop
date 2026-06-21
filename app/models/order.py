@@ -53,6 +53,7 @@ class OrderItem(UUIDMixin, TimeStampMixin, Base):
 
     # снимок данных товара на момент покупки
     product_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    product_image: Mapped[str | None] = mapped_column(String(255), nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
