@@ -49,5 +49,12 @@
         </div>
     </div>
 
-    <p style="margin-top: 1.5rem;"><a href="/account/orders" class="breadcrumb">→ Мои заказы</a></p>
+
+<div style="margin-top: 1.5rem; display: flex; gap: 1.5rem; align-items: center;">
+        <a href="/account/orders" class="breadcrumb">→ Мои заказы</a>
+        <form action="/logout" method="post" class="inline-form">
+            <button type="submit" class="btn-outline">Выйти из аккаунта</button>
+        </form>
+    </div>
+
 {% endblock %}

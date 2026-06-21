@@ -8,110 +8,105 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="site-header__main">
-            <a class="logo" href="/">
-                <svg class="logo-elephant" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-                    <ellipse cx="30" cy="38" rx="16" ry="13" fill="currentColor"/>
-                    <path d="M16 40 Q10 40 10 32 Q10 26 15 27 Q14 34 18 36 Z" fill="currentColor"/>
-                    <rect x="20" y="48" width="4" height="8" rx="2" fill="currentColor"/>
-                    <rect x="28" y="49" width="4" height="7" rx="2" fill="currentColor"/>
-                    <rect x="36" y="49" width="4" height="7" rx="2" fill="currentColor"/>
-                    <path d="M44 38 Q52 36 50 26 Q49 22 46 24 Q48 30 44 33 Z" fill="currentColor"/>
-                    <circle cx="24" cy="34" r="2" fill="var(--green)"/>
-                </svg>
-                <span class="logo-text">Эпатаж</span>
-            </a>
+<header class="site-header">
+    <div class="site-header__main">
+        <a class="logo" href="/">
+            <svg class="logo-elephant" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+                <ellipse cx="30" cy="38" rx="16" ry="13" fill="currentColor"/>
+                <path d="M16 40 Q10 40 10 32 Q10 26 15 27 Q14 34 18 36 Z" fill="currentColor"/>
+                <rect x="20" y="48" width="4" height="8" rx="2" fill="currentColor"/>
+                <rect x="28" y="49" width="4" height="7" rx="2" fill="currentColor"/>
+                <rect x="36" y="49" width="4" height="7" rx="2" fill="currentColor"/>
+                <path d="M44 38 Q52 36 50 26 Q49 22 46 24 Q48 30 44 33 Z" fill="currentColor"/>
+                <circle cx="24" cy="34" r="2" fill="var(--green)"/>
+            </svg>
+            <span class="logo-text">Эпатаж</span>
+        </a>
 
-            <div class="search-wrap">
-                <form class="header-search" action="/search" method="get">
-                    <i class="ti ti-search" aria-hidden="true"></i>
-                    <input type="text" name="q" id="searchInput" autocomplete="off"
-                           placeholder="Поиск по каталогу…"
-                           value="{{ request.query_params.get('q', '') }}">
-                </form>
-                <div class="search-suggest" id="searchSuggest"></div>
-            </div>
-
-            <nav class="header-actions">
-                {% if user %}
-                    <a href="/account" class="action-item">
-                        <i class="ti ti-user" aria-hidden="true"></i>
-                        <span>Профиль</span>
-                    </a>
-                {% else %}
-                    <a href="/login" class="action-item">
-                        <i class="ti ti-user" aria-hidden="true"></i>
-                        <span>Войти</span>
-                    </a>
-                {% endif %}
-                <a href="/cart" class="action-item action-cart">
-                    <i class="ti ti-shopping-cart" aria-hidden="true"></i>
-                    <span>Корзина</span>
-                    {% if request.state.cart_count %}
-                        <span class="cart-badge">{{ request.state.cart_count }}</span>
-                    {% endif %}
-                </a>
-            </nav>
+        <div class="search-wrap">
+            <form class="header-search" action="/search" method="get">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" name="q" id="searchInput" autocomplete="off"
+                       placeholder="Поиск по каталогу…"
+                       value="{{ request.query_params.get('q', '') }}">
+            </form>
+            <div class="search-suggest" id="searchSuggest"></div>
         </div>
 
-        <nav class="header-nav">
-            <a href="/catalog">Все товары</a>
-            <a href="/catalog?category=mma">ММА</a>
-            <a href="/catalog?category=muay-thai">Муай-тай</a>
-            <a href="/catalog?category=hockey">Хоккей</a>
+<nav class="header-actions">
             {% if user %}
-                <a href="/account/orders">Мои заказы</a>
-                <form action="/logout" method="post" class="inline-form" style="margin-left:auto;">
-                    <button type="submit" class="nav-logout">Выйти</button>
-                </form>
+            <a href="/account/orders" class="action-item">
+                <i class="ti ti-package" aria-hidden="true"></i>
+                <span>Заказы</span>
+            </a>
+            <a href="/account" class="action-item">
+                <i class="ti ti-user" aria-hidden="true"></i>
+                <span>Профиль</span>
+            </a>
+            {% else %}
+            <a href="/login" class="action-item">
+                <i class="ti ti-user" aria-hidden="true"></i>
+                <span>Войти</span>
+            </a>
             {% endif %}
+            <a href="/cart" class="action-item action-cart">
+                <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+                <span>Корзина</span>
+                {% if request.state.cart_count %}
+                <span class="cart-badge">{{ request.state.cart_count }}</span>
+                {% endif %}
+            </a>
         </nav>
-    </header>
+    </div>
 
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
+    <nav class="header-nav">
+        <a href="/catalog">Все товары</a>
+        <a href="/catalog?category=mma">ММА</a>
+        <a href="/catalog?category=muay-thai">Муай-тай</a>
+        <a href="/catalog?category=hockey">Хоккей</a>
+    </nav>
+</header>
 
-    <footer class="site-footer">
-        <div class="footer__cols">
-            <div class="footer__col">
-                <h4>Информация</h4>
-                {% for p in request.state.footer_pages.information %}
-                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-                {% endfor %}
-                {% for p in request.state.footer_pages.information %}
-                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-                {% endfor %}
-                <a href="/track">Отследить заказ</a>
-            </div>
-            <div class="footer__col">
-                <h4>О компании</h4>
-                {% for p in request.state.footer_pages.company %}
-                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-                {% endfor %}
-            </div>
-            <div class="footer__col">
-                <h4>Документы</h4>
-                {% for p in request.state.footer_pages.legal %}
-                    <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-                {% endfor %}
-            </div>
-            <div class="footer__col">
-                <h4>Мы в соцсетях</h4>
-                <div class="footer__social">
-                    <a href="#" aria-label="ВКонтакте"><i class="ti ti-brand-vk" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="Telegram"><i class="ti ti-brand-telegram" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="YouTube"><i class="ti ti-brand-youtube" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="WhatsApp"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></a>
-                </div>
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="footer__cols">
+        <div class="footer__col">
+            <h4>Информация</h4>
+            {% for p in request.state.footer_pages.information %}
+            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+            {% endfor %}
+            <a href="/track">Отследить заказ</a>
+        </div>
+        <div class="footer__col">
+            <h4>О компании</h4>
+            {% for p in request.state.footer_pages.company %}
+            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+            {% endfor %}
+        </div>
+        <div class="footer__col">
+            <h4>Документы</h4>
+            {% for p in request.state.footer_pages.legal %}
+            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
+            {% endfor %}
+        </div>
+        <div class="footer__col">
+            <h4>Мы в соцсетях</h4>
+            <div class="footer__social">
+                <a href="#" aria-label="ВКонтакте"><i class="ti ti-brand-vk" aria-hidden="true"></i></a>
+                <a href="#" aria-label="Telegram"><i class="ti ti-brand-telegram" aria-hidden="true"></i></a>
+                <a href="#" aria-label="YouTube"><i class="ti ti-brand-youtube" aria-hidden="true"></i></a>
+                <a href="#" aria-label="WhatsApp"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></a>
             </div>
         </div>
-        <div class="footer__bottom">
-            <p>© 2026 Эпатаж — экипировка для единоборств. Все права защищены.</p>
-        </div>
-    </footer>
+    </div>
+    <div class="footer__bottom">
+        <p>© 2026 Эпатаж — экипировка для единоборств. Все права защищены.</p>
+    </div>
+</footer>
 
-    <script src="/static/js/app.js"></script>
+<script src="/static/js/app.js"></script>
 </body>
 </html>
