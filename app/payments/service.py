@@ -4,7 +4,6 @@ from yookassa import Payment as YooPayment
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.payment import Payment
 
 # Важно: импорт настраивает SDK (account_id + secret_key) при загрузке модуля
@@ -67,7 +66,9 @@ async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | N
     if yoo_payment.status == "succeeded":
         from app.models.order import Order
 
-        order_result = await db.execute(select(Order).where(Order.id == payment.order_id))
+        order_result = await db.execute(
+            select(Order).where(Order.id == payment.order_id)
+        )
         order = order_result.scalar_one_or_none()
         if order:
             order.status = "paid"

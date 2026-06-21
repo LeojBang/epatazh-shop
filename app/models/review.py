@@ -9,9 +9,13 @@ from app.models.base import Base, TimeStampMixin, UUIDMixin
 class Review(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "reviews"
     # Один пользователь — один отзыв на товар
-    __table_args__ = (UniqueConstraint("user_id", "product_id", name="uq_review_user_product"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "product_id", name="uq_review_user_product"),
+    )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
     product_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("products.id"), nullable=False, index=True
     )

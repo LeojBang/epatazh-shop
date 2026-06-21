@@ -38,7 +38,9 @@ async def get_summary(db: AsyncSession, days: int = 30) -> dict:
     }
 
 
-async def get_top_products(db: AsyncSession, days: int = 30, limit: int = 10) -> list[dict]:
+async def get_top_products(
+    db: AsyncSession, days: int = 30, limit: int = 10
+) -> list[dict]:
     """Топ товаров по количеству проданных штук (по оплаченным заказам)."""
     since = datetime.now(timezone.utc) - timedelta(days=days)
 

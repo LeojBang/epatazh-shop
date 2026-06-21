@@ -7,7 +7,9 @@ from app.models.base import Base, TimeStampMixin, UUIDMixin
 class InfoPage(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "info_pages"
 
-    slug: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(
+        String(100), unique=True, index=True, nullable=False
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
     # колонка футера: information / company / cooperation

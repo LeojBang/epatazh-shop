@@ -6,7 +6,6 @@ from app.core.redis import redis_pool
 import redis.asyncio as redis_lib
 from fastapi import Request, status
 from fastapi.responses import RedirectResponse, JSONResponse
-from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.admin.auth import AdminAuth
@@ -18,7 +17,10 @@ from app.admin.views import (
     ProductVariantAdmin,
     ProductImageAdmin,
     ReviewAdmin,
-    UserAdmin, DashboardView, InfoPageAdmin, StockView,
+    UserAdmin,
+    DashboardView,
+    InfoPageAdmin,
+    StockView,
 )
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
@@ -32,10 +34,73 @@ from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.pages.router import router as pages_router
 from app.core.logging_config import setup_logging
+from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
+from starlette.responses import JSONResponse as StarletteJSON
 
 setup_logging()
 
 app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
+
+
+class CSRFMiddleware(BaseHTTPMiddleware):
+    # Пути, которые НЕ проверяем (webhook от YooKassa — он внешний, у него нет нашей cookie)
+    EXEMPT_PREFIXES = ("/payments/webhook", "/admin")
+
+    async def dispatch(self, request, call_next):
+        cookie_token = request.cookies.get(CSRF_COOKIE)
+        is_new = False
+        if not cookie_token:
+            cookie_token = generate_csrf_token()
+            is_new = True
+        request.state.csrf_token = cookie_token
+
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            path = request.url.path
+            exempt = any(path.startswith(p) for p in self.EXEMPT_PREFIXES)
+            if not exempt:
+                # Читаем тело и сохраняем, чтобы прочитать заново после проверки
+                body = await request.body()
+
+                def make_receive(data):
+                    async def receive():
+                        return {
+                            "type": "http.request",
+                            "body": data,
+                            "more_body": False,
+                        }
+
+                    return receive
+
+                # Возвращаем тело для парсинга формы
+                request._receive = make_receive(body)
+                form = await request.form()
+                form_token = form.get("csrf_token")
+                if not validate_csrf(request.cookies.get(CSRF_COOKIE), form_token):
+                    return StarletteJSON(
+                        {
+                            "detail": "Ошибка безопасности. Обновите страницу и попробуйте снова."
+                        },
+                        status_code=403,
+                    )
+
+                # Возвращаем тело снова — теперь для роута
+                request._receive = make_receive(body)
+
+        response = await call_next(request)
+
+        if is_new:
+            response.set_cookie(
+                CSRF_COOKIE,
+                cookie_token,
+                httponly=False,
+                samesite="lax",
+                max_age=60 * 60 * 24 * 7,
+            )
+
+        return response
+
+
+app.add_middleware(CSRFMiddleware)
 
 
 class CartCountMiddleware(BaseHTTPMiddleware):
@@ -58,6 +123,7 @@ class CartCountMiddleware(BaseHTTPMiddleware):
                 if payload and payload.get("type") == "access":
                     from app.core.database import AsyncSessionLocal
                     from app.users.service import get_user_by_email
+
                     async with AsyncSessionLocal() as db:
                         user = await get_user_by_email(db, payload["sub"])
                         if user:
@@ -83,7 +149,7 @@ class CartCountMiddleware(BaseHTTPMiddleware):
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
                     select(InfoPage)
-                    .where(InfoPage.is_published == True)
+                    .where(InfoPage.is_published)
                     .order_by(InfoPage.position)
                 )
                 pages = result.scalars().all()
@@ -113,6 +179,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         accept = request.headers.get("accept", "")
         if "text/html" in accept:
             from app.templates_env import templates
+
             return templates.TemplateResponse(
                 request, "errors/404.html", {}, status_code=404
             )
@@ -135,7 +202,9 @@ app.include_router(pages_router)
 app.include_router(reviews_router)
 
 # --- Админка ---
-admin = Admin(app, engine, authentication_backend=AdminAuth(secret_key=settings.SECRET_KEY))
+admin = Admin(
+    app, engine, authentication_backend=AdminAuth(secret_key=settings.SECRET_KEY)
+)
 admin.add_view(UserAdmin)
 admin.add_view(CategoryAdmin)
 admin.add_view(ProductAdmin)

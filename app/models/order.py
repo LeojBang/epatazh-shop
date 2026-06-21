@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.payment import Payment
+
 import uuid
 from decimal import Decimal
 
@@ -38,7 +43,9 @@ class OrderItem(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "order_items"
 
     order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False)
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("products.id"), nullable=False
+    )
     variant_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("product_variants.id"), nullable=True
     )

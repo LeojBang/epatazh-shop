@@ -1,4 +1,3 @@
-import redis.asyncio as redis
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +13,8 @@ router = APIRouter(tags=["payments"])
 
 @router.post("/payments/webhook")
 async def yookassa_webhook(
-        request: Request,
-        db: AsyncSession = Depends(get_db),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
 ):
     try:
         body = await request.json()

@@ -15,26 +15,31 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/catalog", response_class=HTMLResponse)
 async def catalog_page(
-        request: Request,
-        category: str | None = None,
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    category: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     categories = await service.get_categories(db)
     products = await service.get_products(db, category_slug=category)
     return templates.TemplateResponse(
         request,
         "catalog/index.html",
-        {"categories": categories, "products": products, "active_category": category, "user": user},
+        {
+            "categories": categories,
+            "products": products,
+            "active_category": category,
+            "user": user,
+        },
     )
 
 
 @router.get("/catalog/{slug}", response_class=HTMLResponse)
 async def product_page(
-        request: Request,
-        slug: str,
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     product = await service.get_product_by_slug(db, slug)
     if not product:
@@ -43,14 +48,20 @@ async def product_page(
     from app.reviews import service as review_service
 
     reviews = await review_service.get_approved_reviews(db, str(product.id))
-    avg_rating, reviews_count = await review_service.get_rating_summary(db, str(product.id))
+    avg_rating, reviews_count = await review_service.get_rating_summary(
+        db, str(product.id)
+    )
 
     # Может ли текущий пользователь оставить отзыв:
     # залогинен, купил товар, ещё не оставлял отзыв
     can_review = False
     if user:
-        purchased = await review_service.has_purchased(db, str(user.id), str(product.id))
-        existing = await review_service.get_existing_review(db, str(user.id), str(product.id))
+        purchased = await review_service.has_purchased(
+            db, str(user.id), str(product.id)
+        )
+        existing = await review_service.get_existing_review(
+            db, str(user.id), str(product.id)
+        )
         can_review = purchased and existing is None
 
     return templates.TemplateResponse(
@@ -69,10 +80,10 @@ async def product_page(
 
 @router.get("/search", response_class=HTMLResponse)
 async def search(
-        request: Request,
-        q: str = "",
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    q: str = "",
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     products = await service.search_products(db, q.strip()) if q.strip() else []
     categories = await service.get_categories(db)
@@ -85,8 +96,8 @@ async def search(
 
 @router.get("/api/search-suggest")
 async def search_suggest(
-        q: str = "",
-        db: AsyncSession = Depends(get_db),
+    q: str = "",
+    db: AsyncSession = Depends(get_db),
 ):
     query = q.strip()
     if len(query) < 2:
@@ -95,11 +106,13 @@ async def search_suggest(
     products = await service.search_products(db, query)
     results = []
     for p in products[:6]:  # не больше 6 подсказок
-        results.append({
-            "name": p.name,
-            "slug": p.slug,
-            "price": f"{p.price:.0f}",
-            "category": p.category.name if p.category else "",
-            "image": f"/static/uploads/{p.images[0].path}" if p.images else None,
-        })
+        results.append(
+            {
+                "name": p.name,
+                "slug": p.slug,
+                "price": f"{p.price:.0f}",
+                "category": p.category.name if p.category else "",
+                "image": f"/static/uploads/{p.images[0].path}" if p.images else None,
+            }
+        )
     return JSONResponse({"results": results})

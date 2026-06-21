@@ -21,7 +21,7 @@ async def info_page(
     user: User | None = Depends(get_current_user_optional),
 ):
     result = await db.execute(
-        select(InfoPage).where(InfoPage.slug == slug, InfoPage.is_published == True)
+        select(InfoPage).where(InfoPage.slug == slug, InfoPage.is_published)
     )
     page = result.scalar_one_or_none()
     if not page:

@@ -6,4 +6,16 @@ from app.models.payment import Payment
 from app.models.review import Review
 from app.models.page import InfoPage
 
-__all__ = ["Base", "User", "Category", "Product", "ProductVariant", "ProductImage", "Order", "OrderItem", "Payment", "Review", "InfoPage"]
+__all__ = [
+    "Base",
+    "User",
+    "Category",
+    "Product",
+    "ProductVariant",
+    "ProductImage",
+    "Order",
+    "OrderItem",
+    "Payment",
+    "Review",
+    "InfoPage",
+]

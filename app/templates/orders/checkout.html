@@ -23,6 +23,7 @@
 
     <div class="auth-card" style="margin: 0;">
         <form method="post" action="/checkout" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <label for="full_name">ФИО</label>
             <input type="text" id="full_name" name="full_name" value="{{ user.full_name if user else '' }}" required>
             <label for="email">Email</label>

@@ -27,7 +27,13 @@ def _msk(value):
 class UserAdmin(ModelView, model=User):
     name = "Пользователь"
     name_plural = "Пользователи"
-    column_list = [User.email, User.full_name, User.is_active, User.is_superuser, User.created_at]
+    column_list = [
+        User.email,
+        User.full_name,
+        User.is_active,
+        User.is_superuser,
+        User.created_at,
+    ]
     column_searchable_list = [User.email]
     column_sortable_list = [User.created_at]
     form_excluded_columns = [User.hashed_password, User.created_at, User.updated_at]
@@ -38,13 +44,23 @@ class CategoryAdmin(ModelView, model=Category):
     name = "Категория"
     name_plural = "Категории"
     column_list = [Category.name, Category.slug]
-    form_excluded_columns = [Category.products, Category.created_at, Category.updated_at]
+    form_excluded_columns = [
+        Category.products,
+        Category.created_at,
+        Category.updated_at,
+    ]
 
 
 class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
-    column_list = [Product.name, Product.price, Product.badge, Product.is_active, Product.category]
+    column_list = [
+        Product.name,
+        Product.price,
+        Product.badge,
+        Product.is_active,
+        Product.category,
+    ]
     column_searchable_list = [Product.name]
     column_sortable_list = [Product.price]
     form_excluded_columns = [Product.created_at, Product.updated_at]
@@ -60,8 +76,11 @@ class OrderAdmin(ModelView, model=Order):
     can_edit = True
     column_formatters = {
         Order.status: lambda m, a: {
-            "new": "Новый", "pending": "Ожидает оплаты", "paid": "Оплачен",
-            "cancelled": "Отменён", "shipped": "Отправлен",
+            "new": "Новый",
+            "pending": "Ожидает оплаты",
+            "paid": "Оплачен",
+            "cancelled": "Отменён",
+            "shipped": "Отправлен",
         }.get(m.status, m.status),
         Order.created_at: lambda m, a: _msk(m.created_at),
     }
@@ -90,19 +109,23 @@ class OrderAdmin(ModelView, model=Order):
             from app.models.order import Order
             from sqlalchemy.orm import selectinload
 
-            session = request.state.session if hasattr(request.state, "session") else None
             # Берём позиции заказа и возвращаем остатки
             from app.core.database import AsyncSessionLocal
+
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
-                    select(Order).where(Order.id == model.id).options(selectinload(Order.items))
+                    select(Order)
+                    .where(Order.id == model.id)
+                    .options(selectinload(Order.items))
                 )
                 order = result.scalar_one_or_none()
                 if order:
                     for item in order.items:
                         if item.variant_id:
                             await db.execute(
-                                text("UPDATE product_variants SET stock = stock + :qty WHERE id = :id"),
+                                text(
+                                    "UPDATE product_variants SET stock = stock + :qty WHERE id = :id"
+                                ),
                                 {"qty": item.quantity, "id": item.variant_id},
                             )
                     await db.commit()
@@ -120,7 +143,9 @@ class ProductVariantAdmin(ModelView, model=ProductVariant):
     name = "Вариант товара"
     name_plural = "Склад (размеры)"
     column_list = [ProductVariant.product, ProductVariant.size, ProductVariant.stock]
-    column_formatters = {ProductVariant.product: lambda m, a: m.product.name if m.product else ""}
+    column_formatters = {
+        ProductVariant.product: lambda m, a: m.product.name if m.product else ""
+    }
     form_excluded_columns = [ProductVariant.created_at, ProductVariant.updated_at]
     # Сортировка и поиск
     column_sortable_list = [ProductVariant.size, ProductVariant.stock]
@@ -129,13 +154,20 @@ class ProductVariantAdmin(ModelView, model=ProductVariant):
     page_size = 100
     column_default_sort = [("product_id", True)]
 
+
 class ProductImageAdmin(ModelView, model=ProductImage):
     name = "Фото товара"
     name_plural = "Фото товаров"
     column_list = [ProductImage.product, ProductImage.path, ProductImage.position]
-    column_formatters = {ProductImage.product: lambda m, a: m.product.name if m.product else ""}
+    column_formatters = {
+        ProductImage.product: lambda m, a: m.product.name if m.product else ""
+    }
     # path заполнится автоматически из загруженного файла — скрываем из формы
-    form_excluded_columns = [ProductImage.path, ProductImage.created_at, ProductImage.updated_at]
+    form_excluded_columns = [
+        ProductImage.path,
+        ProductImage.created_at,
+        ProductImage.updated_at,
+    ]
 
     async def scaffold_form(self, rules=None):
         from wtforms import FileField
@@ -163,7 +195,9 @@ class ReviewAdmin(ModelView, model=Review):
     column_list = [Review.product, Review.rating, Review.is_approved, Review.created_at]
     column_sortable_list = [Review.created_at, Review.is_approved]
     form_excluded_columns = [Review.created_at, Review.updated_at]
-    column_formatters = {Review.product: lambda m, a: m.product.name if m.product else ""}
+    column_formatters = {
+        Review.product: lambda m, a: m.product.name if m.product else ""
+    }
 
 
 class DashboardView(BaseView):
@@ -195,9 +229,16 @@ class DashboardView(BaseView):
 class InfoPageAdmin(ModelView, model=InfoPage):
     name = "Страница"
     name_plural = "Страницы"
-    column_list = [InfoPage.title, InfoPage.slug, InfoPage.footer_group, InfoPage.position, InfoPage.is_published]
+    column_list = [
+        InfoPage.title,
+        InfoPage.slug,
+        InfoPage.footer_group,
+        InfoPage.position,
+        InfoPage.is_published,
+    ]
     column_sortable_list = [InfoPage.footer_group, InfoPage.position]
     form_excluded_columns = [InfoPage.created_at, InfoPage.updated_at]
+
 
 class StockView(BaseView):
     name = "Склад"
@@ -219,13 +260,15 @@ class StockView(BaseView):
                 for key, value in form.items():
                     # поля вида stock_<variant_id>
                     if key.startswith("stock_"):
-                        variant_id = key[len("stock_"):]
+                        variant_id = key[len("stock_") :]
                         try:
                             new_stock = int(value)
                             if new_stock < 0:
                                 new_stock = 0
                             await db.execute(
-                                text("UPDATE product_variants SET stock = :s WHERE id = :id"),
+                                text(
+                                    "UPDATE product_variants SET stock = :s WHERE id = :id"
+                                ),
                                 {"s": new_stock, "id": variant_id},
                             )
                         except (ValueError, TypeError):

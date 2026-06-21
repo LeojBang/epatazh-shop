@@ -13,6 +13,7 @@
             {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
 
             <form method="post" action="/account" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <label for="full_name">Имя</label>
                 <input type="text" id="full_name" name="full_name" value="{{ user.full_name or '' }}">
 
@@ -38,6 +39,7 @@
             {% if password_error %}<p class="form-error">{{ password_error }}</p>{% endif %}
 
             <form method="post" action="/account/password" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <label for="current_password">Текущий пароль</label>
                 <input type="password" id="current_password" name="current_password" required>
 
@@ -53,6 +55,7 @@
 <div style="margin-top: 1.5rem; display: flex; gap: 1.5rem; align-items: center;">
         <a href="/account/orders" class="breadcrumb">→ Мои заказы</a>
         <form action="/logout" method="post" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="btn-outline">Выйти из аккаунта</button>
         </form>
     </div>

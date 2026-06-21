@@ -1,3 +1,5 @@
+from datetime import timezone, timedelta
+
 ORDER_STATUS_RU = {
     "new": "Новый",
     "pending": "Ожидает оплаты",
@@ -6,13 +8,11 @@ ORDER_STATUS_RU = {
     "shipped": "Отправлен",
 }
 
+MSK = timezone(timedelta(hours=3))
+
 
 def order_status_ru(status: str) -> str:
     return ORDER_STATUS_RU.get(status, status)
-
-from datetime import timezone, timedelta
-
-MSK = timezone(timedelta(hours=3))
 
 
 def msk_datetime(value, fmt: str = "%d.%m.%Y %H:%M") -> str:

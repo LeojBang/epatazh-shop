@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Корзина — Shop{% endblock %}
-{% block content %}
+{% block title %}Корзина — Эпатаж{% endblock %}
+ {% block content %}
     <h1>Корзина</h1>
 
     {% if items %}
@@ -23,6 +23,7 @@
                     <td>{{ item.product.price }} ₽</td>
                     <td>
                         <form method="post" action="/cart/update" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}"
                                    min="1" max="{{ item.variant.stock }}"
@@ -32,6 +33,7 @@
                     <td>{{ "%.2f"|format(item.subtotal) }} ₽</td>
                     <td>
                         <form method="post" action="/cart/remove" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
                             <button type="submit" class="link-button">Удалить</button>
                         </form>

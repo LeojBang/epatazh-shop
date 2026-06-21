@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.cart import service as cart_service
-from app.models.catalog import Product
 from app.models.order import Order, OrderItem
 from app.core.logging_config import get_logger
 
@@ -92,16 +91,16 @@ async def create_order(
     await db.refresh(order)
     await cart_service.clear_cart(r, cart_user_id)
 
-    logger.info("Создан заказ %s на сумму %s (%s позиций)", order.id, total, len(order_items))
+    logger.info(
+        "Создан заказ %s на сумму %s (%s позиций)", order.id, total, len(order_items)
+    )
 
     return order
 
 
 async def get_order(db: AsyncSession, order_id: str) -> Order | None:
     result = await db.execute(
-        select(Order)
-        .where(Order.id == order_id)
-        .options(selectinload(Order.items))
+        select(Order).where(Order.id == order_id).options(selectinload(Order.items))
     )
     return result.scalar_one_or_none()
 

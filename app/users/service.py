@@ -31,13 +31,13 @@ async def authenticate_user(db: AsyncSession, email: str, password: str) -> User
 
 
 async def update_profile(
-        db: AsyncSession,
-        user: User,
-        *,
-        full_name: str | None,
-        email: str,
-        phone: str | None,
-        address: str | None,
+    db: AsyncSession,
+    user: User,
+    *,
+    full_name: str | None,
+    email: str,
+    phone: str | None,
+    address: str | None,
 ) -> tuple[User | None, str | None]:
     """Обновляет профиль. Возвращает (user, error)."""
     # Если email меняется — проверяем, что он не занят другим пользователем
@@ -56,10 +56,10 @@ async def update_profile(
 
 
 async def change_password(
-        db: AsyncSession,
-        user: User,
-        current_password: str,
-        new_password: str,
+    db: AsyncSession,
+    user: User,
+    current_password: str,
+    new_password: str,
 ) -> str | None:
     """Меняет пароль. Возвращает текст ошибки или None при успехе."""
     from app.core.security import verify_password, hash_password

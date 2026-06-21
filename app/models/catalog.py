@@ -11,7 +11,9 @@ class Category(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "categories"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
 
     products: Mapped[list["Product"]] = relationship(back_populates="category")
 
@@ -22,9 +24,13 @@ class Category(UUIDMixin, TimeStampMixin, Base):
 class Product(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "products"
 
-    category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("categories.id"), nullable=False)
+    category_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("categories.id"), nullable=False
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     badge: Mapped[str | None] = mapped_column(String(32), nullable=True)
@@ -35,7 +41,9 @@ class Product(UUIDMixin, TimeStampMixin, Base):
         back_populates="product", cascade="all, delete-orphan"
     )
     images: Mapped[list["ProductImage"]] = relationship(
-        back_populates="product", cascade="all, delete-orphan", order_by="ProductImage.position"
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ProductImage.position",
     )
 
     def __str__(self) -> str:
@@ -45,7 +53,9 @@ class Product(UUIDMixin, TimeStampMixin, Base):
 class ProductVariant(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "product_variants"
 
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("products.id"), nullable=False
+    )
     size: Mapped[str] = mapped_column(String(32), nullable=False)
     stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
@@ -54,10 +64,13 @@ class ProductVariant(UUIDMixin, TimeStampMixin, Base):
     def __str__(self) -> str:
         return f"Размер {self.size}"
 
+
 class ProductImage(UUIDMixin, TimeStampMixin, Base):
     __tablename__ = "product_images"
 
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("products.id"), nullable=False
+    )
     path: Mapped[str] = mapped_column(String(512), nullable=False)
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 

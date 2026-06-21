@@ -70,7 +70,7 @@ async def get_approved_reviews(db: AsyncSession, product_id: str) -> list[Review
     """Одобренные отзывы товара, для показа на странице."""
     result = await db.execute(
         select(Review)
-        .where(Review.product_id == product_id, Review.is_approved == True)
+        .where(Review.product_id == product_id, Review.is_approved)
         .options(selectinload(Review.user))
         .order_by(Review.created_at.desc())
     )
@@ -81,7 +81,7 @@ async def get_rating_summary(db: AsyncSession, product_id: str) -> tuple[float, 
     """Средняя оценка и количество одобренных отзывов."""
     result = await db.execute(
         select(func.avg(Review.rating), func.count(Review.id)).where(
-            Review.product_id == product_id, Review.is_approved == True
+            Review.product_id == product_id, Review.is_approved
         )
     )
     avg, count = result.one()

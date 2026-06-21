@@ -44,6 +44,7 @@
             {% set available = product.variants | selectattr("stock", "gt", 0) | list %}
             {% if available %}
                 <form method="post" action="/cart/add" class="add-form">
+                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                     <label for="variant_id">Размер</label>
                     <select name="variant_id" id="variant_id" required>
                         {% for variant in available %}
@@ -76,6 +77,7 @@
 
         {% if can_review %}
             <form method="post" action="/catalog/{{ product.slug }}/review" class="review-form">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <label for="rating">Оценка</label>
                 <select name="rating" id="rating" required>
                     <option value="5">5 — отлично</option>

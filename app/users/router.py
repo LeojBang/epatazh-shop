@@ -34,11 +34,11 @@ async def register_form(request: Request):
 
 @router.post("/register")
 async def register(
-        request: Request,
-        email: str = Form(...),
-        password: str = Form(...),
-        full_name: str = Form(""),
-        db: AsyncSession = Depends(get_db),
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    full_name: str = Form(""),
+    db: AsyncSession = Depends(get_db),
 ):
     existing = await service.get_user_by_email(db, email)
     if existing:
@@ -65,10 +65,10 @@ async def login_form(request: Request):
 
 @router.post("/login")
 async def login(
-        request: Request,
-        email: str = Form(...),
-        password: str = Form(...),
-        db: AsyncSession = Depends(get_db),
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    db: AsyncSession = Depends(get_db),
 ):
     user = await service.authenticate_user(db, email, password)
     if not user:
@@ -94,34 +94,37 @@ async def logout():
 
 @router.get("/account", response_class=HTMLResponse)
 async def account_page(
-        request: Request,
-        user: User = Depends(get_current_user),
+    request: Request,
+    user: User = Depends(get_current_user),
 ):
     return templates.TemplateResponse(request, "account/profile.html", {"user": user})
 
 
 @router.post("/account")
 async def update_account(
-        request: Request,
-        full_name: str = Form(""),
-        email: str = Form(...),
-        phone: str = Form(""),
-        address: str = Form(""),
-        db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user),
+    request: Request,
+    full_name: str = Form(""),
+    email: str = Form(...),
+    phone: str = Form(""),
+    address: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     updated, error = await service.update_profile(
         db, user, full_name=full_name, email=email, phone=phone, address=address
     )
     if error:
         return templates.TemplateResponse(
-            request, "account/profile.html",
-            {"user": user, "error": error}, status_code=400,
+            request,
+            "account/profile.html",
+            {"user": user, "error": error},
+            status_code=400,
         )
 
     # Если email сменился, старый JWT (с прежним email в sub) станет невалидным —
     # перевыпускаем токен с новым email
     from app.core.security import create_access_token
+
     token = create_access_token(subject=updated.email)
     response = RedirectResponse(url="/account?saved=1", status_code=303)
     _set_auth_cookie(response, token)
@@ -130,16 +133,18 @@ async def update_account(
 
 @router.post("/account/password")
 async def update_password(
-        request: Request,
-        current_password: str = Form(...),
-        new_password: str = Form(...),
-        db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user),
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     error = await service.change_password(db, user, current_password, new_password)
     if error:
         return templates.TemplateResponse(
-            request, "account/profile.html",
-            {"user": user, "password_error": error}, status_code=400,
+            request,
+            "account/profile.html",
+            {"user": user, "password_error": error},
+            status_code=400,
         )
     return RedirectResponse(url="/account?password_changed=1", status_code=303)

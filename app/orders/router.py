@@ -27,11 +27,11 @@ templates.env.filters["msk_date"] = msk_date
 
 @router.get("/checkout", response_class=HTMLResponse)
 async def checkout_page(
-        request: Request,
-        guest_id: str | None = Cookie(default=None),
-        db: AsyncSession = Depends(get_db),
-        r: redis.Redis = Depends(get_redis),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    guest_id: str | None = Cookie(default=None),
+    db: AsyncSession = Depends(get_db),
+    r: redis.Redis = Depends(get_redis),
+    user: User | None = Depends(get_current_user_optional),
 ):
     cart_user_id, _ = get_user_id(user, guest_id)
     items, total = await cart_service.get_cart_with_products(r, db, cart_user_id)
@@ -48,34 +48,42 @@ async def checkout_page(
 
 @router.post("/checkout")
 async def checkout(
-        request: Request,
-        email: str = Form(...),
-        phone: str = Form(...),
-        full_name: str = Form(...),
-        address: str = Form(...),
-        guest_id: str | None = Cookie(default=None),
-        db: AsyncSession = Depends(get_db),
-        r: redis.Redis = Depends(get_redis),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    email: str = Form(...),
+    phone: str = Form(...),
+    full_name: str = Form(...),
+    address: str = Form(...),
+    guest_id: str | None = Cookie(default=None),
+    db: AsyncSession = Depends(get_db),
+    r: redis.Redis = Depends(get_redis),
+    user: User | None = Depends(get_current_user_optional),
 ):
     cart_user_id, _ = get_user_id(user, guest_id)
 
     # Валидация формы
     try:
-        form = CheckoutForm(email=email, phone=phone, full_name=full_name, address=address)
+        form = CheckoutForm(
+            email=email, phone=phone, full_name=full_name, address=address
+        )
     except ValidationError:
         items, total = await cart_service.get_cart_with_products(r, db, cart_user_id)
         return templates.TemplateResponse(
             request,
             "orders/checkout.html",
-            {"items": items, "total": total, "user": user,
-             "error": "Проверьте правильность заполнения полей"},
+            {
+                "items": items,
+                "total": total,
+                "user": user,
+                "error": "Проверьте правильность заполнения полей",
+            },
             status_code=400,
         )
 
     try:
         order = await service.create_order(
-            db, r, cart_user_id,
+            db,
+            r,
+            cart_user_id,
             user_id=str(user.id) if user else None,
             email=form.email,
             phone=form.phone,
@@ -107,10 +115,10 @@ async def checkout(
 
 @router.get("/orders/{order_id}/success", response_class=HTMLResponse)
 async def order_success(
-        request: Request,
-        order_id: str,
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     order = await service.get_order(db, order_id)
     if not order:
@@ -122,10 +130,10 @@ async def order_success(
 
 @router.get("/orders/{order_id}/payment-return", response_class=HTMLResponse)
 async def payment_return(
-        request: Request,
-        order_id: str,
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     order = await service.get_order(db, order_id)
     if not order:
@@ -136,7 +144,9 @@ async def payment_return(
     from app.models.payment import Payment
 
     result = await db.execute(
-        select(Payment).where(Payment.order_id == order_id).order_by(Payment.created_at.desc())
+        select(Payment)
+        .where(Payment.order_id == order_id)
+        .order_by(Payment.created_at.desc())
     )
     payment = result.scalars().first()
 
@@ -151,9 +161,9 @@ async def payment_return(
 
 @router.get("/account/orders", response_class=HTMLResponse)
 async def my_orders(
-        request: Request,
-        db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     orders = await service.get_user_orders(db, str(user.id))
     return templates.TemplateResponse(
@@ -163,10 +173,10 @@ async def my_orders(
 
 @router.post("/orders/{order_id}/pay")
 async def pay_order(
-        request: Request,
-        order_id: str,
-        db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user),
+    request: Request,
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     order = await service.get_order(db, order_id)
     if not order or order.user_id != user.id:
@@ -188,10 +198,10 @@ async def pay_order(
 
 @router.post("/orders/{order_id}/cancel")
 async def cancel_order(
-        request: Request,
-        order_id: str,
-        db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user),
+    request: Request,
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     order = await service.get_order(db, order_id)
     if not order or order.user_id != user.id:
@@ -206,19 +216,19 @@ async def cancel_order(
 
 @router.get("/track", response_class=HTMLResponse)
 async def track_form(
-        request: Request,
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    user: User | None = Depends(get_current_user_optional),
 ):
     return templates.TemplateResponse(request, "orders/track.html", {"user": user})
 
 
 @router.post("/track", response_class=HTMLResponse)
 async def track_order(
-        request: Request,
-        order_id: str = Form(...),
-        email: str = Form(...),
-        db: AsyncSession = Depends(get_db),
-        user: User | None = Depends(get_current_user_optional),
+    request: Request,
+    order_id: str = Form(...),
+    email: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     order = None
     error = None
@@ -234,6 +244,7 @@ async def track_order(
         error = "Неверный формат номера заказа."
 
     return templates.TemplateResponse(
-        request, "orders/track.html",
+        request,
+        "orders/track.html",
         {"user": user, "order": order, "error": error},
     )

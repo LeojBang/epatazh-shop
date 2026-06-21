@@ -11,12 +11,12 @@ async def get_categories(db: AsyncSession) -> list[Category]:
 
 
 async def get_products(
-        db: AsyncSession,
-        category_slug: str | None = None,
+    db: AsyncSession,
+    category_slug: str | None = None,
 ) -> list[Product]:
     query = (
         select(Product)
-        .where(Product.is_active == True)
+        .where(Product.is_active)
         .options(
             selectinload(Product.category),
             selectinload(Product.variants),
@@ -34,7 +34,7 @@ async def get_products(
 async def get_product_by_slug(db: AsyncSession, slug: str) -> Product | None:
     result = await db.execute(
         select(Product)
-        .where(Product.slug == slug, Product.is_active == True)
+        .where(Product.slug == slug, Product.is_active)
         .options(
             selectinload(Product.category),
             selectinload(Product.variants),
@@ -57,7 +57,7 @@ async def search_products(db: AsyncSession, query: str) -> list[Product]:
     """Поиск товаров по названию (без учёта регистра)."""
     q = (
         select(Product)
-        .where(Product.is_active == True, Product.name.ilike(f"%{query}%"))
+        .where(Product.is_active, Product.name.ilike(f"%{query}%"))
         .options(
             selectinload(Product.category),
             selectinload(Product.variants),

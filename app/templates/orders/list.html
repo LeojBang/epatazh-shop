@@ -23,10 +23,12 @@
                 {% if order.status == "pending" %}
                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                         <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <button type="submit" class="btn-primary">Оплатить</button>
                         </form>
                         <form method="post" action="/orders/{{ order.id }}/cancel" class="inline-form"
                               onsubmit="return confirm('Отменить заказ? Товар вернётся в продажу.');">
+                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <button type="submit" class="btn-outline">Отменить</button>
                         </form>
                     </div>
