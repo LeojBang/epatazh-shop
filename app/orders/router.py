@@ -15,7 +15,7 @@ from app.orders import service
 from app.orders.service import CheckoutError
 from app.schemas.order import CheckoutForm
 from app.users.dependencies import get_current_user, get_current_user_optional
-from app.web.filters import order_status_ru, msk_datetime, msk_date
+from app.web.filters import order_status_ru, msk_datetime, msk_date, plural_ru
 
 router = APIRouter(tags=["orders"])
 templates = Jinja2Templates(directory="app/templates")
@@ -23,6 +23,7 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["order_status_ru"] = order_status_ru
 templates.env.filters["msk_datetime"] = msk_datetime
 templates.env.filters["msk_date"] = msk_date
+templates.env.filters["plural_ru"] = plural_ru
 
 
 @router.get("/checkout", response_class=HTMLResponse)
@@ -253,4 +254,19 @@ async def track_order(
         request,
         "orders/track.html",
         {"user": user, "order": order, "error": error},
+    )
+
+@router.get("/account/orders/{order_id}", response_class=HTMLResponse)
+async def order_detail(
+    request: Request,
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    order = await service.get_order(db, order_id)
+    if not order or order.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+
+    return templates.TemplateResponse(
+        request, "orders/detail.html", {"order": order, "user": user}
     )

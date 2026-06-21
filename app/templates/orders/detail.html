@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Заказ — Эпатаж{% endblock %}
+{% block content %}
+    <a href="/account/orders" class="breadcrumb">← К списку заказов</a>
+
+    <div class="order-detail-head">
+        <div>
+            <h1>Заказ</h1>
+            <p class="order-detail-number">№ {{ order.id }}</p>
+            <p class="order-detail-date">от {{ order.created_at | msk_datetime }}</p>
+        </div>
+        <span class="order-status order-status--big">{{ order.status | order_status_ru }}</span>
+    </div>
+
+    <div class="order-detail-grid">
+        <div class="order-detail-items">
+            <h3>Состав заказа</h3>
+            {% for item in order.items %}
+                <div class="order-detail-item">
+                    <div class="order-detail-item-info">
+                        <span class="order-detail-item-name">{{ item.product_name }}</span>
+                        {% if item.size %}<span class="order-detail-item-size">Размер: {{ item.size }}</span>{% endif %}
+                    </div>
+                    <div class="order-detail-item-price">
+                        <span>{{ item.quantity }} × {{ "%.2f"|format(item.price) }} ₽</span>
+                        <strong>{{ "%.2f"|format(item.price * item.quantity) }} ₽</strong>
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="order-detail-total">
+                Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong>
+            </div>
+        </div>
+
+        <div class="order-detail-info">
+            <h3>Данные доставки</h3>
+            <p><span class="info-label">Получатель:</span><br>{{ order.full_name }}</p>
+            <p><span class="info-label">Телефон:</span><br>{{ order.phone }}</p>
+            <p><span class="info-label">Email:</span><br>{{ order.email }}</p>
+            <p><span class="info-label">Адрес:</span><br>{{ order.address }}</p>
+
+            {% if order.status == "pending" %}
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+                    <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                        <button type="submit" class="btn-primary" style="width: 100%;">Оплатить</button>
+                    </form>
+                    <form method="post" action="/orders/{{ order.id }}/cancel" class="inline-form"
+                          onsubmit="return confirm('Отменить заказ? Товар вернётся в продажу.');">
+                        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                        <button type="submit" class="btn-outline" style="width: 100%;">Отменить заказ</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -559,3 +559,41 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     border-bottom-color: var(--gold);
 }
 .orders-empty { color: var(--text-muted); padding: 1rem 0; }
+.order-card--link { display: block; text-decoration: none; color: inherit; transition: border-color 0.15s; }
+.order-card--link:hover { border-color: var(--gold); }
+.order-card-summary { color: var(--text-muted); margin: 0.5rem 0; }
+.order-card-more { color: var(--green); font-weight: 600; font-size: 0.9rem; }
+
+.order-detail-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
+}
+.order-detail-number { color: var(--text-muted); font-size: 0.85rem; margin: 0.3rem 0 0; word-break: break-all; }
+.order-detail-date { color: var(--text-muted); margin: 0.2rem 0 0; }
+.order-status--big { font-size: 1rem; padding: 0.4rem 1rem; }
+.order-detail-grid {
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; align-items: start;
+}
+.order-detail-items, .order-detail-info {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;
+}
+.order-detail-items h3, .order-detail-info h3 { margin-top: 0; }
+.order-detail-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.7rem 0; border-bottom: 1px solid var(--border); gap: 1rem;
+}
+.order-detail-item:last-of-type { border-bottom: none; }
+.order-detail-item-name { font-weight: 500; display: block; }
+.order-detail-item-size { font-size: 0.83rem; color: var(--text-muted); }
+.order-detail-item-price { text-align: right; white-space: nowrap; }
+.order-detail-item-price span { display: block; font-size: 0.83rem; color: var(--text-muted); }
+.order-detail-total {
+    text-align: right; font-size: 1.1rem; margin-top: 1rem; padding-top: 1rem;
+    border-top: 2px solid var(--gold);
+}
+.info-label { color: var(--text-muted); font-size: 0.85rem; }
+.order-detail-info p { margin: 0 0 0.8rem; }
+@media (max-width: 700px) {
+    .order-detail-grid { grid-template-columns: 1fr; }
+}
