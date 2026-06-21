@@ -10,6 +10,9 @@ from app.models import User
 from app.schemas.user import UserCreate
 from app.users import service
 from app.users.dependencies import get_current_user
+from app.users import rate_limit
+from app.core.redis import redis_pool
+import redis.asyncio as redis_lib
 
 router = APIRouter(tags=["auth"])
 templates = Jinja2Templates(directory="app/templates")
@@ -70,14 +73,33 @@ async def login(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
+    r = redis_lib.Redis(connection_pool=redis_pool)
+    # IP клиента
+    ip = request.client.host if request.client else "unknown"
+
+    # Проверяем блокировку ДО проверки пароля
+    if await rate_limit.is_blocked(r, ip):
+        await r.aclose()
+        return templates.TemplateResponse(
+            request, "auth/login.html",
+            {"error": "Слишком много попыток входа. Попробуйте через 15 минут."},
+            status_code=429,
+        )
+
     user = await service.authenticate_user(db, email, password)
     if not user:
+        # Неудача — увеличиваем счётчик
+        await rate_limit.register_failed_attempt(r, ip)
+        await r.aclose()
         return templates.TemplateResponse(
-            request,
-            "auth/login.html",
+            request, "auth/login.html",
             {"error": "Неверный email или пароль"},
             status_code=400,
         )
+
+    # Успех — сбрасываем счётчик и выдаём токен
+    await rate_limit.reset_attempts(r, ip)
+    await r.aclose()
 
     token = create_access_token(subject=user.email)
     response = RedirectResponse(url="/", status_code=303)
