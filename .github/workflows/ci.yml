@@ -28,6 +28,12 @@ jobs:
       - name: Lint with ruff
         run: ruff check app/
 
-      # 5. Прогоняем тесты
+# 5. Прогоняем тесты
       - name: Run tests
+        env:
+          DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/test"
+          SECRET_KEY: "test-secret-key-for-ci-not-real"
+          YOOKASSA_SHOP_ID: "test-shop-id"
+          YOOKASSA_SECRET_KEY: "test-secret-key"
+          ENVIRONMENT: "local"
         run: python -m pytest
