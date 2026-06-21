@@ -64,7 +64,7 @@ async def create_order(
                 f"Недостаточно товара «{variant.product.name}» (размер {variant.size})"
             )
 
-        subtotal = variant.product.price * qty
+        subtotal = variant.product.effective_price * qty
         total += subtotal
         image_path = variant.product.images[0].path if variant.product.images else None
         order_items.append(
@@ -74,7 +74,7 @@ async def create_order(
                 product_name=variant.product.name,
                 product_image=image_path,
                 size=variant.size,
-                price=variant.product.price,
+                price=variant.product.effective_price,
                 quantity=qty,
             )
         )

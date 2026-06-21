@@ -649,3 +649,12 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
     margin-left: 0.2rem;
 }
+.product-price__old {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    font-weight: 400;
+    margin-right: 0.4rem;
+}
+.product-price__new { color: var(--danger); }
+.badge--sale { background: var(--danger); color: #fff; }

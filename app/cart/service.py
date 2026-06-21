@@ -71,7 +71,7 @@ async def get_cart_with_products(
     for variant_id, qty in cart.items():
         variant = await get_variant(db, variant_id)
         if variant and variant.product:
-            subtotal = float(variant.product.price) * qty
+            subtotal = float(variant.product.effective_price) * qty
             total += subtotal
             items.append(
                 {

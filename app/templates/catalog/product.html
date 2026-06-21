@@ -26,7 +26,14 @@
         <div class="product-info">
             <h1>{{ product.name }}</h1>
             <p class="product-category">{{ product.category.name }}</p>
-            <p class="product-price">{{ product.price }} ₽</p>
+            {% if product.sale_price and product.sale_price < product.price %}
+                <p class="product-price">
+                    <span class="product-price__old">{{ product.price }} ₽</span>
+                    <span class="product-price__new">{{ product.sale_price }} ₽</span>
+                </p>
+            {% else %}
+                <p class="product-price">{{ product.price }} ₽</p>
+            {% endif %}
             {% if request.query_params.get('added') == '1' %}
                 <div class="cart-notice">
                     ✓ Товар добавлен в корзину

@@ -72,13 +72,7 @@ class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
     category = "Каталог"
-    column_list = [
-        Product.name,
-        Product.price,
-        Product.badge,
-        Product.is_active,
-        Product.category,
-    ]
+    column_list = [Product.name, Product.price, Product.sale_price, Product.badge, Product.is_active, Product.category]
     column_searchable_list = [Product.name]
     column_sortable_list = [Product.price]
     form_excluded_columns = [Product.created_at, Product.updated_at]

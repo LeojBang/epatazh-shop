@@ -34,6 +34,7 @@ class Product(UUIDMixin, TimeStampMixin, Base):
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    sale_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     badge: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
@@ -46,6 +47,13 @@ class Product(UUIDMixin, TimeStampMixin, Base):
         cascade="all, delete-orphan",
         order_by="ProductImage.position",
     )
+
+    @property
+    def effective_price(self) -> Decimal:
+        """Цена с учётом скидки: sale_price если задана и ниже обычной, иначе price."""
+        if self.sale_price is not None and self.sale_price < self.price:
+            return self.sale_price
+        return self.price
 
     def __str__(self) -> str:
         return self.name

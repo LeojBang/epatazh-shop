@@ -8,6 +8,8 @@
         {% set total_stock = product.variants | sum(attribute="stock") %}
         {% if total_stock == 0 %}
             <span class="badge badge--out">Нет в наличии</span>
+        {% elif product.sale_price and product.sale_price < product.price %}
+            <span class="badge badge--sale">Скидка</span>
         {% elif product.badge %}
             <span class="badge badge--hit">{{ product.badge }}</span>
         {% endif %}
@@ -15,7 +17,14 @@
     <div class="product-card__body">
         <h3>{{ product.name }}</h3>
         <span class="product-category">{{ product.category.name }}</span>
-        <span class="product-price">{{ product.price }} ₽</span>
+        {% if product.sale_price and product.sale_price < product.price %}
+            <span class="product-price">
+                <span class="product-price__old">{{ product.price }} ₽</span>
+                <span class="product-price__new">{{ product.sale_price }} ₽</span>
+            </span>
+        {% else %}
+            <span class="product-price">{{ product.price }} ₽</span>
+        {% endif %}
         {% set total_stock = product.variants | sum(attribute="stock") %}
         {% if total_stock > 0 %}
             <span class="card-btn"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Выбрать</span>
