@@ -137,6 +137,12 @@ docker compose logs --since 5m app
 # Проверить код линтером
 ruff check app/
 
+# Запустить тесты
+python -m pytest
+
+# Тесты с покрытием
+python -m pytest --cov=app --cov-report=term-missing
+
 # Создать новую миграцию
 alembic revision --autogenerate -m "описание изменений"
 
