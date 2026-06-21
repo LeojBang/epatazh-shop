@@ -29,6 +29,7 @@ def msk_datetime(value, fmt: str = "%d.%m.%Y %H:%M") -> str:
 def msk_date(value, fmt: str = "%d.%m.%Y") -> str:
     return msk_datetime(value, fmt)
 
+
 def plural_ru(number: int, one: str, few: str, many: str) -> str:
     """Склоняет слово по числу: 1 товар, 2 товара, 5 товаров."""
     n = abs(number) % 100

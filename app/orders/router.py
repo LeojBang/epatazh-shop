@@ -173,7 +173,8 @@ async def my_orders(
     completed = [o for o in all_orders if o.status not in active_statuses]
 
     return templates.TemplateResponse(
-        request, "orders/list.html",
+        request,
+        "orders/list.html",
         {"orders": all_orders, "active": active, "completed": completed, "user": user},
     )
 
@@ -255,6 +256,7 @@ async def track_order(
         "orders/track.html",
         {"user": user, "order": order, "error": error},
     )
+
 
 @router.get("/account/orders/{order_id}", response_class=HTMLResponse)
 async def order_detail(

@@ -1,8 +1,8 @@
 import redis.asyncio as redis
 
-MAX_ATTEMPTS = 5          # сколько неудач разрешаем
+MAX_ATTEMPTS = 5  # сколько неудач разрешаем
 WINDOW_SECONDS = 15 * 60  # за какое время (15 минут)
-BLOCK_SECONDS = 15 * 60   # на сколько блокируем после превышения
+BLOCK_SECONDS = 15 * 60  # на сколько блокируем после превышения
 
 
 def _key(ip: str) -> str:

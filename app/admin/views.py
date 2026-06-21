@@ -72,7 +72,14 @@ class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
     category = "Каталог"
-    column_list = [Product.name, Product.price, Product.sale_price, Product.badge, Product.is_active, Product.category]
+    column_list = [
+        Product.name,
+        Product.price,
+        Product.sale_price,
+        Product.badge,
+        Product.is_active,
+        Product.category,
+    ]
     column_searchable_list = [Product.name]
     column_sortable_list = [Product.price]
     form_excluded_columns = [Product.created_at, Product.updated_at]
@@ -93,12 +100,21 @@ class OrderAdmin(ModelView, model=Order):
     name = "Заказ"
     name_plural = "Заказы"
     column_list = [
-        Order.created_at, Order.full_name, Order.email,
-        Order.phone, Order.total, Order.status,
+        Order.created_at,
+        Order.full_name,
+        Order.email,
+        Order.phone,
+        Order.total,
+        Order.status,
     ]
     column_details_list = [
-        Order.created_at, Order.full_name, Order.email, Order.phone,
-        Order.address, Order.total, Order.status,
+        Order.created_at,
+        Order.full_name,
+        Order.email,
+        Order.phone,
+        Order.address,
+        Order.total,
+        Order.status,
     ]
 
     column_searchable_list = [Order.email, Order.full_name, Order.phone]
@@ -108,8 +124,12 @@ class OrderAdmin(ModelView, model=Order):
     page_size = 50
     column_formatters_detail = {
         Order.status: lambda m, a: {
-            "new": "Новый", "pending": "Ожидает оплаты", "paid": "Оплачен",
-            "cancelled": "Отменён", "shipped": "Отправлен", "delivered": "Доставлен",
+            "new": "Новый",
+            "pending": "Ожидает оплаты",
+            "paid": "Оплачен",
+            "cancelled": "Отменён",
+            "shipped": "Отправлен",
+            "delivered": "Доставлен",
         }.get(m.status, m.status),
         Order.created_at: lambda m, a: _msk(m.created_at),
     }
@@ -297,7 +317,7 @@ class StockView(BaseView):
                 for key, value in form.items():
                     # поля вида stock_<variant_id>
                     if key.startswith("stock_"):
-                        variant_id = key[len("stock_"):]
+                        variant_id = key[len("stock_") :]
                         try:
                             new_stock = int(value)
                             if new_stock < 0:

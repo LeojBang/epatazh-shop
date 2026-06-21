@@ -81,7 +81,8 @@ async def login(
     if await rate_limit.is_blocked(r, ip):
         await r.aclose()
         return templates.TemplateResponse(
-            request, "auth/login.html",
+            request,
+            "auth/login.html",
             {"error": "Слишком много попыток входа. Попробуйте через 15 минут."},
             status_code=429,
         )
@@ -92,7 +93,8 @@ async def login(
         await rate_limit.register_failed_attempt(r, ip)
         await r.aclose()
         return templates.TemplateResponse(
-            request, "auth/login.html",
+            request,
+            "auth/login.html",
             {"error": "Неверный email или пароль"},
             status_code=400,
         )
