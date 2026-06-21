@@ -14,6 +14,7 @@ class Category(UUIDMixin, TimeStampMixin, Base):
     slug: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
     )
+    icon: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     products: Mapped[list["Product"]] = relationship(back_populates="category")
 

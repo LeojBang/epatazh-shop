@@ -42,15 +42,31 @@ class UserAdmin(ModelView, model=User):
 
 
 class CategoryAdmin(ModelView, model=Category):
+    category = "Каталог"
     name = "Категория"
     name_plural = "Категории"
-    category = "Каталог"
-    column_list = [Category.name, Category.slug]
-    form_excluded_columns = [
-        Category.products,
-        Category.created_at,
-        Category.updated_at,
-    ]
+    column_list = [Category.name, Category.slug, Category.icon]
+
+    form_overrides = {"icon": SelectField}
+    form_args = {
+        "icon": {
+            "choices": [
+                ("", "— без иконки —"),
+                ("ti-karate", "Карате / единоборства"),
+                ("ti-boxing-glove", "Боксёрская перчатка"),
+                ("ti-ice-skating", "Коньки / хоккей"),
+                ("ti-barbell", "Штанга / зал"),
+                ("ti-run", "Бег"),
+                ("ti-ball-football", "Футбол / мяч"),
+                ("ti-shirt-sport", "Спортивная одежда"),
+                ("ti-shirt", "Футболка"),
+                ("ti-jacket", "Куртка / верх"),
+                ("ti-medal", "Награда / медаль"),
+                ("ti-flame", "Огонь / хит"),
+                ("ti-star", "Звезда"),
+            ],
+        }
+    }
 
 
 class ProductAdmin(ModelView, model=Product):

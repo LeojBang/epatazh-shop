@@ -124,7 +124,7 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 @media (max-width: 700px) {
     .site-header__main { flex-wrap: wrap; gap: 0.75rem; }
     .header-search { order: 3; max-width: 100%; width: 100%; }
-    .action-item span { display: none; }
+    .action-item span:not(.cart-badge) { display: none; }
     .header-nav { flex-wrap: wrap; gap: 1rem; }
 }
 /* ===== Контейнер ===== */
@@ -395,24 +395,60 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 .home-section { margin-bottom: 3rem; }
 .home-section h2 { margin-bottom: 1.25rem; }
 
-.category-cards {
+.category-tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
 }
-.category-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    text-decoration: none;
-    color: var(--text);
+.category-tile {
+    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 1.15rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    min-height: 180px;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text-on-dark);
+    background: var(--green);
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.category-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(15,58,46,0.25);
+}
+/* золотой акцент-градиент в углу каждой плитки */
+.category-tile::after {
+    content: "";
+    position: absolute;
+    right: -40px;
+    bottom: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(199,154,59,0.35), transparent 70%);
+    pointer-events: none;
+}
+.category-tile__icon {
+    font-size: 2.6rem;
+    color: var(--gold-soft);
+    position: relative;
+    z-index: 1;
+}
+.category-tile__name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+.category-tile__link {
+    margin-top: auto;
+    color: var(--gold-soft);
     font-weight: 600;
-    transition: border-color 0.15s, transform 0.15s;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 1;
 }
 .category-card:hover { border-color: var(--gold); transform: translateY(-2px); }
 .category-card__arrow { color: var(--gold); font-size: 1.3rem; }
