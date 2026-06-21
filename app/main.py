@@ -12,7 +12,6 @@ from app.admin.auth import AdminAuth
 from app.admin.views import (
     CategoryAdmin,
     OrderAdmin,
-    OrderItemAdmin,
     ProductAdmin,
     ProductVariantAdmin,
     ProductImageAdmin,
@@ -209,7 +208,6 @@ admin.add_view(UserAdmin)
 admin.add_view(CategoryAdmin)
 admin.add_view(ProductAdmin)
 admin.add_view(OrderAdmin)
-admin.add_view(OrderItemAdmin)
 admin.add_view(ProductVariantAdmin)
 admin.add_view(ProductImageAdmin)
 admin.add_view(ReviewAdmin)

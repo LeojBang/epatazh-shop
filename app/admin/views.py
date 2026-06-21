@@ -27,6 +27,7 @@ def _msk(value):
 class UserAdmin(ModelView, model=User):
     name = "Пользователь"
     name_plural = "Пользователи"
+    category = "Сервис"
     column_list = [
         User.email,
         User.full_name,
@@ -43,6 +44,7 @@ class UserAdmin(ModelView, model=User):
 class CategoryAdmin(ModelView, model=Category):
     name = "Категория"
     name_plural = "Категории"
+    category = "Каталог"
     column_list = [Category.name, Category.slug]
     form_excluded_columns = [
         Category.products,
@@ -54,6 +56,7 @@ class CategoryAdmin(ModelView, model=Category):
 class ProductAdmin(ModelView, model=Product):
     name = "Товар"
     name_plural = "Товары"
+    category = "Каталог"
     column_list = [
         Product.name,
         Product.price,
@@ -69,6 +72,7 @@ class ProductAdmin(ModelView, model=Product):
 class OrderAdmin(ModelView, model=Order):
     name = "Заказ"
     name_plural = "Заказы"
+    category = "Продажи"
     column_list = [Order.id, Order.email, Order.total, Order.status, Order.created_at]
     column_searchable_list = [Order.email]
     column_sortable_list = [Order.created_at, Order.total]
@@ -134,6 +138,7 @@ class OrderAdmin(ModelView, model=Order):
 class OrderItemAdmin(ModelView, model=OrderItem):
     name = "Позиция заказа"
     name_plural = "Позиции заказов"
+    category = "Продажи"
     column_list = [OrderItem.product_name, OrderItem.price, OrderItem.quantity]
     can_create = False
     can_edit = False
@@ -141,7 +146,8 @@ class OrderItemAdmin(ModelView, model=OrderItem):
 
 class ProductVariantAdmin(ModelView, model=ProductVariant):
     name = "Вариант товара"
-    name_plural = "Склад (размеры)"
+    name_plural = "Размеры товаров"
+    category = "Каталог"
     column_list = [ProductVariant.product, ProductVariant.size, ProductVariant.stock]
     column_formatters = {
         ProductVariant.product: lambda m, a: m.product.name if m.product else ""
@@ -158,6 +164,7 @@ class ProductVariantAdmin(ModelView, model=ProductVariant):
 class ProductImageAdmin(ModelView, model=ProductImage):
     name = "Фото товара"
     name_plural = "Фото товаров"
+    category = "Каталог"
     column_list = [ProductImage.product, ProductImage.path, ProductImage.position]
     column_formatters = {
         ProductImage.product: lambda m, a: m.product.name if m.product else ""
@@ -192,6 +199,7 @@ class ProductImageAdmin(ModelView, model=ProductImage):
 class ReviewAdmin(ModelView, model=Review):
     name = "Отзыв"
     name_plural = "Отзывы"
+    category = "Контент"
     column_list = [Review.product, Review.rating, Review.is_approved, Review.created_at]
     column_sortable_list = [Review.created_at, Review.is_approved]
     form_excluded_columns = [Review.created_at, Review.updated_at]
@@ -202,6 +210,7 @@ class ReviewAdmin(ModelView, model=Review):
 
 class DashboardView(BaseView):
     name = "Аналитика"
+    category = "Сервис"
 
     @expose("/dashboard", methods=["GET"])
     async def dashboard(self, request: Request):
@@ -229,6 +238,7 @@ class DashboardView(BaseView):
 class InfoPageAdmin(ModelView, model=InfoPage):
     name = "Страница"
     name_plural = "Страницы"
+    category = "Контент"
     column_list = [
         InfoPage.title,
         InfoPage.slug,
@@ -242,6 +252,7 @@ class InfoPageAdmin(ModelView, model=InfoPage):
 
 class StockView(BaseView):
     name = "Склад"
+    category = "Сервис"
 
     @expose("/stock", methods=["GET", "POST"])
     async def stock(self, request: Request):
