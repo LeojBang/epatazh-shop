@@ -68,3 +68,25 @@ function changeImage(direction) {
         }
     });
 })();
+
+// ===== Вкладки "Мои заказы" =====
+(function () {
+    const tabs = document.querySelectorAll('.orders-tab');
+    if (!tabs.length) return;
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            const target = tab.dataset.tab;
+
+            // Переключаем активную кнопку
+            tabs.forEach(function (t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+
+            // Показываем нужную панель, прячем другую
+            document.getElementById('panel-active').style.display =
+                target === 'active' ? 'block' : 'none';
+            document.getElementById('panel-completed').style.display =
+                target === 'completed' ? 'block' : 'none';
+        });
+    });
+})();

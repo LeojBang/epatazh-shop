@@ -165,9 +165,15 @@ async def my_orders(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    orders = await service.get_user_orders(db, str(user.id))
+    all_orders = await service.get_user_orders(db, user.id)
+
+    active_statuses = {"pending", "paid", "shipped"}
+    active = [o for o in all_orders if o.status in active_statuses]
+    completed = [o for o in all_orders if o.status not in active_statuses]
+
     return templates.TemplateResponse(
-        request, "orders/list.html", {"orders": orders, "user": user}
+        request, "orders/list.html",
+        {"orders": all_orders, "active": active, "completed": completed, "user": user},
     )
 
 

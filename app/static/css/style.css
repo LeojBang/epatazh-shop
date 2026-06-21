@@ -534,3 +534,28 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     transition: background 0.15s;
 }
 .product-card:hover .card-btn { background: var(--gold); color: var(--green-dark); }
+.orders-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.25rem 0;
+    border-bottom: 2px solid var(--border);
+}
+.orders-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+}
+.orders-tab:hover { color: var(--green); }
+.orders-tab.active {
+    color: var(--green);
+    border-bottom-color: var(--gold);
+}
+.orders-empty { color: var(--text-muted); padding: 1rem 0; }

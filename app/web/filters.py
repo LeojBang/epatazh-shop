@@ -4,8 +4,9 @@ ORDER_STATUS_RU = {
     "new": "Новый",
     "pending": "Ожидает оплаты",
     "paid": "Оплачен",
-    "cancelled": "Отменён",
     "shipped": "Отправлен",
+    "delivered": "Доставлен",
+    "cancelled": "Отменён",
 }
 
 MSK = timezone(timedelta(hours=3))

@@ -90,7 +90,7 @@ class OrderAdmin(ModelView, model=Order):
     column_formatters_detail = {
         Order.status: lambda m, a: {
             "new": "Новый", "pending": "Ожидает оплаты", "paid": "Оплачен",
-            "cancelled": "Отменён", "shipped": "Отправлен",
+            "cancelled": "Отменён", "shipped": "Отправлен", "delivered": "Доставлен",
         }.get(m.status, m.status),
         Order.created_at: lambda m, a: _msk(m.created_at),
     }
@@ -102,6 +102,7 @@ class OrderAdmin(ModelView, model=Order):
                 ("pending", "Ожидает оплаты"),
                 ("paid", "Оплачен"),
                 ("shipped", "Отправлен"),
+                ("delivered", "Доставлен"),
                 ("cancelled", "Отменён"),
             ]
         }

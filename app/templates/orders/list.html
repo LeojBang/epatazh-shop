@@ -3,39 +3,36 @@
 {% block content %}
     <h1>Мои заказы</h1>
 
-    {% if orders %}
-        {% for order in orders %}
-            <div class="order-card">
-                <div class="order-header">
-                    <span>Заказ от {{ order.created_at | msk_datetime }}</span>
-                    <span class="order-status">{{ order.status | order_status_ru }}</span>
-                </div>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.5rem;">
-                    № {{ order.id }}
-                </p>
-                    {% for item in order.items %}
-                    <div class="checkout-item">
-                        <span>{{ item.product_name }}{% if item.size %} ({{ item.size }}){% endif %} × {{ item.quantity }}</span>
-                        <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
-                    </div>
-                {% endfor %}
-                <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
-                {% if order.status == "pending" %}
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                        <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">
-                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                            <button type="submit" class="btn-primary">Оплатить</button>
-                        </form>
-                        <form method="post" action="/orders/{{ order.id }}/cancel" class="inline-form"
-                              onsubmit="return confirm('Отменить заказ? Товар вернётся в продажу.');">
-                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                            <button type="submit" class="btn-outline">Отменить</button>
-                        </form>
-                    </div>
-                {% endif %}
-            </div>
-        {% endfor %}
-    {% else %}
+    {% if not active and not completed %}
         <p>У вас пока нет заказов. <a href="/catalog">Перейти в каталог</a></p>
+    {% else %}
+        <div class="orders-tabs">
+            <button class="orders-tab active" data-tab="active">
+                Активные{% if active %} ({{ active|length }}){% endif %}
+            </button>
+            <button class="orders-tab" data-tab="completed">
+                Завершённые{% if completed %} ({{ completed|length }}){% endif %}
+            </button>
+        </div>
+
+        <div class="orders-panel" id="panel-active">
+            {% if active %}
+                {% for order in active %}
+                    {% include "orders/_order_card.html" %}
+                {% endfor %}
+            {% else %}
+                <p class="orders-empty">Нет активных заказов.</p>
+            {% endif %}
+        </div>
+
+        <div class="orders-panel" id="panel-completed" style="display: none;">
+            {% if completed %}
+                {% for order in completed %}
+                    {% include "orders/_order_card.html" %}
+                {% endfor %}
+            {% else %}
+                <p class="orders-empty">Нет завершённых заказов.</p>
+            {% endif %}
+        </div>
     {% endif %}
 {% endblock %}
