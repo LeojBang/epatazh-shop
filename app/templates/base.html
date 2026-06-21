@@ -63,12 +63,6 @@
         </nav>
     </div>
 
-        <nav class="header-nav">
-            <a href="/catalog">Все товары</a>
-            {% for cat in request.state.nav_categories %}
-                <a href="/catalog?category={{ cat.slug }}">{{ cat.name }}</a>
-            {% endfor %}
-        </nav>
 </header>
 
 <main class="container">
