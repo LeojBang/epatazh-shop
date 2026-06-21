@@ -1,5 +1,6 @@
 import pytest
 import pytest_asyncio
+import fakeredis.aioredis
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -26,3 +27,12 @@ async def db_session():
 
     # После теста — закрываем
     await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def fake_redis():
+    """Поддельный Redis в памяти для тестов корзины."""
+    r = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    yield r
+    await r.flushall()
+    await r.aclose()
