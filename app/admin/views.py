@@ -70,21 +70,27 @@ class ProductAdmin(ModelView, model=Product):
 
 
 class OrderAdmin(ModelView, model=Order):
+    category = "Продажи"
     name = "Заказ"
     name_plural = "Заказы"
-    category = "Продажи"
-    column_list = [Order.id, Order.email, Order.total, Order.status, Order.created_at]
-    column_searchable_list = [Order.email]
-    column_sortable_list = [Order.created_at, Order.total]
+    column_list = [
+        Order.created_at, Order.full_name, Order.email,
+        Order.phone, Order.total, Order.status,
+    ]
+    column_details_list = [
+        Order.created_at, Order.full_name, Order.email, Order.phone,
+        Order.address, Order.total, Order.status,
+    ]
+
+    column_searchable_list = [Order.email, Order.full_name, Order.phone]
+    column_sortable_list = [Order.created_at, Order.total, Order.status]
+    column_default_sort = [("created_at", True)]  # новые сверху
     can_create = False
-    can_edit = True
-    column_formatters = {
+    page_size = 50
+    column_formatters_detail = {
         Order.status: lambda m, a: {
-            "new": "Новый",
-            "pending": "Ожидает оплаты",
-            "paid": "Оплачен",
-            "cancelled": "Отменён",
-            "shipped": "Отправлен",
+            "new": "Новый", "pending": "Ожидает оплаты", "paid": "Оплачен",
+            "cancelled": "Отменён", "shipped": "Отправлен",
         }.get(m.status, m.status),
         Order.created_at: lambda m, a: _msk(m.created_at),
     }
@@ -271,7 +277,7 @@ class StockView(BaseView):
                 for key, value in form.items():
                     # поля вида stock_<variant_id>
                     if key.startswith("stock_"):
-                        variant_id = key[len("stock_") :]
+                        variant_id = key[len("stock_"):]
                         try:
                             new_stock = int(value)
                             if new_stock < 0:
