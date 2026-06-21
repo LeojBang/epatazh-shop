@@ -76,6 +76,12 @@ DATA = {
 
 
 async def seed():
+    import os
+    if os.getenv("ENVIRONMENT") == "production":
+        print("ОТКАЗ: seed.py удаляет данные и запрещён на production.")
+        print("Для первичного наполнения используйте seed_prod.py")
+        return
+
     async with AsyncSessionLocal() as db:
         # --- Полная очистка тестовых данных в порядке зависимостей ---
         # Сносим всё, что ссылается на товары, затем сами товары и категории.
