@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from app.models.catalog import Category, Product
+from app.models.catalog import Product
 
 
 class TestEffectivePrice:
