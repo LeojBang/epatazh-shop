@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    PROJECT_NAME: str = "Shop"
+    PROJECT_NAME: str = "Эпатаж"
     ENVIRONMENT: str = "local"
     DEBUG: bool = True
 
@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     YOOKASSA_SHOP_ID: str
     YOOKASSA_SECRET_KEY: str
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT == "production"
 
 
 settings = Settings()
