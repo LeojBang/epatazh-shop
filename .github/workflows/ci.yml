@@ -28,6 +28,10 @@ jobs:
       - name: Lint with ruff
         run: ruff check app/
 
+      # 4.5. Проверяем форматирование
+      - name: Check formatting with ruff
+        run: ruff format --check app/
+
 # 5. Прогоняем тесты
       - name: Run tests
         env:
