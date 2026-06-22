@@ -43,6 +43,24 @@ async def register(
     full_name: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
+    # Анти-спам: ограничиваем число регистраций с одного IP
+    r = redis_lib.Redis(connection_pool=redis_pool)
+    ip = rate_limit.get_client_ip(request)
+    if await rate_limit.is_blocked(
+        r, ip, action="register", max_attempts=rate_limit.REGISTER_MAX
+    ):
+        await r.aclose()
+        return templates.TemplateResponse(
+            request,
+            "auth/register.html",
+            {"error": "Слишком много регистраций. Попробуйте позже."},
+            status_code=429,
+        )
+    await rate_limit.register_attempt(
+        r, ip, action="register", window_seconds=rate_limit.REGISTER_WINDOW_SECONDS
+    )
+    await r.aclose()
+
     existing = await service.get_user_by_email(db, email)
     if existing:
         return templates.TemplateResponse(
