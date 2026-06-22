@@ -5,6 +5,7 @@ from app.models.order import Order, OrderItem
 from app.models.payment import Payment
 from app.models.review import Review
 from app.models.page import InfoPage
+from app.models.return_request import ReturnRequest
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "Payment",
     "Review",
     "InfoPage",
+    "ReturnRequest",
 ]
