@@ -74,8 +74,8 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ):
     r = redis_lib.Redis(connection_pool=redis_pool)
-    # IP клиента
-    ip = request.client.host if request.client else "unknown"
+    # IP клиента (за nginx — из X-Forwarded-For)
+    ip = rate_limit.get_client_ip(request)
 
     # Проверяем блокировку ДО проверки пароля
     if await rate_limit.is_blocked(r, ip):

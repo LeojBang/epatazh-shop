@@ -1,4 +1,5 @@
 import redis.asyncio as redis
+from fastapi.requests import Request
 
 MAX_ATTEMPTS = 5  # сколько неудач разрешаем
 WINDOW_SECONDS = 15 * 60  # за какое время (15 минут)
@@ -33,3 +34,18 @@ async def register_failed_attempt(r: redis.Redis, ip: str) -> int:
 async def reset_attempts(r: redis.Redis, ip: str) -> None:
     """Сбрасывает счётчик (при успешном входе)."""
     await r.delete(_key(ip))
+
+
+def get_client_ip(request: Request) -> str:
+    """Возвращает IP посетителя.
+
+    За nginx реальный адрес приходит в заголовке X-Forwarded-For
+    (nginx подставляет его сам). Без прокси (локально) берём прямой адрес.
+    """
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        # X-Forwarded-For может содержать цепочку "клиент, прокси1, прокси2"
+        # Первый адрес — настоящий клиент.
+        return forwarded.split(",")[0].strip()
+    # Запасной вариант: прямое подключение (разработка без nginx)
+    return request.client.host if request.client else "unknown"
