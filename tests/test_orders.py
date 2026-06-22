@@ -7,12 +7,15 @@ from app.models.order import Order, OrderItem
 async def _make_order(db_session, user_id=None, status="pending", total="3000.00"):
     """Создаёт заказ с одной позицией напрямую (без create_order)."""
     import uuid
+
     order = Order(
         user_id=user_id,
         status=status,
         total=Decimal(total),
-        email="t@e.com", phone="+79001112233",
-        full_name="Тест", address="Москва",
+        email="t@e.com",
+        phone="+79001112233",
+        full_name="Тест",
+        address="Москва",
         items=[
             OrderItem(
                 product_id=uuid.uuid4(),  # просто валидный UUID, товар реально не нужен
@@ -53,6 +56,7 @@ class TestGetUserOrders:
     async def test_user_orders_returned(self, db_session):
         """Возвращаются заказы конкретного пользователя."""
         import uuid
+
         user_id = uuid.uuid4()
         await _make_order(db_session, user_id=user_id, total="1000.00")
         await _make_order(db_session, user_id=user_id, total="2000.00")
@@ -63,6 +67,7 @@ class TestGetUserOrders:
     async def test_other_users_orders_excluded(self, db_session):
         """Заказы других пользователей не попадают в список."""
         import uuid
+
         user_a = uuid.uuid4()
         user_b = uuid.uuid4()
         await _make_order(db_session, user_id=user_a)

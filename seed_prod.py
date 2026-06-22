@@ -1,10 +1,9 @@
 import asyncio
-from decimal import Decimal
 
 from sqlalchemy import select, func
 
 from app.core.database import AsyncSessionLocal
-from app.models.catalog import Category, Product, ProductVariant
+from app.models.catalog import Category
 
 
 # Минимальный стартовый каталог — категории без товаров,

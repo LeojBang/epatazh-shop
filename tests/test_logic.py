@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from app.web.filters import plural_ru, order_status_ru
 
 
