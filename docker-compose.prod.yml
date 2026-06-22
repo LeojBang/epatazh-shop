@@ -22,6 +22,8 @@ services:
       redis:
         condition: service_healthy
     restart: always
+    volumes:
+      - uploads_data:/code/app/static/uploads
 
   worker:
     build:
@@ -52,7 +54,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -62,7 +64,7 @@ services:
     image: redis:7-alpine
     # порт НЕ пробрасываем наружу
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -70,3 +72,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
