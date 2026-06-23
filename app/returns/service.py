@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.return_request import ReturnRequest
 from app.models.order import Order
+from app.models.payment import Payment
 
 
 class ReturnError(Exception):
@@ -15,8 +16,8 @@ class ReturnError(Exception):
 # Причины возврата — фиксированный список (код → русская подпись)
 RETURN_REASONS = {
     "size": "Не подошёл размер",
-    "look": "Не понравился / не подошёл",
-    "defect": "Брак / дефект",
+    "defect": "Брак или дефект",
+    "mismatch": "Не соответствует описанию или фото",
     "other": "Другая причина",
 }
 
@@ -71,6 +72,14 @@ async def create_return_request(
     if existing:
         raise ReturnError("По этому заказу уже есть активная заявка на возврат")
 
+    # Находим id платежа в YooKassa — чтобы менеджер быстро нашёл его в кабинете
+    payment = await db.scalar(
+        select(Payment)
+        .where(Payment.order_id == order_id, Payment.status == "succeeded")
+        .order_by(Payment.created_at.desc())
+    )
+    payment_external_id = payment.external_id if payment else None
+
     # Создаём заявку
     return_request = ReturnRequest(
         order_id=order_id,
@@ -78,6 +87,7 @@ async def create_return_request(
         reason=reason,
         comment=comment,
         status="pending",
+        payment_external_id=payment_external_id,
     )
     db.add(return_request)
     await db.commit()

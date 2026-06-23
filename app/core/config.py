@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: str
     YOOKASSA_SECRET_KEY: str
 
+    # Код НДС для чеков (1 = без НДС/УСН, 3 = НДС 10%, 4 = НДС 20%)
+    # Уточняется у заказчика по его системе налогообложения
+    RECEIPT_VAT_CODE: int = 1
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"

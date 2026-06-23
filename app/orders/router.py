@@ -102,13 +102,8 @@ async def checkout(
 
     # Формируем URL возврата — сюда YooKassa вернёт покупателя после оплаты
     return_url = str(request.base_url) + f"orders/{order.id}/payment-return"
-
     payment_url = await payment_service.create_payment(
-        db,
-        order_id=str(order.id),
-        amount=order.total,
-        description=f"Заказ в магазине на {order.total} ₽",
-        return_url=return_url,
+        db, order=order, return_url=return_url
     )
 
     return RedirectResponse(url=payment_url, status_code=303)
@@ -195,11 +190,7 @@ async def pay_order(
 
     return_url = str(request.base_url) + f"orders/{order.id}/payment-return"
     payment_url = await payment_service.create_payment(
-        db,
-        order_id=str(order.id),
-        amount=order.total,
-        description=f"Заказ в магазине Эпатаж на {order.total} ₽",
-        return_url=return_url,
+        db, order=order, return_url=return_url
     )
     return RedirectResponse(url=payment_url, status_code=303)
 

@@ -26,6 +26,9 @@ class ReturnRequest(UUIDMixin, TimeStampMixin, Base):
 
     # Ответ администратора (необязательно)
     admin_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # id платежа в YooKassa (копируется при создании заявки — чтобы
+    # менеджер быстро нашёл платёж в кабинете YooKassa для возврата денег)
+    payment_external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     order: Mapped["Order"] = relationship("Order")
     user: Mapped["User"] = relationship("User")

@@ -20,6 +20,7 @@ from app.admin.views import (
     DashboardView,
     InfoPageAdmin,
     StockView,
+    ReturnRequestAdmin,
 )
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
@@ -240,6 +241,7 @@ admin.add_view(ReviewAdmin)
 admin.add_view(DashboardView)
 admin.add_view(InfoPageAdmin)
 admin.add_view(StockView)
+admin.add_view(ReturnRequestAdmin)
 
 
 @app.get("/health", tags=["system"])

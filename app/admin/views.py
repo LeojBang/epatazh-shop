@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.catalog import Category, Product, ProductVariant, ProductImage
 from app.models.review import Review
 from app.models.page import InfoPage
+from app.models.return_request import ReturnRequest
 
 from datetime import timezone, timedelta
 
@@ -188,6 +189,87 @@ class OrderItemAdmin(ModelView, model=OrderItem):
     column_list = [OrderItem.product_name, OrderItem.price, OrderItem.quantity]
     can_create = False
     can_edit = False
+
+
+class ReturnRequestAdmin(ModelView, model=ReturnRequest):
+    name = "Возврат"
+    name_plural = "Возвраты"
+    category = "Продажи"
+    column_list = [
+        ReturnRequest.created_at,
+        ReturnRequest.order_id,
+        ReturnRequest.reason,
+        ReturnRequest.status,
+        ReturnRequest.payment_external_id,
+    ]
+    column_details_list = [
+        ReturnRequest.created_at,
+        ReturnRequest.order_id,
+        ReturnRequest.user_id,
+        ReturnRequest.reason,
+        ReturnRequest.comment,
+        ReturnRequest.status,
+        ReturnRequest.admin_comment,
+        ReturnRequest.payment_external_id,
+    ]
+    column_sortable_list = [ReturnRequest.created_at, ReturnRequest.status]
+    column_default_sort = [("created_at", True)]  # новые сверху
+    can_create = False  # заявки создаёт покупатель, не админ
+    page_size = 50
+
+    _REASON_RU = {
+        "size": "Не подошёл размер",
+        "look": "Не понравился / не подошёл",
+        "defect": "Брак / дефект",
+        "other": "Другая причина",
+    }
+    _STATUS_RU = {
+        "pending": "На рассмотрении",
+        "approved": "Одобрена",
+        "rejected": "Отклонена",
+        "refunded": "Деньги возвращены",
+    }
+
+    column_formatters = {
+        ReturnRequest.created_at: lambda m, a: _msk(m.created_at),
+        ReturnRequest.reason: lambda m, a: ReturnRequestAdmin._REASON_RU.get(
+            m.reason, m.reason
+        ),
+        ReturnRequest.status: lambda m, a: ReturnRequestAdmin._STATUS_RU.get(
+            m.status, m.status
+        ),
+    }
+    column_formatters_detail = {
+        ReturnRequest.created_at: lambda m, a: _msk(m.created_at),
+        ReturnRequest.reason: lambda m, a: ReturnRequestAdmin._REASON_RU.get(
+            m.reason, m.reason
+        ),
+        ReturnRequest.status: lambda m, a: ReturnRequestAdmin._STATUS_RU.get(
+            m.status, m.status
+        ),
+    }
+
+    form_overrides = {"status": SelectField}
+    form_args = {
+        "status": {
+            "choices": [
+                ("pending", "На рассмотрении"),
+                ("approved", "Одобрена"),
+                ("rejected", "Отклонена"),
+                ("refunded", "Деньги возвращены"),
+            ]
+        }
+    }
+    # Покупательские поля не редактируем — только статус и ответ админа
+    form_excluded_columns = [
+        ReturnRequest.created_at,
+        ReturnRequest.updated_at,
+        ReturnRequest.order_id,
+        ReturnRequest.user_id,
+        ReturnRequest.reason,
+        ReturnRequest.comment,
+        ReturnRequest.payment_external_id,
+    ]
 
 
 class ProductVariantAdmin(ModelView, model=ProductVariant):

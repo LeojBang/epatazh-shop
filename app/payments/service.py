@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.payment import Payment
 
+from app.core.config import settings
+
 # Важно: импорт настраивает SDK (account_id + secret_key) при загрузке модуля
 from app.payments import yookassa_client  # noqa: F401
 from app.core.logging_config import get_logger
@@ -13,40 +15,69 @@ from app.core.logging_config import get_logger
 logger = get_logger("payments")
 
 
+def build_receipt(order, email: str, phone: str) -> dict:
+    """Собирает фискальный чек (54-ФЗ) из позиций заказа.
+
+    Сумма позиций чека должна совпадать с суммой платежа до копейки,
+    иначе YooKassa отклонит чек.
+    """
+    items = []
+    for item in order.items:
+        items.append(
+            {
+                "description": item.product_name[:128],  # ограничение длины в чеке
+                "quantity": f"{item.quantity}.00",
+                "amount": {
+                    "value": f"{item.price:.2f}",  # цена продажи (с учётом скидки)
+                    "currency": "RUB",
+                },
+                "vat_code": settings.RECEIPT_VAT_CODE,
+                "payment_mode": "full_prepayment",
+                "payment_subject": "commodity",
+            }
+        )
+
+    # Контакт покупателя — на него YooKassa пришлёт чек.
+    # Достаточно email или телефона.
+    customer = {}
+    if email:
+        customer["email"] = email
+    if phone:
+        customer["phone"] = phone
+
+    return {"customer": customer, "items": items}
+
+
 async def create_payment(
     db: AsyncSession,
-    order_id: str,
-    amount,
-    description: str,
+    *,
+    order,
     return_url: str,
 ) -> str:
-    """Создаёт платёж в YooKassa и запись у нас. Возвращает URL страницы оплаты."""
-    # 1. Своя запись о платеже (пока без external_id)
-    payment = Payment(order_id=order_id, amount=amount, status="pending")
+    """Создаёт платёж в YooKassa с фискальным чеком. Возвращает URL оплаты."""
+    payment = Payment(order_id=order.id, amount=order.total, status="pending")
     db.add(payment)
-    await db.flush()  # получаем payment.id, но ещё не коммитим
+    await db.flush()
 
-    # 2. Запрос в YooKassa. idempotence_key защищает от двойного списания
-    #    при повторной отправке того же запроса (например, при ретрае сети).
     idempotence_key = str(uuid.uuid4())
     yoo_payment = YooPayment.create(
         {
-            "amount": {"value": f"{amount:.2f}", "currency": "RUB"},
+            "amount": {"value": f"{order.total:.2f}", "currency": "RUB"},
             "capture": True,
             "confirmation": {
                 "type": "redirect",
                 "return_url": return_url,
             },
-            "description": description,
-            "metadata": {"order_id": str(order_id), "payment_id": str(payment.id)},
+            "description": f"Заказ в магазине Эпатаж на {order.total} ₽",
+            "receipt": build_receipt(order, order.email, order.phone),
+            "metadata": {"order_id": str(order.id), "payment_id": str(payment.id)},
         },
         idempotence_key,
     )
 
-    # 3. Сохраняем id платежа от YooKassa и его статус
     payment.external_id = yoo_payment.id
-    logger.info("Создан платёж YooKassa %s для заказа %s", yoo_payment.id, order_id)
     payment.status = yoo_payment.status
+    logger.info("Создан платёж YooKassa %s для заказа %s", yoo_payment.id, order.id)
     await db.commit()
 
     return yoo_payment.confirmation.confirmation_url
