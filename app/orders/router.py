@@ -100,7 +100,22 @@ async def checkout(
             status_code=400,
         )
 
-    # Формируем URL возврата — сюда YooKassa вернёт покупателя после оплаты
+    # Письмо «Заказ принят» — ставим в фоновую очередь (не тормозим оформление)
+    try:
+        from app.core.email import order_created_email
+
+        # Перезагружаем заказ с подгруженными позициями (избегаем MissingGreenlet)
+        order_full = await service.get_order(db, str(order.id))
+        subject, body = order_created_email(order_full)
+        await request.app.state.arq_pool.enqueue_job(
+            "send_email_task", to=order_full.email, subject=subject, body=body
+        )
+    except Exception as e:
+        from app.core.logging_config import get_logger
+
+        get_logger("email").warning("Не удалось поставить письмо в очередь: %s", e)
+
+        # Формируем URL возврата — сюда YooKassa вернёт покупателя после оплаты
     return_url = str(request.base_url) + f"orders/{order.id}/payment-return"
     payment_url = await payment_service.create_payment(
         db, order=order, return_url=return_url
@@ -147,8 +162,26 @@ async def payment_return(
     payment = result.scalars().first()
 
     if payment and payment.external_id:
-        await payment_service.sync_payment_status(db, payment.external_id)
+        _, just_paid = await payment_service.sync_payment_status(
+            db, payment.external_id
+        )
         await db.refresh(order)
+
+        # Заказ только что оплачен — письмо «Заказ оплачен»
+        if just_paid:
+            try:
+                from app.core.email import order_paid_email
+
+                subject, body = order_paid_email(order)
+                await request.app.state.arq_pool.enqueue_job(
+                    "send_email_task", to=order.email, subject=subject, body=body
+                )
+            except Exception as e:
+                from app.core.logging_config import get_logger
+
+                get_logger("email").warning(
+                    "Не удалось поставить письмо об оплате: %s", e
+                )
 
     return templates.TemplateResponse(
         request, "orders/payment_return.html", {"order": order, "user": user}

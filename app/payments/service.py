@@ -96,17 +96,23 @@ async def create_refund(payment_external_id: str, amount) -> str:
     return refund.status
 
 
-async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | None:
-    """Запрашивает актуальный статус платежа у YooKassa и обновляет нашу запись + заказ."""
+async def sync_payment_status(
+    db: AsyncSession, external_id: str
+) -> tuple[Payment | None, bool]:
+    """Запрашивает статус платежа у YooKassa, обновляет запись + заказ.
+
+    Возвращает (payment, just_paid), где just_paid=True, если заказ
+    ТОЛЬКО ЧТО перешёл в paid (для отправки письма ровно один раз).
+    """
     result = await db.execute(select(Payment).where(Payment.external_id == external_id))
     payment = result.scalar_one_or_none()
     if not payment:
-        return None
+        return None, False
 
     yoo_payment = YooPayment.find_one(external_id)
     payment.status = yoo_payment.status
 
-    # Если оплата прошла — переводим заказ в paid
+    just_paid = False
     if yoo_payment.status == "succeeded":
         from app.models.order import Order
 
@@ -114,12 +120,14 @@ async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | N
             select(Order).where(Order.id == payment.order_id)
         )
         order = order_result.scalar_one_or_none()
-        if order:
+        if order and order.status != "paid":
+            # Переход из не-paid в paid — это «только что оплачен»
             order.status = "paid"
+            just_paid = True
             logger.info("Заказ %s оплачен (платёж %s)", payment.order_id, external_id)
 
     await db.commit()
-    return payment
+    return payment, just_paid
 
 
 async def mark_refunded(db: AsyncSession, payment_external_id: str) -> None:

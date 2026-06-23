@@ -1,3 +1,7 @@
+from contextlib import asynccontextmanager
+
+from arq import create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
@@ -40,7 +44,19 @@ from starlette.responses import JSONResponse as StarletteJSON
 
 setup_logging()
 
-app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Старт: создаём arq-пул для постановки фоновых задач
+    app.state.arq_pool = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+    yield
+    # Остановка: закрываем пул
+    pool = getattr(app.state, "arq_pool", None)
+    if pool:
+        await pool.close()
+
+
+app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG, lifespan=lifespan)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

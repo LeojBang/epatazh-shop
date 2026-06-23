@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     # Уточняется у заказчика по его системе налогообложения
     RECEIPT_VAT_CODE: int = 1
 
+    # Почта (SMTP) — письма покупателям через Яндекс
+    SMTP_HOST: str = "smtp.yandex.ru"
+    SMTP_PORT: int = 465
+    SMTP_USER: str = ""  # email-ящик на Яндексе
+    SMTP_PASSWORD: str = ""  # пароль приложения (не обычный пароль!)
+    SMTP_FROM: str = ""  # от кого (обычно = SMTP_USER)
+    EMAILS_ENABLED: bool = False  # переключатель: реально слать или только логировать
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"
