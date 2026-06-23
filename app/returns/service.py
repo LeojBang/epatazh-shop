@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.return_request import ReturnRequest
 from app.models.order import Order
 from app.models.payment import Payment
+from app.payments import service as payment_service
 
 
 class ReturnError(Exception):
@@ -62,15 +63,20 @@ async def create_return_request(
                 "Для возврата бракованного товара выберите причину «Брак»."
             )
 
-    # 5. Нельзя подать повторную заявку, если уже есть активная
+    # 5. Проверка существующих заявок по заказу.
+    #    pending/approved — заявка в работе, нельзя дублировать.
+    #    refunded — деньги уже вернули, возвращать нечего.
+    #    rejected — была отклонена, разрешаем повторную попытку.
     existing = await db.scalar(
         select(ReturnRequest).where(
             ReturnRequest.order_id == order_id,
-            ReturnRequest.status.in_(["pending", "approved"]),
+            ReturnRequest.status.in_(["pending", "approved", "refunded"]),
         )
     )
     if existing:
-        raise ReturnError("По этому заказу уже есть активная заявка на возврат")
+        if existing.status == "refunded":
+            raise ReturnError("По этому заказу деньги уже возвращены")
+        raise ReturnError("По этому заказу уже есть заявка на возврат в обработке")
 
     # Находим id платежа в YooKassa — чтобы менеджер быстро нашёл его в кабинете
     payment = await db.scalar(
@@ -103,3 +109,31 @@ async def get_user_returns(db: AsyncSession, user_id: uuid.UUID) -> list[ReturnR
         .order_by(ReturnRequest.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def process_refund(db: AsyncSession, return_request: ReturnRequest) -> None:
+    """Делает возврат денег по заявке. С защитой от ошибок."""
+    # Защита от повторного возврата — ПЕРВОЙ проверкой
+    if return_request.status == "refunded":
+        raise ReturnError("Деньги по этой заявке уже возвращены")
+
+    if return_request.status != "approved":
+        raise ReturnError("Возврат возможен только для одобренной заявки")
+
+    if not return_request.payment_external_id:
+        raise ReturnError("Не найден платёж для возврата")
+
+    order = await db.scalar(select(Order).where(Order.id == return_request.order_id))
+    if not order:
+        raise ReturnError("Заказ не найден")
+
+    # Вызываем возврат в YooKassa
+    status = await payment_service.create_refund(
+        return_request.payment_external_id, order.total
+    )
+
+    # Если возврат успешен — сразу ставим статус (не ждём webhook).
+    # Webhook придёт как дополнительное подтверждение.
+    if status == "succeeded":
+        return_request.status = "refunded"
+        await db.commit()

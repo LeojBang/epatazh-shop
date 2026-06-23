@@ -1,4 +1,4 @@
-from sqladmin import BaseView, expose
+from sqladmin import BaseView, expose, action
 from starlette.requests import Request
 
 from app.core.database import AsyncSessionLocal
@@ -270,6 +270,40 @@ class ReturnRequestAdmin(ModelView, model=ReturnRequest):
         ReturnRequest.comment,
         ReturnRequest.payment_external_id,
     ]
+
+    @action(
+        name="refund",
+        label="Вернуть деньги",
+        confirmation_message="Вернуть деньги покупателю по этой заявке? "
+        "Действие отправит возврат в YooKassa.",
+    )
+    async def refund_action(self, request: Request):
+        from app.returns import service as returns_service
+        from app.models.return_request import ReturnRequest
+        from sqlalchemy import select
+
+        pks = request.query_params.get("pks", "").split(",")
+        async with AsyncSessionLocal() as db:
+            for pk in pks:
+                if not pk:
+                    continue
+                return_request = await db.scalar(
+                    select(ReturnRequest).where(ReturnRequest.id == pk)
+                )
+                if return_request:
+                    try:
+                        await returns_service.process_refund(db, return_request)
+                    except Exception as e:
+                        from app.core.logging_config import get_logger
+
+                        get_logger("admin").warning(
+                            "Возврат по заявке %s не выполнен: %s", pk, e
+                        )
+
+        referer = request.headers.get("referer", "/admin")
+        from starlette.responses import RedirectResponse
+
+        return RedirectResponse(referer)
 
 
 class ProductVariantAdmin(ModelView, model=ProductVariant):

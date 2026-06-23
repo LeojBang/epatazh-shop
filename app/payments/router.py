@@ -21,15 +21,22 @@ async def yookassa_webhook(
     except Exception:
         return JSONResponse({"status": "bad request"}, status_code=400)
 
-    # Из уведомления берём ТОЛЬКО id платежа. Статусу из тела не доверяем —
-    # sync_payment_status сам запросит реальный статус у YooKassa.
-    payment_object = body.get("object", {})
-    external_id = payment_object.get("id")
-    logger.info("Webhook YooKassa: платёж %s", external_id)
+    event = body.get("event", "")
+    obj = body.get("object", {})
+
+    # Возврат денег подтверждён — отмечаем заявку как refunded
+    if event == "refund.succeeded":
+        payment_id = obj.get("payment_id")
+        logger.info("Webhook YooKassa: возврат по платежу %s", payment_id)
+        if payment_id:
+            await payment_service.mark_refunded(db, payment_id)
+        return JSONResponse({"status": "ok"}, status_code=200)
+
+    # Платёж — берём id платежа, статус перепроверяем у YooKassa
+    external_id = obj.get("id")
+    logger.info("Webhook YooKassa: платёж %s (%s)", external_id, event)
     if not external_id:
         return JSONResponse({"status": "ignored"}, status_code=200)
 
     await payment_service.sync_payment_status(db, external_id)
-
-    # YooKassa ждёт 200 — иначе будет повторять уведомление.
     return JSONResponse({"status": "ok"}, status_code=200)

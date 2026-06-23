@@ -1,6 +1,6 @@
 import uuid
 
-from yookassa import Payment as YooPayment
+from yookassa import Payment as YooPayment, Refund
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,46 +15,38 @@ from app.core.logging_config import get_logger
 logger = get_logger("payments")
 
 
-def build_receipt(order, email: str, phone: str) -> dict:
-    """Собирает фискальный чек (54-ФЗ) из позиций заказа.
-
-    Сумма позиций чека должна совпадать с суммой платежа до копейки,
-    иначе YooKassa отклонит чек.
-    """
+def build_receipt(order_items, email: str, phone: str) -> dict:
+    """Собирает фискальный чек из позиций заказа."""
     items = []
-    for item in order.items:
+    for item in order_items:
         items.append(
             {
-                "description": item.product_name[:128],  # ограничение длины в чеке
+                "description": item.product_name[:128],
                 "quantity": f"{item.quantity}.00",
-                "amount": {
-                    "value": f"{item.price:.2f}",  # цена продажи (с учётом скидки)
-                    "currency": "RUB",
-                },
+                "amount": {"value": f"{item.price:.2f}", "currency": "RUB"},
                 "vat_code": settings.RECEIPT_VAT_CODE,
                 "payment_mode": "full_prepayment",
                 "payment_subject": "commodity",
             }
         )
-
-    # Контакт покупателя — на него YooKassa пришлёт чек.
-    # Достаточно email или телефона.
     customer = {}
     if email:
         customer["email"] = email
     if phone:
         customer["phone"] = phone
-
     return {"customer": customer, "items": items}
 
 
-async def create_payment(
-    db: AsyncSession,
-    *,
-    order,
-    return_url: str,
-) -> str:
+async def create_payment(db: AsyncSession, *, order, return_url: str) -> str:
     """Создаёт платёж в YooKassa с фискальным чеком. Возвращает URL оплаты."""
+    # Явно подгружаем позиции заказа для чека (избегаем lazy load в async)
+    from app.models.order import OrderItem
+
+    items_result = await db.execute(
+        select(OrderItem).where(OrderItem.order_id == order.id)
+    )
+    order_items = list(items_result.scalars().all())
+
     payment = Payment(order_id=order.id, amount=order.total, status="pending")
     db.add(payment)
     await db.flush()
@@ -64,12 +56,9 @@ async def create_payment(
         {
             "amount": {"value": f"{order.total:.2f}", "currency": "RUB"},
             "capture": True,
-            "confirmation": {
-                "type": "redirect",
-                "return_url": return_url,
-            },
+            "confirmation": {"type": "redirect", "return_url": return_url},
             "description": f"Заказ в магазине Эпатаж на {order.total} ₽",
-            "receipt": build_receipt(order, order.email, order.phone),
+            "receipt": build_receipt(order_items, order.email, order.phone),
             "metadata": {"order_id": str(order.id), "payment_id": str(payment.id)},
         },
         idempotence_key,
@@ -81,6 +70,30 @@ async def create_payment(
     await db.commit()
 
     return yoo_payment.confirmation.confirmation_url
+
+
+async def create_refund(payment_external_id: str, amount) -> str:
+    """Создаёт полный возврат в YooKassa по успешному платежу.
+
+    Для полного возврата YooKassa сама сформирует чек возврата
+    из данных исходного платежа — передавать receipt не нужно.
+    Возвращает статус возврата.
+    """
+    idempotence_key = str(uuid.uuid4())
+    refund = Refund.create(
+        {
+            "amount": {"value": f"{amount:.2f}", "currency": "RUB"},
+            "payment_id": payment_external_id,
+        },
+        idempotence_key,
+    )
+    logger.info(
+        "Создан возврат YooKassa %s по платежу %s на сумму %s",
+        refund.id,
+        payment_external_id,
+        amount,
+    )
+    return refund.status
 
 
 async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | None:
@@ -107,3 +120,36 @@ async def sync_payment_status(db: AsyncSession, external_id: str) -> Payment | N
 
     await db.commit()
     return payment
+
+
+async def mark_refunded(db: AsyncSession, payment_external_id: str) -> None:
+    """По id платежа находит заявку на возврат и отмечает деньги возвращёнными."""
+    from app.models.return_request import ReturnRequest
+
+    return_request = await db.scalar(
+        select(ReturnRequest).where(
+            ReturnRequest.payment_external_id == payment_external_id,
+            ReturnRequest.status.in_(["approved", "refunded"]),
+        )
+    )
+    if not return_request:
+        logger.info(
+            "Webhook возврата: заявка для платежа %s не найдена (возможно, уже обработана)",
+            payment_external_id,
+        )
+        return
+
+    if return_request.status == "refunded":
+        # Уже отмечено (мы ставим статус сразу после create_refund) — webhook подтверждает
+        logger.info(
+            "Webhook возврата: заявка %s уже refunded, подтверждено", return_request.id
+        )
+        return
+
+    return_request.status = "refunded"
+    await db.commit()
+    logger.info(
+        "Заявка на возврат %s отмечена refunded (платёж %s)",
+        return_request.id,
+        payment_external_id,
+    )
