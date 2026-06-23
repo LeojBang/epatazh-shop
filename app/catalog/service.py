@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,7 +15,13 @@ async def get_categories(db: AsyncSession) -> list[Category]:
 async def get_products(
     db: AsyncSession,
     category_slug: str | None = None,
-) -> list[Product]:
+    *,
+    size: str | None = None,
+    sort: str = "name",
+    page: int = 1,
+    per_page: int = 12,
+) -> tuple[list[Product], int]:
+    """Возвращает (товары на странице, всего товаров) с фильтрами и пагинацией."""
     query = (
         select(Product)
         .where(Product.is_active)
@@ -24,13 +30,40 @@ async def get_products(
             selectinload(Product.variants),
             selectinload(Product.images),
         )
-        .order_by(Product.name)
     )
+
     if category_slug:
         query = query.join(Category).where(Category.slug == category_slug)
 
+    # Фильтр по размеру: товар показываем, если есть вариант этого размера в наличии
+    if size:
+        query = query.where(
+            Product.variants.any(
+                (ProductVariant.size == size) & (ProductVariant.stock > 0)
+            )
+        )
+
+    # Сортировка
+    if sort == "price_asc":
+        query = query.order_by(Product.price.asc())
+    elif sort == "price_desc":
+        query = query.order_by(Product.price.desc())
+    elif sort == "new":
+        query = query.order_by(Product.created_at.desc())
+    else:
+        query = query.order_by(Product.name)
+
+    # Считаем общее количество (для пагинации) — до limit/offset
+
+    count_query = select(func.count()).select_from(query.order_by(None).subquery())
+    total = await db.scalar(count_query)
+
+    # Пагинация
+    page = max(1, page)
+    query = query.limit(per_page).offset((page - 1) * per_page)
+
     result = await db.execute(query)
-    return list(result.scalars().all())
+    return list(result.scalars().all()), total or 0
 
 
 async def get_product_by_slug(db: AsyncSession, slug: str) -> Product | None:
@@ -77,3 +110,38 @@ async def search_products(db: AsyncSession, query: str) -> list[Product]:
     )
     result = await db.execute(q)
     return list(result.scalars().all())
+
+
+async def get_available_sizes(db: AsyncSession) -> list[str]:
+    """Уникальные размеры, доступные в каталоге (для фильтра)."""
+    result = await db.execute(
+        select(ProductVariant.size)
+        .distinct()
+        .where(ProductVariant.stock > 0)
+        .order_by(ProductVariant.size)
+    )
+    return [row[0] for row in result.all()]
+
+
+async def get_featured_products(db: AsyncSession, limit: int = 4) -> list[Product]:
+    """Товары для витрины на главной: сначала хиты, потом остальные.
+
+    Отдельно от get_products — главной не нужна пагинация,
+    нужен небольшой набор для блока «Популярное».
+    """
+    # Берём активные товары с бейджем «Хит» в первую очередь
+    result = await db.execute(
+        select(Product)
+        .where(Product.is_active)
+        .options(
+            selectinload(Product.category),
+            selectinload(Product.variants),
+            selectinload(Product.images),
+        )
+        .order_by(Product.name)
+    )
+    products = list(result.scalars().all())
+
+    hits = [p for p in products if p.badge and "хит" in p.badge.lower()]
+    featured = hits[:limit] if hits else products[:limit]
+    return featured

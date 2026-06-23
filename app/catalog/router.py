@@ -8,20 +8,32 @@ from app.catalog import service
 from app.core.database import get_db
 from app.models.user import User
 from app.users.dependencies import get_current_user_optional
+from app.web.filters import update_query
 
 router = APIRouter(tags=["catalog"])
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["update_query"] = update_query
 
 
 @router.get("/catalog", response_class=HTMLResponse)
 async def catalog_page(
     request: Request,
     category: str | None = None,
+    size: str | None = None,
+    sort: str = "name",
+    page: int = 1,
     db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_current_user_optional),
 ):
     categories = await service.get_categories(db)
-    products = await service.get_products(db, category_slug=category)
+    products, total = await service.get_products(
+        db, category_slug=category, size=size, sort=sort, page=page
+    )
+
+    per_page = 12
+    total_pages = (total + per_page - 1) // per_page
+    all_sizes = await service.get_available_sizes(db)
+
     return templates.TemplateResponse(
         request,
         "catalog/index.html",
@@ -29,6 +41,11 @@ async def catalog_page(
             "categories": categories,
             "products": products,
             "active_category": category,
+            "active_size": size,
+            "active_sort": sort,
+            "page": page,
+            "total_pages": total_pages,
+            "all_sizes": all_sizes,
             "user": user,
         },
     )

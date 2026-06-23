@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""  # пароль приложения (не обычный пароль!)
     SMTP_FROM: str = ""  # от кого (обычно = SMTP_USER)
     EMAILS_ENABLED: bool = False  # переключатель: реально слать или только логировать
+    SMTP_FROM_NAME: str = "Магазин Эпатаж"  # отображаемое имя отправителя
 
     @property
     def is_production(self) -> bool:

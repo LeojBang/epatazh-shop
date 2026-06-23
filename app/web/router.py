@@ -19,13 +19,7 @@ async def index(
     user: User | None = Depends(get_current_user_optional),
 ):
     categories = await catalog_service.get_categories(db)
-    products = await catalog_service.get_products(db)
-
-    # «Популярное»: сначала товары с бейджем «Хит».
-    # Если хитов нет — показываем первые товары как запасной вариант,
-    # чтобы блок не пустовал.
-    hits = [p for p in products if p.badge and "хит" in p.badge.lower()]
-    featured = hits[:4] if hits else products[:4]
+    featured = await catalog_service.get_featured_products(db, limit=4)
 
     return templates.TemplateResponse(
         request,

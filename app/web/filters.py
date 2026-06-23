@@ -52,3 +52,18 @@ def return_status_ru(status: str) -> str:
         "refunded": "Деньги возвращены",
     }
     return mapping.get(status, status)
+
+
+def update_query(request, **kwargs):
+    """Берёт текущие query-параметры и обновляет заданные, сохраняя остальные.
+
+    None-значение убирает параметр. Возвращает путь с новой query-строкой.
+    """
+    params = dict(request.query_params)
+    for key, value in kwargs.items():
+        if value is None:
+            params.pop(key, None)
+        else:
+            params[key] = str(value)
+    query = "&".join(f"{k}={v}" for k, v in params.items())
+    return f"{request.url.path}?{query}" if query else request.url.path

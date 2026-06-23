@@ -1,5 +1,6 @@
 import smtplib
 from email.message import EmailMessage
+from email.utils import formataddr
 
 from app.core.config import settings
 from app.core.logging_config import get_logger
@@ -24,7 +25,11 @@ def send_email(to: str, subject: str, body: str) -> None:
 
     # Реальная отправка через SMTP (Яндекс)
     message = EmailMessage()
-    message["From"] = settings.SMTP_FROM or settings.SMTP_USER
+    from_addr = settings.SMTP_FROM or settings.SMTP_USER
+    if settings.SMTP_FROM_NAME:
+        message["From"] = formataddr((settings.SMTP_FROM_NAME, from_addr))
+    else:
+        message["From"] = from_addr
     message["To"] = to
     message["Subject"] = subject
     message.set_content(body)

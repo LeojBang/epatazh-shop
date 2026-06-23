@@ -4,12 +4,39 @@
     <h1>Каталог</h1>
 
     <nav class="category-nav">
-        <a href="/catalog" class="{% if not active_category %}active{% endif %}">Все</a>
+        <a href="{{ update_query(request, category=None, page=None) }}"
+           class="{% if not active_category %}active{% endif %}">Все</a>
         {% for cat in categories %}
-            <a href="/catalog?category={{ cat.slug }}"
+            <a href="{{ update_query(request, category=cat.slug, page=None) }}"
                class="{% if active_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
         {% endfor %}
     </nav>
+
+    <div class="catalog-filters">
+        <div class="filter-group">
+            <span class="filter-label">Размер:</span>
+            <a href="{{ update_query(request, size=None, page=None) }}"
+               class="filter-chip {% if not active_size %}active{% endif %}">Все</a>
+            {% for s in all_sizes %}
+                <a href="{{ update_query(request, size=s, page=None) }}"
+                   class="filter-chip {% if active_size == s %}active{% endif %}">{{ s }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Сортировка:</span>
+            <select class="filter-select" onchange="window.location.href=this.value">
+                <option value="{{ update_query(request, sort=None, page=None) }}"
+                        {% if active_sort == 'name' %}selected{% endif %}>По названию</option>
+                <option value="{{ update_query(request, sort='price_asc', page=None) }}"
+                        {% if active_sort == 'price_asc' %}selected{% endif %}>Сначала дешёвые</option>
+                <option value="{{ update_query(request, sort='price_desc', page=None) }}"
+                        {% if active_sort == 'price_desc' %}selected{% endif %}>Сначала дорогие</option>
+                <option value="{{ update_query(request, sort='new', page=None) }}"
+                        {% if active_sort == 'new' %}selected{% endif %}>Новинки</option>
+            </select>
+        </div>
+    </div>
 
     {% if products %}
         <div class="product-grid">
@@ -17,7 +44,19 @@
                 {% include "catalog/_product_card.html" %}
             {% endfor %}
         </div>
+
+        {% if total_pages > 1 %}
+            <nav class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ update_query(request, page=page-1) }}" class="page-link">← Назад</a>
+                {% endif %}
+                <span class="page-info">Страница {{ page }} из {{ total_pages }}</span>
+                {% if page < total_pages %}
+                    <a href="{{ update_query(request, page=page+1) }}" class="page-link">Вперёд →</a>
+                {% endif %}
+            </nav>
+        {% endif %}
     {% else %}
-        <p>Товаров пока нет.</p>
+        <p>Товаров по выбранным фильтрам не найдено.</p>
     {% endif %}
 {% endblock %}
