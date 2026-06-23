@@ -41,3 +41,14 @@ def plural_ru(number: int, one: str, few: str, many: str) -> str:
     if 2 <= n <= 4:
         return few
     return many
+
+
+def return_status_ru(status: str) -> str:
+    """Статус заявки на возврат на русском."""
+    mapping = {
+        "pending": "На рассмотрении",
+        "approved": "Одобрена",
+        "rejected": "Отклонена",
+        "refunded": "Деньги возвращены",
+    }
+    return mapping.get(status, status)

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Оформление возврата — Эпатаж{% endblock %}
+{% block content %}
+    <h1>Оформление возврата</h1>
+    <p class="muted">Заказ от {{ order.created_at | msk_date }} на сумму {{ "%.2f"|format(order.total) }} ₽</p>
+
+    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+
+    <div class="auth-card" style="margin: 0;">
+        <form method="post" action="/account/orders/{{ order.id }}/return" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+            <label for="reason">Причина возврата</label>
+            <select id="reason" name="reason" required>
+                <option value="" disabled selected>Выберите причину</option>
+                {% for code, label in reasons.items() %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="comment">Комментарий (необязательно)</label>
+            <textarea id="comment" name="comment" rows="4"
+                placeholder="Опишите подробнее, если нужно"></textarea>
+
+            <button type="submit" class="btn-primary">Отправить заявку</button>
+        </form>
+    </div>
+
+    <p class="muted" style="margin-top: 1.5rem; font-size: 0.9rem;">
+        Возврат товара надлежащего качества возможен в течение 14 дней.
+        Заявка рассматривается до 7 дней. После одобрения деньги вернутся
+        на карту, которой вы оплачивали заказ.
+    </p>
+{% endblock %}

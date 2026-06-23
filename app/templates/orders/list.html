@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Мои заказы — Эпатаж{% endblock %}
 {% block content %}
-    <h1>Мои заказы</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Мои заказы</h1>
+        <a href="/account/returns" class="btn-outline">Мои возвраты</a>
+    </div>
 
     {% if not active and not completed %}
         <p>У вас пока нет заказов. <a href="/catalog">Перейти в каталог</a></p>

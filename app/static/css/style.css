@@ -658,3 +658,36 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 }
 .product-price__new { color: var(--danger); }
 .badge--sale { background: var(--danger); color: #fff; }
+/* Заявки на возврат */
+.return-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+.return-card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.return-reason {
+    font-weight: 600;
+}
+.return-status {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    background: #f0f0f0;
+}
+.return-status--pending { background: #fff3cd; color: #856404; }
+.return-status--approved { background: #d4edda; color: #155724; }
+.return-status--rejected { background: #f8d7da; color: #721c24; }
+.return-status--refunded { background: #d1ecf1; color: #0c5460; }
+.admin-comment {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}

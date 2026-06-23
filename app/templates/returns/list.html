@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Мои возвраты — Эпатаж{% endblock %}
+{% block content %}
+    <h1>Мои возвраты</h1>
+
+    {% if not returns %}
+        <p class="muted">У вас пока нет заявок на возврат.</p>
+        <a href="/account/orders" class="btn-primary">К заказам</a>
+    {% else %}
+        {% for r in returns %}
+        <div class="return-card">
+            <div class="return-card__top">
+                <span class="return-reason">{{ reasons.get(r.reason, r.reason) }}</span>
+                <span class="return-status return-status--{{ r.status }}">
+                    {{ r.status | return_status_ru }}
+                </span>
+            </div>
+            <p class="muted">Заявка от {{ r.created_at | msk_date }}</p>
+            {% if r.comment %}<p>{{ r.comment }}</p>{% endif %}
+            {% if r.admin_comment %}
+            <p class="admin-comment"><strong>Ответ магазина:</strong> {{ r.admin_comment }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

@@ -32,6 +32,7 @@ from app.web.router import router as web_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.pages.router import router as pages_router
+from app.returns.router import router as returns_router
 from app.core.logging_config import setup_logging
 from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
 from starlette.responses import JSONResponse as StarletteJSON
@@ -223,6 +224,7 @@ app.include_router(orders_router)
 app.include_router(payments_router)
 app.include_router(pages_router)
 app.include_router(reviews_router)
+app.include_router(returns_router)
 
 # --- Админка ---
 admin = Admin(

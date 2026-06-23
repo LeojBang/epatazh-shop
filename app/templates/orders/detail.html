@@ -59,6 +59,13 @@
                     </form>
                 </div>
             {% endif %}
+            {% if order.status in ["paid", "shipped", "delivered"] %}
+                <div style="margin-top: 1rem;">
+                    <a href="/account/orders/{{ order.id }}/return" class="btn-outline" style="width: 100%; display: block; text-align: center; box-sizing: border-box;">
+                        Оформить возврат
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
