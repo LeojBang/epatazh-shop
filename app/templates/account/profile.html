@@ -52,9 +52,17 @@
     </div>
 
 
-<div style="margin-top: 1.5rem; display: flex; gap: 1.5rem; align-items: center;">
-        <a href="/account/orders" class="breadcrumb">→ Мои заказы</a>
-        <form action="/logout" method="post" class="inline-form">
+<div class="account-nav">
+        <a href="/account/orders" class="account-nav__link">
+            <i class="ti ti-package" aria-hidden="true"></i> Мои заказы
+        </a>
+        <a href="/account/returns" class="account-nav__link">
+            <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Мои возвраты
+        </a>
+        <a href="/account/favorites" class="account-nav__link">
+            <i class="ti ti-heart" aria-hidden="true"></i> Избранное
+        </a>
+        <form action="/logout" method="post" class="inline-form" style="margin-left: auto;">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="btn-outline">Выйти из аккаунта</button>
         </form>

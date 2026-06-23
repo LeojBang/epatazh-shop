@@ -34,6 +34,19 @@
             {% else %}
                 <p class="product-price">{{ product.price }} ₽</p>
             {% endif %}
+            {% if user %}
+                <button type="button"
+                        class="favorite-btn {% if is_favorite %}is-favorite{% endif %}"
+                        onclick="toggleFavorite(event, '{{ product.id }}')">
+                    <span class="favorite-icon">{% if is_favorite %}♥{% else %}♡{% endif %}</span>
+                    <span class="favorite-label">{% if is_favorite %}В избранном{% else %}В избранное{% endif %}</span>
+                </button>
+            {% else %}
+                <a href="/login" class="favorite-btn">
+                    <span class="favorite-icon">♡</span>
+                    <span class="favorite-label">В избранное</span>
+                </a>
+            {% endif %}
             {% if request.query_params.get('added') == '1' %}
                 <div class="cart-notice">
                     ✓ Товар добавлен в корзину

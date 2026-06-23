@@ -90,3 +90,41 @@ function changeImage(direction) {
         });
     });
 })();
+function getCookie(name) {
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? match.pop() : '';
+}
+
+async function toggleFavorite(event, productId) {
+    event.preventDefault();
+    event.stopPropagation();
+    const btn = event.currentTarget;
+    try {
+        const resp = await fetch(`/favorites/toggle/${productId}`, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': getCookie('csrf_token') },
+        });
+        if (resp.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        const data = await resp.json();
+        btn.classList.toggle('is-favorite', data.favorite);
+
+        // Если внутри есть отдельные span'ы (страница товара) — обновляем их
+        const icon = btn.querySelector('.favorite-icon');
+        const label = btn.querySelector('.favorite-label');
+        if (icon) {
+            icon.textContent = data.favorite ? '♥' : '♡';
+        }
+        if (label) {
+            label.textContent = data.favorite ? 'В избранном' : 'В избранное';
+        }
+        // Если span'ов нет (карточка — только сердечко) — меняем всю кнопку
+        if (!icon && !label) {
+            btn.textContent = data.favorite ? '♥' : '♡';
+        }
+    } catch (e) {
+        console.error('Ошибка избранного:', e);
+    }
+}

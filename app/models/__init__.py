@@ -6,6 +6,7 @@ from app.models.payment import Payment
 from app.models.review import Review
 from app.models.page import InfoPage
 from app.models.return_request import ReturnRequest
+from app.models.favorite import Favorite
 
 __all__ = [
     "Base",
@@ -20,4 +21,5 @@ __all__ = [
     "Review",
     "InfoPage",
     "ReturnRequest",
+    "Favorite",
 ]

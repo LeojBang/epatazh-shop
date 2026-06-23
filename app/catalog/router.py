@@ -8,6 +8,7 @@ from app.catalog import service
 from app.core.database import get_db
 from app.models.user import User
 from app.users.dependencies import get_current_user_optional
+from app.favorites import service as fav_service
 from app.web.filters import update_query
 
 router = APIRouter(tags=["catalog"])
@@ -34,6 +35,11 @@ async def catalog_page(
     total_pages = (total + per_page - 1) // per_page
     all_sizes = await service.get_available_sizes(db)
 
+    # Множество id избранного — для подсветки сердечек на карточках
+    favorite_ids = set()
+    if user:
+        favorite_ids = await fav_service.get_favorite_ids(db, user.id)
+
     return templates.TemplateResponse(
         request,
         "catalog/index.html",
@@ -47,6 +53,7 @@ async def catalog_page(
             "total_pages": total_pages,
             "all_sizes": all_sizes,
             "user": user,
+            "favorite_ids": favorite_ids,
         },
     )
 
@@ -69,8 +76,12 @@ async def product_page(
         db, str(product.id)
     )
 
+    # В избранном ли товар (для залогиненного)
+    is_fav = False
+
     # Может ли текущий пользователь оставить отзыв:
     # залогинен, купил товар, ещё не оставлял отзыв
+
     can_review = False
     if user:
         purchased = await review_service.has_purchased(
@@ -79,6 +90,7 @@ async def product_page(
         existing = await review_service.get_existing_review(
             db, str(user.id), str(product.id)
         )
+        is_fav = await fav_service.is_favorite(db, user.id, product.id)
         can_review = purchased and existing is None
 
     return templates.TemplateResponse(
@@ -91,6 +103,7 @@ async def product_page(
             "avg_rating": avg_rating,
             "reviews_count": reviews_count,
             "can_review": can_review,
+            "is_favorite": is_fav,  # ← добавили
         },
     )
 

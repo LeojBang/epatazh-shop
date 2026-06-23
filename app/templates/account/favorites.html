@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Избранное — Эпатаж{% endblock %}
+{% block content %}
+    <h1>Избранное</h1>
+
+    {% if products %}
+        <div class="product-grid">
+            {% for product in products %}
+                {% include "catalog/_product_card.html" %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">В избранном пока ничего нет.</p>
+        <a href="/catalog" class="btn-primary">Перейти в каталог</a>
+    {% endif %}
+{% endblock %}

@@ -38,6 +38,7 @@ from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.pages.router import router as pages_router
 from app.returns.router import router as returns_router
+from app.favorites.router import router as favorites_router
 from app.core.logging_config import setup_logging
 from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
 from starlette.responses import JSONResponse as StarletteJSON
@@ -112,8 +113,13 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
                 # Возвращаем тело для парсинга формы
                 request._receive = make_receive(body)
-                form = await request.form()
-                form_token = form.get("csrf_token")
+                # Токен может прийти из формы ИЛИ из заголовка (для AJAX)
+                header_token = request.headers.get("X-CSRF-Token")
+                if header_token:
+                    form_token = header_token
+                else:
+                    form = await request.form()
+                    form_token = form.get("csrf_token")
                 if not validate_csrf(request.cookies.get(CSRF_COOKIE), form_token):
                     return StarletteJSON(
                         {
@@ -273,6 +279,7 @@ app.include_router(payments_router)
 app.include_router(pages_router)
 app.include_router(reviews_router)
 app.include_router(returns_router)
+app.include_router(favorites_router)
 
 # --- Админка ---
 admin = Admin(
