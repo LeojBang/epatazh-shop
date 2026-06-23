@@ -274,8 +274,8 @@ class ReturnRequestAdmin(ModelView, model=ReturnRequest):
     @action(
         name="refund",
         label="Вернуть деньги",
-        confirmation_message="Вернуть деньги покупателю по этой заявке? "
-        "Действие отправит возврат в YooKassa.",
+        confirmation_message="Вернуть деньги покупателю? Сработает только для "
+        "одобренных заявок. Возврат уйдёт в YooKassa.",
     )
     async def refund_action(self, request: Request):
         from app.returns import service as returns_service
@@ -290,20 +290,21 @@ class ReturnRequestAdmin(ModelView, model=ReturnRequest):
                 return_request = await db.scalar(
                     select(ReturnRequest).where(ReturnRequest.id == pk)
                 )
-                if return_request:
-                    try:
-                        await returns_service.process_refund(db, return_request)
-                    except Exception as e:
-                        from app.core.logging_config import get_logger
+                if not return_request:
+                    continue
+                try:
+                    await returns_service.process_refund(db, return_request)
+                except Exception as e:
+                    from app.core.logging_config import get_logger
 
-                        get_logger("admin").warning(
-                            "Возврат по заявке %s не выполнен: %s", pk, e
-                        )
+                    get_logger("admin").warning(
+                        "Возврат по заявке %s не выполнен: %s", pk, e
+                    )
 
-        referer = request.headers.get("referer", "/admin")
         from starlette.responses import RedirectResponse
 
-        return RedirectResponse(referer)
+        referer = request.headers.get("referer", "/admin")
+        return RedirectResponse(referer, status_code=302)
 
 
 class ProductVariantAdmin(ModelView, model=ProductVariant):
