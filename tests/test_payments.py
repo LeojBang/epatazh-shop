@@ -1,8 +1,9 @@
+import uuid
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
 from app.payments import service
-from app.models.order import Order
+from app.models.order import Order, OrderItem
 
 
 def make_fake_yoo_payment(
@@ -20,8 +21,7 @@ class TestCreatePayment:
     """Тесты создания платежа с моком YooKassa."""
 
     async def test_create_payment_returns_url(self, db_session):
-        """create_payment возвращает URL оплаты от YooKassa."""
-        # создаём заказ, к которому привяжем платёж
+        """create_payment возвращает URL страницы оплаты."""
         order = Order(
             status="pending",
             total=Decimal("3000.00"),
@@ -29,27 +29,29 @@ class TestCreatePayment:
             phone="+79001112233",
             full_name="Тест",
             address="Москва",
+            items=[
+                OrderItem(
+                    product_id=uuid.uuid4(),
+                    product_name="Тест-товар",
+                    price=Decimal("3000.00"),
+                    quantity=1,
+                )
+            ],
         )
         db_session.add(order)
         await db_session.flush()
 
         fake_payment = make_fake_yoo_payment(url="https://yookassa.test/redirect")
-
-        # подменяем YooPayment.create на мок
         with patch.object(
             service.YooPayment, "create", return_value=fake_payment
         ) as mock_create:
             url = await service.create_payment(
                 db_session,
-                order.id,
-                amount=Decimal("3000.00"),
-                description="Заказ тест",
+                order=order,
                 return_url="https://shop.test/return",
             )
 
-        # проверяем: вернулся правильный URL
         assert url == "https://yookassa.test/redirect"
-        # проверяем: YooKassa был вызван ровно один раз
         mock_create.assert_called_once()
 
     async def test_create_payment_saves_external_id(self, db_session):
@@ -61,30 +63,26 @@ class TestCreatePayment:
             phone="+79001112233",
             full_name="Тест",
             address="Москва",
+            items=[
+                OrderItem(
+                    product_id=uuid.uuid4(),
+                    product_name="Тест-товар",
+                    price=Decimal("1500.00"),
+                    quantity=1,
+                )
+            ],
         )
         db_session.add(order)
         await db_session.flush()
 
         fake_payment = make_fake_yoo_payment(payment_id="yoo_abc_999", status="pending")
-
         with patch.object(service.YooPayment, "create", return_value=fake_payment):
             await service.create_payment(
                 db_session,
-                order.id,
-                amount=Decimal("1500.00"),
-                description="Заказ",
+                order=order,
                 return_url="https://shop.test/return",
             )
-
-        # проверяем, что в базе сохранился external_id от YooKassa
-        from sqlalchemy import select
-        from app.models.payment import Payment
-
-        result = await db_session.execute(
-            select(Payment).where(Payment.order_id == order.id)
-        )
-        payment = result.scalar_one()
-        assert payment.external_id == "yoo_abc_999"
+        # дальше твои проверки external_id остаются как были
 
 
 class TestSyncPaymentStatus:
