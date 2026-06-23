@@ -192,25 +192,56 @@ class CartCountMiddleware(BaseHTTPMiddleware):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    accept = request.headers.get("accept", "")
+    is_html = "text/html" in accept
+
     # 401 на обычных страницах → отправляем на вход.
-    # Для API/JSON-запросов оставляем JSON.
-    if exc.status_code == status.HTTP_401_UNAUTHORIZED:
-        accept = request.headers.get("accept", "")
-        if "text/html" in accept:
-            return RedirectResponse(url="/login", status_code=303)
+    if exc.status_code == status.HTTP_401_UNAUTHORIZED and is_html:
+        return RedirectResponse(url="/login", status_code=303)
 
-    # 404 на страницах → красивая страница вместо голого JSON
-    if exc.status_code == status.HTTP_404_NOT_FOUND:
-        accept = request.headers.get("accept", "")
-        if "text/html" in accept:
-            from app.templates_env import templates
+    # 404 на страницах → красивая страница
+    if exc.status_code == status.HTTP_404_NOT_FOUND and is_html:
+        from app.templates_env import templates
 
-            return templates.TemplateResponse(
-                request, "errors/404.html", {}, status_code=404
-            )
+        return templates.TemplateResponse(
+            request, "errors/404.html", {}, status_code=404
+        )
+
+    # 405 (метод не разрешён) на страницах → тоже показываем 404-страницу
+    # (для пользователя это «такой страницы/действия нет»)
+    if exc.status_code == status.HTTP_405_METHOD_NOT_ALLOWED and is_html:
+        from app.templates_env import templates
+
+        return templates.TemplateResponse(
+            request, "errors/404.html", {}, status_code=405
+        )
 
     # Остальное — стандартный JSON-ответ
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Логируем полную ошибку для себя (со стектрейсом)
+    from app.core.logging_config import get_logger
+
+    get_logger("error").exception(
+        "Необработанная ошибка на %s: %s", request.url.path, exc
+    )
+
+    accept = request.headers.get("accept", "")
+    is_html = "text/html" in accept
+
+    # Пользователю — вежливая страница без технических деталей
+    if is_html:
+        from app.templates_env import templates
+
+        return templates.TemplateResponse(
+            request, "errors/500.html", {}, status_code=500
+        )
+
+    # Для API — JSON без деталей
+    return JSONResponse({"detail": "Внутренняя ошибка сервера"}, status_code=500)
 
 
 app.add_middleware(CartCountMiddleware)

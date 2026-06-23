@@ -124,6 +124,7 @@ async def seed():
         # Сносим всё, что ссылается на товары, затем сами товары и категории.
         # Пользователей не трогаем.
         await db.execute(text("DELETE FROM reviews"))
+        await db.execute(text("DELETE FROM return_requests"))
         await db.execute(text("DELETE FROM payments"))
         await db.execute(text("DELETE FROM order_items"))
         await db.execute(text("DELETE FROM orders"))
