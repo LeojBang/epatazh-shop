@@ -34,8 +34,10 @@
                 {% include "catalog/_product_card.html" %}
             {% endfor %}
         </div>
-        <div style="text-align: center; margin-top: 1.5rem;">
-            <a href="/catalog" class="btn-outline">Смотреть всё</a>
+        <div class="home-cta">
+            <a href="/catalog" class="home-cta__btn">
+                Смотреть весь каталог <span class="home-cta__arrow">→</span>
+            </a>
         </div>
     </section>
 {% endif %}
