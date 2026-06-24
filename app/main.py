@@ -175,6 +175,12 @@ class CartCountMiddleware(BaseHTTPMiddleware):
                         user = await get_user_by_email(db, payload["sub"])
                         if user:
                             cart_id = str(user.id)
+                            # Счётчик избранного для залогиненного
+                            from app.favorites import service as fav_service
+
+                            request.state.favorites_count = (
+                                await fav_service.get_favorite_count(db, user.id)
+                            )
 
             if not cart_id:
                 guest_id = request.cookies.get("guest_id")
