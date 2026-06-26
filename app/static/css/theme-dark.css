@@ -432,11 +432,11 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 .hero {
     background: linear-gradient(115deg,
         var(--green-dark) 0%,
-        var(--green-dark) 72%,
+        var(--green-dark) 52%,
         var(--green) 52%,
         var(--green) 100%);
     border-radius: var(--radius-lg);
-    padding: 5.5rem 3.5rem;
+    padding: 5.5rem 3.5rem;          /* было 3.5rem 3rem — выше и весомее */
     margin-bottom: 3rem;
     position: relative;
     overflow: hidden;
@@ -460,8 +460,8 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 }
 .hero__title {
     color: var(--gold-soft);
-    font-family: 'Oswald', sans-serif;
-    font-size: 3.25rem;
+    font-family: 'Oswald', sans-serif;   /* фирменный шрифт как на лендинге */
+    font-size: 4.5rem;                   /* было 3.25rem — крупно (концепт A) */
     font-style: italic;
     font-weight: 700;
     letter-spacing: 1px;
@@ -1036,3 +1036,57 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     color: #7d8a83;
     line-height: 1.7;
 }
+/* ============================================================
+   ТЕМА: ТЁМНЫЙ КАТАЛОГ
+   Подключается ПОСЛЕ style.css в base.html:
+     <link rel="stylesheet" href="/static/css/theme-dark.css">
+   Переопределяет карточки товаров на тёмно-зелёные (как лендинг).
+   Чтобы переключить на светлый — заменить эту строку на theme-light.css
+   ============================================================ */
+
+/* --- Карточка товара: тёмно-зелёная --- */
+.product-card{
+    background: var(--green);            /* было светлое → зелёное */
+    border: 1px solid var(--green-line);
+    color: var(--text-on-dark);
+}
+.product-card__body h3{ color: var(--text-on-dark); }
+.product-category{ color: #a9b5ae; }
+
+/* --- Цена: золотом (ярче на тёмном) --- */
+.product-price{ color: var(--gold-soft); }
+
+/* --- Картинка-заглушка: тёмная --- */
+.card-img-placeholder{
+    background: rgba(0,0,0,0.22);
+    color: #4a6b5e;
+}
+
+/* --- Кнопка на карточке: контурная, при наведении золотая --- */
+.card-btn{
+    background: transparent;
+    color: var(--text-on-dark);
+    border: 1px solid var(--green-line);
+}
+.product-card:hover .card-btn{
+    background: var(--gold);
+    color: var(--green-dark);
+    border-color: var(--gold);
+}
+
+/* --- Бейджи на карточке остаются как есть (золотой/тёмный) --- */
+
+/* --- ОПЦИЯ: затемнить фон всей страницы под тёмный каталог ---
+   Если хочешь, чтобы вся страница каталога была тёмной (а не только карточки),
+   раскомментируй блок ниже. Осторожно: затемнит фон везде, где подключена тема.
+*/
+/*
+body{
+    background-color: var(--green-dark);
+    background-image: repeating-linear-gradient(
+        45deg, transparent, transparent 28px,
+        rgba(199,154,59,0.03) 28px, rgba(199,154,59,0.03) 29px);
+    color: var(--text-on-dark);
+}
+.home-section h2{ color: var(--text-on-dark); }
+*/

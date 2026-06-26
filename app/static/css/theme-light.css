@@ -432,11 +432,11 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 .hero {
     background: linear-gradient(115deg,
         var(--green-dark) 0%,
-        var(--green-dark) 72%,
+        var(--green-dark) 52%,
         var(--green) 52%,
         var(--green) 100%);
     border-radius: var(--radius-lg);
-    padding: 5.5rem 3.5rem;
+    padding: 5.5rem 3.5rem;          /* было 3.5rem 3rem — выше и весомее */
     margin-bottom: 3rem;
     position: relative;
     overflow: hidden;
@@ -460,8 +460,8 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 }
 .hero__title {
     color: var(--gold-soft);
-    font-family: 'Oswald', sans-serif;
-    font-size: 3.25rem;
+    font-family: 'Oswald', sans-serif;   /* фирменный шрифт как на лендинге */
+    font-size: 4.5rem;                   /* было 3.25rem — крупно (концепт A) */
     font-style: italic;
     font-weight: 700;
     letter-spacing: 1px;
@@ -1035,4 +1035,36 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     font-size: 0.78rem;
     color: #7d8a83;
     line-height: 1.7;
+}
+/* ============================================================
+   ТЕМА: СВЕТЛЫЙ КАТАЛОГ
+   Подключается ПОСЛЕ style.css в base.html:
+     <link rel="stylesheet" href="/static/css/theme-light.css">
+   Переопределяет карточки товаров на чисто-белые.
+   Чтобы переключить на тёмный — заменить эту строку на theme-dark.css
+   ============================================================ */
+
+/* --- Карточка товара: белая, чистая --- */
+.product-card{
+    background: var(--surface);          /* было #f0f4f1 (зеленоватый) → чисто белый */
+    border: 1px solid var(--border);
+}
+.product-card__body h3{ color: var(--text); }
+.product-category{ color: var(--text-muted); }
+.product-price{ color: var(--green); }
+
+/* --- Картинка-заглушка: светлая (чтобы фото товара не на тёмном) --- */
+.card-img-placeholder{
+    background: #eef1ee;
+    color: var(--text-muted);
+}
+
+/* --- Кнопка на карточке --- */
+.card-btn{
+    background: var(--green);
+    color: var(--text-on-dark);
+}
+.product-card:hover .card-btn{
+    background: var(--gold);
+    color: var(--green-dark);
 }
