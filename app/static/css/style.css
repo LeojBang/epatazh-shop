@@ -42,6 +42,9 @@ body {
         rgba(15,58,46,0.022) 28px, rgba(15,58,46,0.022) 29px);
     line-height: 1.6;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 a { color: inherit; }
@@ -132,6 +135,7 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     margin: 0 auto;
     padding: 2rem 1.5rem;
     width: 100%;
+    flex: 1;
 }
 
 /* ===== Блок преимуществ (тёмная полоса) ===== */
@@ -210,47 +214,234 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 
 /* ===== Футер ===== */
 .site-footer {
-    background: var(--green-dark);
+    margin-top: 80px;
+    background: linear-gradient(180deg, #103b31 0%, #0b3027 45%, #08261f 100%);
     color: var(--text-on-dark);
-    padding: 2.5rem 1.5rem 1.5rem;
-    margin-top: 2rem;
+    padding: 60px 0 0;
 }
-.footer__cols {
+
+.footer__inner {
     max-width: var(--maxw);
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 2rem;
+    padding: 0 1.5rem;
 }
-.footer__col h4 {
+
+.footer__cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr;
+    gap: 2.5rem;
+    padding-bottom: 3rem;
+}
+
+/* Колонка-заглушка для логотипа */
+.footer__col--brand .footer__logo-stub {
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.footer__logo-img {
+    width: 120px;
+    margin-bottom: 0.5rem;
+}
+.footer__col--brand .footer__brand-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-style: italic;
     color: var(--gold-soft);
+    display: block;
+    margin-bottom: 0.4rem;
+}
+.footer__col--brand .footer__brand-sub {
+    font-size: 0.78rem;
+    color: #7d8a83;
+    margin-bottom: 0.9rem;
+}
+.footer__col--brand .footer__brand-desc {
+    font-size: 0.875rem;
+    color: #a9b5ae;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+}
+.footer__rating {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 0.25rem;
+}
+.footer__rating-count {
+    font-size: 0.8rem;
+    color: #7d8a83;
+}
+
+/* Все колонки */
+.footer__col h4 {
+    font-family: 'Oswald', sans-serif;
     font-size: 0.95rem;
-    margin: 0 0 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--gold);
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.5rem;
+    position: relative;
+}
+.footer__col h4::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 28px; height: 2px;
+    background: var(--gold);
 }
 .footer__col a {
     display: block;
     color: #c8d2cc;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     margin-bottom: 0.55rem;
+    transition: color 0.15s;
 }
-.footer__col a:hover { color: var(--gold-soft); }
-.footer__social { display: flex; gap: 0.6rem; }
+.footer__col a:hover {
+    color: var(--gold-soft);
+}
+
+/* Пошив на заказ */
+.footer__custom-text {
+    color: #a9b5ae;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0 0 0.9rem;
+}
+.footer__custom-btn {
+    display: inline-block;
+    background: transparent;
+    color: var(--gold-soft);
+    border: 1.5px solid var(--gold);
+    padding: 0.55rem 1.2rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    margin-bottom: 1.25rem;
+}
+.footer__custom-btn:hover {
+    background: var(--green-line);
+    color: var(--gold-soft);
+    border-color: var(--gold-soft);
+}
+
+/* Контакты */
+.footer__contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.footer__contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+.footer__contact-icon {
+    width: 34px;
+    height: 34px;
+    background: #164337;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.footer__contact-text strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-on-dark);
+}
+.footer__contact-text span {
+    font-size: 0.78rem;
+    color: #7d8a83;
+}
+
+/* Соцсети */
+.footer__social {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
 .footer__social a {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--green); color: var(--text-on-dark);
-    font-size: 1.2rem; margin: 0; text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #164337;
+    color: var(--text-on-dark);
+    font-size: 1.15rem;
+    text-decoration: none;
+    margin-bottom: 0;
+    transition: background 0.2s, color 0.2s;
 }
-.footer__social a:hover { background: var(--gold); color: var(--green-dark); }
+.footer__social a:hover {
+    background: var(--gold);
+    color: var(--green-dark);
+}
+
+/* Нижняя полоса */
 .footer__bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 1.25rem 1.5rem;
     max-width: var(--maxw);
-    margin: 2rem auto 0;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--green-line);
-    text-align: center;
-    font-size: 0.85rem;
-    color: #9fb0a8;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    color: #7d8a83;
+    font-size: 0.82rem;
+}
+.footer__bottom a {
+    color: #7d8a83;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.footer__bottom a:hover { color: var(--gold-soft); }
+.footer__bottom-links {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.footer__bottom-dev a { color: var(--gold-soft); }
+
+@media (max-width: 1000px) {
+    .footer__cols {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .footer__cols {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.75rem;
+    }
+    .footer__col--brand {
+        grid-column: 1 / -1;
+    }
+    .footer__bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
 }
 
 /* ===== Кнопки ===== */
@@ -1014,25 +1205,151 @@ h3 { font-size: 1.1rem; font-weight: 600; }
     .logo-div, .logo-tag{ display: none; }
 }
 
-.footer__col--brand{ max-width: 320px; }
-.footer-logo{
+
+/* ============================================================
+   ХАРАКТЕРИСТИКИ ТОВАРА (состав, уход)
+   ============================================================ */
+.product-spec {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+.product-spec h3 {
+    font-size: 0.95rem;
+    color: var(--green);
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+}
+.product-spec p {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+/* ============================================================
+   СЕКЦИЯ ПОШИВА НА ГЛАВНОЙ + БЛОК В ФУТЕРЕ (пункт 6)
+   Добавить в конец style.css
+   ============================================================ */
+
+/* --- Секция "Сошьём под вашу команду" на главной --- */
+.custom-section {
+    background: var(--green-dark);
+    color: var(--text-on-dark);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 3rem;
+}
+.custom-section::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.custom-section__inner {
+    padding: 3.5rem 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+.custom-section__eyebrow {
     font-family: 'Oswald', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    font-style: italic;
-    letter-spacing: 1px;
-    color: var(--gold-soft);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 0.8rem;
+    color: var(--gold);
     display: block;
     margin-bottom: 0.75rem;
 }
-.footer-about{
-    font-size: 0.875rem;
-    color: #a9b5ae;
-    line-height: 1.6;
-    margin-bottom: 0.875rem;
+.custom-section h2 {
+    font-size: 2rem;
+    color: var(--gold-soft);
+    margin-bottom: 0.75rem;
 }
-.footer-legal{
-    font-size: 0.78rem;
-    color: #7d8a83;
-    line-height: 1.7;
+.custom-section p {
+    color: var(--on-dark-soft, #a9b5ae);
+    font-size: 1rem;
+    max-width: 540px;
+    margin: 0 auto 1.5rem;
+}
+.custom-section__btn {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--green-dark);
+    padding: 0.95rem 2.2rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+}
+.custom-section__btn:hover {
+    background: var(--gold-soft);
+    transform: translateY(-2px);
+}
+
+/* --- Колонка "Пошив на заказ" в футере --- */
+/* ============================================================
+   ЦВЕТОВЫЕ ВАРИАЦИИ ТОВАРА (пункт 8) — добавить в конец style.css
+   ============================================================ */
+
+/* --- Страница товара: палитра цветов --- */
+.color-picker {
+    margin: 1.25rem 0;
+}
+.color-picker__label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+}
+.color-picker__label span {
+    color: var(--text);
+    font-weight: 600;
+}
+.color-picker__swatches {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+}
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+.color-swatch.active {
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px var(--green);
+}
+
+/* --- Карточка каталога: мелкие кружочки --- */
+.card-colors {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+}
+.card-color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+.card-color-swatch:hover {
+    transform: scale(1.2);
+}
+.card-color-swatch.active {
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px var(--green);
 }

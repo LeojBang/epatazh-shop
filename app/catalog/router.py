@@ -10,6 +10,9 @@ from app.models.user import User
 from app.users.dependencies import get_current_user_optional
 from app.favorites import service as fav_service
 from app.web.filters import update_query
+from app.models.catalog import ProductColor
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(tags=["catalog"])
 templates = Jinja2Templates(directory="app/templates")
@@ -21,6 +24,7 @@ async def catalog_page(
     request: Request,
     category: str | None = None,
     size: str | None = None,
+    gender: str | None = None,
     sort: str = "name",
     page: int = 1,
     db: AsyncSession = Depends(get_db),
@@ -28,7 +32,7 @@ async def catalog_page(
 ):
     categories = await service.get_categories(db)
     products, total = await service.get_products(
-        db, category_slug=category, size=size, sort=sort, page=page
+        db, category_slug=category, size=size, gender=gender, sort=sort, page=page
     )
 
     per_page = 12
@@ -48,6 +52,7 @@ async def catalog_page(
             "products": products,
             "active_category": category,
             "active_size": size,
+            "active_gender": gender,
             "active_sort": sort,
             "page": page,
             "total_pages": total_pages,
@@ -93,6 +98,15 @@ async def product_page(
         is_fav = await fav_service.is_favorite(db, user.id, product.id)
         can_review = purchased and existing is None
 
+    # Загружаем цвета товара с их фото
+    colors_result = await db.execute(
+        select(ProductColor)
+        .where(ProductColor.product_id == product.id)
+        .options(selectinload(ProductColor.images))
+        .order_by(ProductColor.position)
+    )
+    colors = list(colors_result.scalars().all())
+
     return templates.TemplateResponse(
         request,
         "catalog/product.html",
@@ -103,7 +117,8 @@ async def product_page(
             "avg_rating": avg_rating,
             "reviews_count": reviews_count,
             "can_review": can_review,
-            "is_favorite": is_fav,  # ← добавили
+            "is_favorite": is_fav,
+            "colors": colors,
         },
     )
 

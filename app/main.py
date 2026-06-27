@@ -19,10 +19,11 @@ from app.admin.views import (
     ProductAdmin,
     ProductVariantAdmin,
     ProductImageAdmin,
+    ProductColorAdmin,
+    ProductColorImageAdmin,
     ReviewAdmin,
     UserAdmin,
     DashboardView,
-    InfoPageAdmin,
     StockView,
     ReturnRequestAdmin,
 )
@@ -36,7 +37,6 @@ from app.users.router import router as users_router
 from app.web.router import router as web_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
-from app.pages.router import router as pages_router
 from app.returns.router import router as returns_router
 from app.favorites.router import router as favorites_router
 from app.core.logging_config import setup_logging
@@ -154,7 +154,6 @@ class CartCountMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         # Значения по умолчанию — чтобы шаблон не падал, даже если что-то пойдёт не так
         request.state.cart_count = 0
-        request.state.footer_pages = {"information": [], "company": [], "legal": []}
 
         # --- Счётчик корзины ---
         try:
@@ -192,28 +191,6 @@ class CartCountMiddleware(BaseHTTPMiddleware):
             await r.aclose()
         except Exception:
             request.state.cart_count = 0
-
-        # --- Страницы для футера ---
-        try:
-            from sqlalchemy import select
-            from app.models.page import InfoPage
-            from app.core.database import AsyncSessionLocal
-
-            async with AsyncSessionLocal() as db:
-                result = await db.execute(
-                    select(InfoPage)
-                    .where(InfoPage.is_published)
-                    .order_by(InfoPage.position)
-                )
-                pages = result.scalars().all()
-
-            footer = {"information": [], "company": [], "legal": []}
-            for p in pages:
-                if p.footer_group in footer:
-                    footer[p.footer_group].append({"slug": p.slug, "title": p.title})
-            request.state.footer_pages = footer
-        except Exception:
-            request.state.footer_pages = {"information": [], "company": [], "legal": []}
 
         return await call_next(request)
 
@@ -282,7 +259,6 @@ app.include_router(catalog_router)
 app.include_router(cart_router)
 app.include_router(orders_router)
 app.include_router(payments_router)
-app.include_router(pages_router)
 app.include_router(reviews_router)
 app.include_router(returns_router)
 app.include_router(favorites_router)
@@ -297,9 +273,10 @@ admin.add_view(ProductAdmin)
 admin.add_view(OrderAdmin)
 admin.add_view(ProductVariantAdmin)
 admin.add_view(ProductImageAdmin)
+admin.add_view(ProductColorAdmin)
+admin.add_view(ProductColorImageAdmin)
 admin.add_view(ReviewAdmin)
 admin.add_view(DashboardView)
-admin.add_view(InfoPageAdmin)
 admin.add_view(StockView)
 admin.add_view(ReturnRequestAdmin)
 

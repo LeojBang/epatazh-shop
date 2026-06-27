@@ -7,8 +7,10 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
+    <!--    <link rel="stylesheet" href="/static/css/theme-light.css">-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 </head>
 <body>
@@ -74,38 +76,103 @@
 </main>
 
 <footer class="site-footer">
-    <div class="footer__cols">
-        <div class="footer__col">
-            <h4>Информация</h4>
-            {% for p in request.state.footer_pages.information %}
-            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-            {% endfor %}
-            <a href="/track">Отследить заказ</a>
-        </div>
-        <div class="footer__col">
-            <h4>О компании</h4>
-            {% for p in request.state.footer_pages.company %}
-            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-            {% endfor %}
-        </div>
-        <div class="footer__col">
-            <h4>Документы</h4>
-            {% for p in request.state.footer_pages.legal %}
-            <a href="/info/{{ p.slug }}">{{ p.title }}</a>
-            {% endfor %}
-        </div>
-        <div class="footer__col">
-            <h4>Мы в соцсетях</h4>
-            <div class="footer__social">
-                <a href="#" aria-label="ВКонтакте"><i class="ti ti-brand-vk" aria-hidden="true"></i></a>
-                <a href="#" aria-label="Telegram"><i class="ti ti-brand-telegram" aria-hidden="true"></i></a>
-                <a href="#" aria-label="YouTube"><i class="ti ti-brand-youtube" aria-hidden="true"></i></a>
-                <a href="#" aria-label="WhatsApp"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></a>
+    <div class="footer__inner">
+        <div class="footer__cols">
+
+            <!-- Бренд -->
+<!--            <div class="footer__col footer__col&#45;&#45;brand">-->
+<!--                <img src="/static/img/logo.svg" alt="Эпатаж" class="footer__logo-img">-->
+<!--                <span class="footer__brand-name">ЭПАТАЖ</span>-->
+<!--                <span class="footer__brand-sub">Экипировка для единоборств</span>-->
+<!--                <p class="footer__brand-desc">-->
+<!--                    Качественная экипировка для профессионалов и любителей.-->
+<!--                    Производство и продажа по всей России.-->
+<!--                </p>-->
+<!--                <div class="footer__rating">-->
+<!--                    ★★★★★ <strong>4.9</strong>-->
+<!--                </div>-->
+<!--                <div class="footer__rating-count">Более 2 000 довольных клиентов</div>-->
+<!--            </div>-->
+
+            <!-- Информация -->
+            <div class="footer__col">
+                <h4>Информация</h4>
+                <a href="/info/delivery">Доставка и оплата</a>
+                <a href="/info/return">Обмен и возврат</a>
+                <a href="/info/sizes">Размерная сетка</a>
+                <a href="/track">Отследить заказ</a>
             </div>
+
+            <!-- О компании -->
+            <div class="footer__col">
+                <h4>О компании</h4>
+                <a href="/info/about">О компании</a>
+                <a href="/info/contacts">Контакты</a>
+            </div>
+
+            <!-- Документы -->
+            <div class="footer__col">
+                <h4>Документы</h4>
+                <a href="/info/terms">Пользовательское соглашение</a>
+                <a href="/info/privacy">Политика конфиденциальности</a>
+                <a href="/info/offer">Публичная оферта</a>
+            </div>
+
+            <!-- Пошив на заказ -->
+            <div class="footer__col">
+                <h4>Пошив на заказ</h4>
+                <p class="footer__custom-text">
+                    Сошьём экипировку под ваши размеры, цвета и с логотипом.
+                </p>
+                <a href="https://epatazh.netlify.app" target="_blank" rel="noopener" class="footer__custom-btn">
+                    Оставить заявку →
+                </a>
+            </div>
+
+            <!-- Контакты + Соцсети -->
+            <div class="footer__col">
+                <h4>Контакты</h4>
+                <div class="footer__contacts">
+                    <div class="footer__contact-item">
+                        <div class="footer__contact-icon"><i class="ti ti-phone"></i></div>
+                        <div class="footer__contact-text">
+                            <strong>+7 (999) 123-45-67</strong>
+                            <span>Ежедневно с 10:00 до 20:00</span>
+                        </div>
+                    </div>
+                    <div class="footer__contact-item">
+                        <div class="footer__contact-icon"><i class="ti ti-mail"></i></div>
+                        <div class="footer__contact-text">
+                            <strong>info@epatazh.ru</strong>
+                            <span>Ответим в течение часа</span>
+                        </div>
+                    </div>
+                    <div class="footer__contact-item">
+                        <div class="footer__contact-icon"><i class="ti ti-map-pin"></i></div>
+                        <div class="footer__contact-text">
+                            <a href="https://go.2gis.com/iwAL8" target="_blank" rel="noopener" style="color: var(--gold-soft); font-size: 0.88rem; text-decoration: none;">Наша фабрика на карте →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 1.25rem;">Мы в соцсетях</h4>
+                <div class="footer__social">
+                    <a href="#" aria-label="ВКонтакте"><i class="ti ti-brand-vk" aria-hidden="true"></i></a>
+                    <a href="#" aria-label="Telegram"><i class="ti ti-brand-telegram" aria-hidden="true"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="ti ti-brand-youtube" aria-hidden="true"></i></a>
+                    <a href="#" aria-label="WhatsApp"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></a>
+                </div>
+            </div>
+
         </div>
     </div>
+
     <div class="footer__bottom">
-        <p>© 2026 Эпатаж — экипировка для единоборств. Все права защищены.</p>
+        <span>© 2026 Эпатаж — экипировка для единоборств. Все права защищены.</span>
+        <div class="footer__bottom-links">
+            <a href="#">Политика конфиденциальности</a>
+            <a href="#">Пользовательское соглашение</a>
+        </div>
     </div>
 </footer>
 

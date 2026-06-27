@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.catalog import Category, Product, ProductVariant
+from app.models.catalog import Category, Product, ProductVariant, ProductColor
 
 
 async def get_categories(db: AsyncSession) -> list[Category]:
@@ -17,6 +17,7 @@ async def get_products(
     category_slug: str | None = None,
     *,
     size: str | None = None,
+    gender: str | None = None,
     sort: str = "name",
     page: int = 1,
     per_page: int = 12,
@@ -29,6 +30,7 @@ async def get_products(
             selectinload(Product.category),
             selectinload(Product.variants),
             selectinload(Product.images),
+            selectinload(Product.colors).selectinload(ProductColor.images),
         )
     )
 
@@ -42,6 +44,10 @@ async def get_products(
                 (ProductVariant.size == size) & (ProductVariant.stock > 0)
             )
         )
+
+    # Фильтр по полу
+    if gender:
+        query = query.where(Product.gender == gender)
 
     # Сортировка
     if sort == "price_asc":
@@ -74,6 +80,7 @@ async def get_product_by_slug(db: AsyncSession, slug: str) -> Product | None:
             selectinload(Product.category),
             selectinload(Product.variants),
             selectinload(Product.images),
+            selectinload(Product.colors).selectinload(ProductColor.images),
         )
     )
     return result.scalar_one_or_none()
@@ -105,6 +112,7 @@ async def search_products(db: AsyncSession, query: str) -> list[Product]:
             selectinload(Product.category),
             selectinload(Product.variants),
             selectinload(Product.images),
+            selectinload(Product.colors).selectinload(ProductColor.images),
         )
         .order_by(Product.name)
     )
@@ -137,6 +145,7 @@ async def get_featured_products(db: AsyncSession, limit: int = 4) -> list[Produc
             selectinload(Product.category),
             selectinload(Product.variants),
             selectinload(Product.images),
+            selectinload(Product.colors).selectinload(ProductColor.images),
         )
         .order_by(Product.name)
     )

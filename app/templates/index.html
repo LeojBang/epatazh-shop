@@ -16,13 +16,20 @@
     <div class="category-tiles">
         {% for cat in categories %}
         <a href="/catalog?category={{ cat.slug }}" class="category-tile category-tile--{{ cat.slug }}">
-                    <span class="category-tile__icon">
-                        <i class="ti {{ cat.icon or 'ti-shirt-sport' }}" aria-hidden="true"></i>
-                    </span>
+            <span class="category-tile__icon">{{ cat.icon or '🥋' }}</span>
             <span class="category-tile__name">{{ cat.name }}</span>
             <span class="category-tile__link">Смотреть →</span>
         </a>
         {% endfor %}
+    </div>
+</section>
+
+<section class="custom-section">
+    <div class="custom-section__inner">
+        <span class="custom-section__eyebrow">Собственное производство</span>
+        <h2>Сошьём под вашу команду</h2>
+        <p>Не нашли в каталоге? Произведём экипировку под заказ — ваши цвета, размеры и логотип. Форма для команды или индивидуальный пошив.</p>
+        <a href="https://epatazh.netlify.app" target="_blank" rel="noopener" class="custom-section__btn">Заказать пошив →</a>
     </div>
 </section>
 

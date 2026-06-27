@@ -9,9 +9,15 @@ from sqladmin import ModelView
 
 from app.models.order import Order, OrderItem
 from app.models.user import User
-from app.models.catalog import Category, Product, ProductVariant, ProductImage
+from app.models.catalog import (
+    Category,
+    Product,
+    ProductVariant,
+    ProductImage,
+    ProductColor,
+    ProductColorImage,
+)
 from app.models.review import Review
-from app.models.page import InfoPage
 from app.models.return_request import ReturnRequest
 
 from datetime import timezone, timedelta
@@ -48,24 +54,11 @@ class CategoryAdmin(ModelView, model=Category):
     name_plural = "Категории"
     column_list = [Category.name, Category.slug, Category.icon]
 
-    form_overrides = {"icon": SelectField}
     form_args = {
         "icon": {
-            "choices": [
-                ("", "— без иконки —"),
-                ("ti-karate", "Карате / единоборства"),
-                ("ti-flame", "Огонь / муай-тай"),
-                ("ti-ice-skating", "Коньки / хоккей"),
-                ("ti-barbell", "Штанга / зал"),
-                ("ti-run", "Бег"),
-                ("ti-ball-football", "Футбол / мяч"),
-                ("ti-shirt-sport", "Спортивная одежда"),
-                ("ti-shirt", "Футболка"),
-                ("ti-jacket", "Куртка / верх"),
-                ("ti-medal", "Награда / медаль"),
-                ("ti-star", "Звезда"),
-            ],
-        }
+            "label": "Эмодзи",
+            "description": "Вставьте эмодзи для категории, например 🥊 🔥 🏒 🥋",
+        },
     }
 
 
@@ -92,7 +85,22 @@ class ProductAdmin(ModelView, model=Product):
                 ("Хит", "Хит"),
                 ("Новинка", "Новинка"),
             ],
-        }
+        },
+        "material": {
+            "label": "Состав / материал",
+            "description": "Например: 88% полиэстер, 12% эластан",
+        },
+        "care": {
+            "label": "Уход",
+            "description": "Например: стирка при 30°, не отбеливать",
+        },
+        "gender": {
+            "label": "Пол",
+            "description": "мужское / женское / детское",
+        },
+        "description": {
+            "label": "Описание",
+        },
     }
 
 
@@ -349,14 +357,94 @@ class ProductImageAdmin(ModelView, model=ProductImage):
 
     async def on_model_change(self, data, model, is_created, request):
         from app.admin.uploads import save_upload
+        from wtforms import ValidationError
 
         upload = data.get("upload")
         if upload:
             filename = await save_upload(upload)
             if filename:
                 model.path = filename
+            elif is_created:
+                raise ValidationError(
+                    "Не удалось загрузить файл. Проверьте формат (jpg, png, webp)."
+                )
+        elif is_created and not getattr(model, "path", None):
+            raise ValidationError("Выберите файл изображения.")
         # убираем upload из data, чтобы sqladmin не пытался записать его в модель
         data.pop("upload", None)
+
+
+class ProductColorImageAdmin(ModelView, model=ProductColorImage):
+    name = "Фото цвета"
+    name_plural = "Фото цветов"
+    category = "Каталог"
+    column_list = [
+        ProductColorImage.color,
+        ProductColorImage.path,
+        ProductColorImage.position,
+    ]
+    column_formatters = {
+        ProductColorImage.color: lambda m, a: str(m.color) if m.color else ""
+    }
+    form_excluded_columns = [
+        ProductColorImage.path,
+        ProductColorImage.created_at,
+        ProductColorImage.updated_at,
+    ]
+
+    async def scaffold_form(self, rules=None):
+        from wtforms import FileField
+
+        form_class = await super().scaffold_form(rules)
+        form_class.upload = FileField("Файл изображения")
+        return form_class
+
+    async def on_model_change(self, data, model, is_created, request):
+        from app.admin.uploads import save_upload
+        from wtforms import ValidationError
+
+        upload = data.get("upload")
+        if upload:
+            filename = await save_upload(upload)
+            if filename:
+                model.path = filename
+            elif is_created:
+                raise ValidationError(
+                    "Не удалось загрузить файл. Проверьте формат (jpg, png, webp)."
+                )
+        elif is_created and not getattr(model, "path", None):
+            raise ValidationError("Выберите файл изображения.")
+        data.pop("upload", None)
+
+
+class ProductColorAdmin(ModelView, model=ProductColor):
+    name = "Цвет товара"
+    name_plural = "Цвета товаров"
+    category = "Каталог"
+    column_list = [
+        ProductColor.product,
+        ProductColor.name,
+        ProductColor.hex,
+        ProductColor.position,
+    ]
+    column_formatters = {
+        ProductColor.product: lambda m, a: m.product.name if m.product else ""
+    }
+    form_excluded_columns = [ProductColor.created_at, ProductColor.updated_at]
+    form_args = {
+        "name": {
+            "label": "Название цвета",
+            "description": "Например: Чёрный, Красный, Синий",
+        },
+        "hex": {
+            "label": "HEX-код цвета",
+            "description": "Например: #000000 — для кружочка-свотча",
+        },
+        "position": {
+            "label": "Порядок",
+            "description": "0 — первый (показывается по умолчанию)",
+        },
+    }
 
 
 class ReviewAdmin(ModelView, model=Review):
@@ -396,21 +484,6 @@ class DashboardView(BaseView):
                 "revenue_by_day": revenue_by_day,
             },
         )
-
-
-class InfoPageAdmin(ModelView, model=InfoPage):
-    name = "Страница"
-    name_plural = "Страницы"
-    category = "Контент"
-    column_list = [
-        InfoPage.title,
-        InfoPage.slug,
-        InfoPage.footer_group,
-        InfoPage.position,
-        InfoPage.is_published,
-    ]
-    column_sortable_list = [InfoPage.footer_group, InfoPage.position]
-    form_excluded_columns = [InfoPage.created_at, InfoPage.updated_at]
 
 
 class StockView(BaseView):

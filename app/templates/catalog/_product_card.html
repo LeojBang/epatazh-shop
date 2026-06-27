@@ -27,6 +27,21 @@
         <div class="product-card__body">
             <h3>{{ product.name }}</h3>
             <span class="product-category">{{ product.category.name }}</span>
+            {% if product.colors %}
+            <div class="card-colors">
+                {% for color in product.colors %}
+                <button type="button"
+                        class="card-color-swatch {% if loop.first %}active{% endif %}"
+                        style="background: {{ color.hex }}"
+                        title="{{ color.name }}"
+                        {% if color.images %}
+                        data-img="/static/uploads/{{ color.images[0].path }}"
+                        {% endif %}
+                        onclick="cardSwitchColor(event, this)">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% if product.sale_price and product.sale_price < product.price %}
                 <span class="product-price">
                     <span class="product-price__old">{{ product.price }} ₽</span>

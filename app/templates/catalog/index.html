@@ -24,6 +24,18 @@
         </div>
 
         <div class="filter-group">
+            <span class="filter-label">Пол:</span>
+            <a href="{{ update_query(request, gender=None, page=None) }}"
+               class="filter-chip {% if not active_gender %}active{% endif %}">Все</a>
+            <a href="{{ update_query(request, gender='мужское', page=None) }}"
+               class="filter-chip {% if active_gender == 'мужское' %}active{% endif %}">Мужское</a>
+            <a href="{{ update_query(request, gender='женское', page=None) }}"
+               class="filter-chip {% if active_gender == 'женское' %}active{% endif %}">Женское</a>
+            <a href="{{ update_query(request, gender='детское', page=None) }}"
+               class="filter-chip {% if active_gender == 'детское' %}active{% endif %}">Детское</a>
+        </div>
+
+        <div class="filter-group">
             <span class="filter-label">Сортировка:</span>
             <select class="filter-select" onchange="window.location.href=this.value">
                 <option value="{{ update_query(request, sort=None, page=None) }}"
@@ -59,4 +71,24 @@
     {% else %}
         <p>Товаров по выбранным фильтрам не найдено.</p>
     {% endif %}
+
+<script>
+function cardSwitchColor(event, btn) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = btn.closest('.product-card-wrap');
+    card.querySelectorAll('.card-color-swatch').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    const img = btn.dataset.img;
+    if (!img) return;
+    const cardImg = card.querySelector('.card-img');
+    const placeholder = card.querySelector('.card-img-placeholder');
+    if (cardImg) { cardImg.src = img; }
+    else if (placeholder) {
+        const newImg = document.createElement('img');
+        newImg.src = img; newImg.className = 'card-img';
+        placeholder.replaceWith(newImg);
+    }
+}
+</script>
 {% endblock %}

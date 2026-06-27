@@ -60,6 +60,36 @@
             {% if product.description %}
                 <p>{{ product.description }}</p>
             {% endif %}
+            {% if product.material %}
+                <div class="product-spec">
+                    <h3>Состав</h3>
+                    <p>{{ product.material }}</p>
+                </div>
+            {% endif %}
+            {% if product.care %}
+                <div class="product-spec">
+                    <h3>Уход</h3>
+                    <p>{{ product.care }}</p>
+                </div>
+            {% endif %}
+
+            {% if colors %}
+            <div class="color-picker">
+                <p class="color-picker__label">Цвет: <span id="colorName">{{ colors[0].name }}</span></p>
+                <div class="color-picker__swatches">
+                    {% for color in colors %}
+                    <button type="button"
+                            class="color-swatch {% if loop.first %}active{% endif %}"
+                            data-color-name="{{ color.name }}"
+                            data-images='{{ color.images | map(attribute="path") | list | tojson }}'
+                            style="background: {{ color.hex }}"
+                            title="{{ color.name }}"
+                            onclick="switchColor(this)">
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             {% set available = product.variants | selectattr("stock", "gt", 0) | list %}
             {% if available %}
@@ -127,4 +157,44 @@
             <p>Пока нет отзывов.</p>
         {% endif %}
     </section>
+
+{% if colors %}
+<script>
+function switchColor(btn) {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('colorName').textContent = btn.dataset.colorName;
+
+    const images = JSON.parse(btn.dataset.images);
+    if (!images.length) return;
+
+    const gallery = document.querySelector('.gallery-main');
+    if (!gallery) return;
+
+    // удаляем старые фото
+    gallery.querySelectorAll('.gallery-img').forEach(img => img.remove());
+
+    // добавляем новые
+    const arrows = gallery.querySelectorAll('.gallery-arrow');
+    images.forEach((path, i) => {
+        const img = document.createElement('img');
+        img.src = '/static/uploads/' + path;
+        img.className = 'gallery-img' + (i === 0 ? ' active' : '');
+        img.dataset.index = i;
+        img.alt = btn.dataset.colorName;
+        if (arrows.length) {
+            gallery.insertBefore(img, arrows[0]);
+        } else {
+            gallery.appendChild(img);
+        }
+    });
+
+    // показываем/скрываем стрелки
+    const arrowBtns = gallery.querySelectorAll('.gallery-arrow');
+    arrowBtns.forEach(a => a.style.display = images.length > 1 ? '' : 'none');
+
+    currentIndex = 0;
+}
+</script>
+{% endif %}
 {% endblock %}
