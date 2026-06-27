@@ -1,0 +1,86 @@
+{% extends "admin/base.html" %}
+{% block title %}Категории{% endblock %}
+{% block page_title %}Категории{% endblock %}
+
+{% block content %}
+{% if request.query_params.get('success') %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Сохранено</div>
+{% endif %}
+{% if request.query_params.get('error') == 'not_empty' %}
+<div class="alert alert-error"><i class="ti ti-alert-circle" aria-hidden="true"></i>Нельзя удалить категорию, в которой есть товары. Сначала перенесите или удалите товары.</div>
+{% endif %}
+
+<div class="grid-main">
+  <div class="table-wrap" style="align-self:start">
+    <table>
+      <thead>
+        <tr><th>Эмодзи</th><th>Название</th><th>Слаг</th><th style="text-align:center">Товаров</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td style="font-size:20px">{{ cat.icon or '—' }}</td>
+          <td style="font-weight:500;color:var(--text)">{{ cat.name }}</td>
+          <td style="font-family:monospace;font-size:12px;color:var(--text-muted)">{{ cat.slug }}</td>
+          <td style="text-align:center;color:var(--text-muted)">{{ cat.products|length }}</td>
+          <td style="text-align:right">
+            <button class="btn btn-secondary btn-sm" onclick="editCat('{{ cat.id }}','{{ cat.name }}','{{ cat.slug }}','{{ cat.icon or '' }}')">Изменить</button>
+            <form method="post" action="/admin/categories/{{ cat.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить категорию {{ cat.name }}?')">
+              <button type="submit" class="btn btn-danger btn-sm">×</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title" id="formTitle">Новая категория</div>
+    <form method="post" action="/admin/categories/save">
+      <input type="hidden" name="category_id" id="catId" value="">
+      <div class="form-group">
+        <label class="form-label">Название</label>
+        <input type="text" name="name" id="catName" class="form-control" required
+               oninput="if(!document.getElementById('catSlug').dataset.touched) document.getElementById('catSlug').value = translit(this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Слаг (URL)</label>
+        <input type="text" name="slug" id="catSlug" class="form-control" required style="font-family:monospace;font-size:12px" oninput="this.dataset.touched='1'">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Эмодзи</label>
+        <input type="text" name="icon" id="catIcon" class="form-control" placeholder="🥊 🔥 🏒 🥋">
+        <p class="form-hint">Вставьте эмодзи для категории</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center">Сохранить</button>
+        <button type="button" class="btn btn-secondary" onclick="resetCatForm()" id="cancelBtn" style="display:none">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function translit(str){const map={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',' ':'-'};return str.toLowerCase().split('').map(c=>map[c]!==undefined?map[c]:c).join('').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');}
+function editCat(id,name,slug,icon){
+  document.getElementById('catId').value=id;
+  document.getElementById('catName').value=name;
+  document.getElementById('catSlug').value=slug;
+  document.getElementById('catSlug').dataset.touched='1';
+  document.getElementById('catIcon').value=icon;
+  document.getElementById('formTitle').textContent='Редактировать категорию';
+  document.getElementById('cancelBtn').style.display='block';
+  window.scrollTo(0,0);
+}
+function resetCatForm(){
+  document.getElementById('catId').value='';
+  document.getElementById('catName').value='';
+  document.getElementById('catSlug').value='';
+  document.getElementById('catSlug').dataset.touched='';
+  document.getElementById('catIcon').value='';
+  document.getElementById('formTitle').textContent='Новая категория';
+  document.getElementById('cancelBtn').style.display='none';
+}
+</script>
+{% endblock %}

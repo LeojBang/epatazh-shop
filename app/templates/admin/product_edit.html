@@ -1,0 +1,272 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ product.name if product else 'Новый товар' }}{% endblock %}
+{% block page_title %}{% if product %}Редактирование товара{% else %}Новый товар{% endif %}{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/products" class="btn btn-secondary">← К списку</a>
+{% endblock %}
+
+{% block content %}
+{% if request.query_params.get('success') %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Товар сохранён</div>
+{% endif %}
+
+<div class="grid-main">
+  <!-- ЛЕВАЯ КОЛОНКА -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- ОСНОВНОЕ + РАЗМЕРЫ (главная форма) -->
+    <form method="post" action="/admin/products/save" id="productForm" style="display:flex;flex-direction:column;gap:16px">
+      <input type="hidden" name="product_id" value="{{ product.id if product else '' }}">
+
+      <div class="card">
+        <div class="card-title">Основное</div>
+        <div class="form-group">
+          <label class="form-label">Название</label>
+          <input type="text" name="name" class="form-control" required
+                 value="{{ product.name if product else '' }}"
+                 oninput="if(!document.getElementById('slugField').dataset.touched) document.getElementById('slugField').value = translit(this.value)">
+        </div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label class="form-label">Цена ₽</label>
+            <input type="text" name="price" class="form-control" required value="{{ product.price if product else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Цена со скидкой</label>
+            <input type="text" name="sale_price" class="form-control" placeholder="—" value="{{ product.sale_price if product and product.sale_price else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Бейдж</label>
+            <select name="badge" class="form-control">
+              <option value="">— нет —</option>
+              <option value="Хит" {% if product and product.badge == 'Хит' %}selected{% endif %}>Хит</option>
+              <option value="Новинка" {% if product and product.badge == 'Новинка' %}selected{% endif %}>Новинка</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Категория</label>
+            <select name="category_id" class="form-control" required>
+              <option value="">— выберите —</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.icon or '' }} {{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Пол</label>
+            <select name="gender" class="form-control" required>
+              <option value="">— выберите —</option>
+              <option value="мужское" {% if product and product.gender == 'мужское' %}selected{% endif %}>Мужское</option>
+              <option value="женское" {% if product and product.gender == 'женское' %}selected{% endif %}>Женское</option>
+              <option value="детское" {% if product and product.gender == 'детское' %}selected{% endif %}>Детское</option>
+              <option value="унисекс" {% if product and product.gender == 'унисекс' %}selected{% endif %}>Унисекс</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Описание</label>
+          <textarea name="description" class="form-control" rows="3">{{ product.description if product and product.description else '' }}</textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Состав / материал</label>
+            <input type="text" name="material" class="form-control" placeholder="88% полиэстер, 12% эластан" value="{{ product.material if product and product.material else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Уход</label>
+            <input type="text" name="care" class="form-control" placeholder="Стирка 30°, не отбеливать" value="{{ product.care if product and product.care else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- РАЗМЕРЫ -->
+      <div class="card">
+        <div class="card-title">Размеры и остатки</div>
+        <div id="sizesGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          {% if product and product.variants %}
+          {% for v in product.variants|sort(attribute='size') %}
+          <div style="text-align:center" data-size-row>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;justify-content:center">
+              <span>{{ v.size }}</span>
+              <button type="button" onclick="this.closest('[data-size-row]').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;line-height:1">×</button>
+            </div>
+            <input type="number" name="size_{{ v.size }}" value="{{ v.stock }}" min="0" class="form-control" style="width:70px;text-align:center;padding:6px">
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div>
+            <label class="form-label">Новый размер</label>
+            <input type="text" id="sizeNewInput" placeholder="напр. XL или 52" class="form-control" style="width:160px"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addSize();}">
+          </div>
+          <div>
+            <label class="form-label">Кол-во</label>
+            <input type="number" id="sizeNewStock" value="0" min="0" class="form-control" style="width:90px"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addSize();}">
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="addSize()" style="margin-bottom:0">+ Добавить</button>
+        </div>
+        <p class="form-hint" style="margin-top:8px">Добавляйте размеры по одному кнопкой. Все сохранятся вместе с товаром.</p>
+      </div>
+    </form>
+    <!-- /главная форма закрыта -->
+
+    {% if product %}
+    <!-- ЦВЕТА (отдельные формы, ВНЕ главной формы) -->
+    <div class="card">
+      <div class="card-title">Цвета и фото по цветам</div>
+      <p class="form-hint" style="margin-bottom:12px">Если товар бывает разных цветов — добавьте каждый цвет и загрузите для него свои фото. На сайте появятся кружочки выбора цвета.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        {% for color in product.colors %}
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <div style="padding:10px 14px;background:var(--bg);display:flex;align-items:center;gap:10px">
+            <span class="color-dot" style="background:{{ color.hex }}"></span>
+            <span style="font-weight:500">{{ color.name }}</span>
+            <span style="font-size:12px;color:var(--text-muted)">{{ color.hex }}</span>
+            <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">{{ color.images|length }} фото</span>
+            <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить цвет {{ color.name }} со всеми фото?')">
+              <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+            </form>
+          </div>
+          <div style="padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            {% for img in color.images %}
+            <div class="thumb-wrap">
+              <img src="/static/uploads/{{ img.path }}" class="thumb" alt="">
+              <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/images/{{ img.id }}/delete" style="position:absolute;top:-4px;right:-4px">
+                <button type="submit" class="thumb-del" title="Удалить фото">×</button>
+              </form>
+            </div>
+            {% endfor %}
+            <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/images/upload" enctype="multipart/form-data" style="display:inline">
+              <label class="thumb-add">
+                <i class="ti ti-plus" aria-hidden="true"></i>фото
+                <input type="file" name="file" accept="image/*" style="display:none" onchange="this.form.submit()">
+              </label>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Добавить цвет (отдельная форма) -->
+        <details style="border:1px dashed var(--border-strong);border-radius:10px;padding:12px 14px" {% if not product.colors %}open{% endif %}>
+          <summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:500">+ Добавить цвет</summary>
+          <form method="post" action="/admin/products/{{ product.id }}/colors/save" style="margin-top:12px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div>
+              <label class="form-label">Название</label>
+              <input type="text" name="name" placeholder="Чёрный" class="form-control" style="width:140px" required>
+            </div>
+            <div>
+              <label class="form-label">Цвет</label>
+              <input type="color" name="hex_code" value="#000000" class="form-control" style="width:60px;height:38px;padding:3px;cursor:pointer">
+            </div>
+            <div>
+              <label class="form-label">Порядок</label>
+              <input type="number" name="position" value="0" class="form-control" style="width:70px">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Добавить цвет</button>
+          </form>
+        </details>
+      </div>
+    </div>
+    {% else %}
+    <div class="card" style="opacity:.6">
+      <div class="card-title">Цвета и фото</div>
+      <p style="font-size:13px;color:var(--text-muted)">Сначала сохраните товар (кнопка справа) — потом сможете добавить цвета и фото.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ПРАВАЯ КОЛОНКА -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <button type="submit" form="productForm" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px">
+        <i class="ti ti-check" aria-hidden="true"></i>Сохранить товар
+      </button>
+      {% if product %}
+      <form method="post" action="/admin/products/{{ product.id }}/delete" onsubmit="return confirm('Удалить товар «{{ product.name }}» полностью?')">
+        <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
+          <i class="ti ti-trash" aria-hidden="true"></i>Удалить товар
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Статус</div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" name="is_active" form="productForm" {% if not product or product.is_active %}checked{% endif %}>
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:13px">Активен на сайте</span>
+      </div>
+    </div>
+
+    {% if product %}
+    <div class="card">
+      <div class="card-title">Фото товара (без цветов)</div>
+      <p class="form-hint" style="margin-bottom:10px">Используйте, если товар одного цвета. Если добавили цвета выше — эти фото не нужны.</p>
+      <div class="thumb-grid">
+        {% for img in product.images %}
+        <div class="thumb-wrap">
+          <img src="/static/uploads/{{ img.path }}" class="thumb" alt="">
+          <form method="post" action="/admin/products/{{ product.id }}/images/{{ img.id }}/delete" style="position:absolute;top:-4px;right:-4px">
+            <button type="submit" class="thumb-del" title="Удалить">×</button>
+          </form>
+        </div>
+        {% endfor %}
+        <form method="post" action="/admin/products/{{ product.id }}/images/upload" enctype="multipart/form-data">
+          <label class="thumb-add">
+            <i class="ti ti-plus" aria-hidden="true"></i>добавить
+            <input type="file" name="file" accept="image/*" style="display:none" onchange="this.form.submit()">
+          </label>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-title">Слаг (URL)</div>
+      <input type="text" name="slug" id="slugField" form="productForm" class="form-control" required
+             style="font-family:monospace;font-size:12px"
+             value="{{ product.slug if product else '' }}"
+             oninput="this.dataset.touched='1';document.getElementById('slugPreview').textContent=this.value||'slug'">
+      <p class="form-hint">Адрес товара: /catalog/<span id="slugPreview">{{ product.slug if product else 'slug' }}</span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+function translit(str) {
+  const map = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',' ':'-'};
+  return str.toLowerCase().split('').map(c => map[c] !== undefined ? map[c] : c).join('').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+function addSize() {
+  const nameInput = document.getElementById('sizeNewInput');
+  const stockInput = document.getElementById('sizeNewStock');
+  const size = nameInput.value.trim().toUpperCase();
+  const stock = parseInt(stockInput.value) || 0;
+  if (!size) { nameInput.focus(); return; }
+  const exists = [...document.querySelectorAll('#sizesGrid [data-size-row] input')].some(inp => inp.name === 'size_' + size);
+  if (exists) { alert('Размер ' + size + ' уже добавлен'); return; }
+  const grid = document.getElementById('sizesGrid');
+  const div = document.createElement('div');
+  div.style.textAlign = 'center';
+  div.setAttribute('data-size-row', '');
+  div.innerHTML =
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;justify-content:center">' +
+    '<span>' + size + '</span>' +
+    '<button type="button" onclick="this.closest(\'[data-size-row]\').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;line-height:1">×</button>' +
+    '</div>' +
+    '<input type="number" name="size_' + size + '" value="' + stock + '" min="0" class="form-control" style="width:70px;text-align:center;padding:6px">';
+  grid.appendChild(div);
+  nameInput.value = '';
+  stockInput.value = '0';
+  nameInput.focus();
+}
+</script>
+{% endblock %}

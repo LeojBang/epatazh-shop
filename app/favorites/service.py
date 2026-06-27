@@ -47,6 +47,7 @@ async def get_user_favorites(db: AsyncSession, user_id) -> list[Product]:
             selectinload(Product.category),
             selectinload(Product.variants),
             selectinload(Product.images),
+            selectinload(Product.colors),
         )
         .order_by(Favorite.created_at.desc())
     )

@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}Возвраты{% endblock %}
+{% block page_title %}Возвраты{% endblock %}
+
+{% set reason_ru = {'size':'Не подошёл размер','look':'Не понравился','defect':'Брак / дефект','other':'Другая причина'} %}
+{% set status_ru = {'pending':'На рассмотрении','approved':'Одобрена','rejected':'Отклонена','refunded':'Деньги возвращены'} %}
+{% set status_badge = {'pending':'pending','approved':'paid','rejected':'cancelled','refunded':'delivered'} %}
+
+{% block content %}
+<div class="filters">
+  <a href="/admin/returns?status=all" class="btn {% if active_status == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Все</a>
+  <a href="/admin/returns?status=pending" class="btn {% if active_status == 'pending' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">На рассмотрении</a>
+  <a href="/admin/returns?status=approved" class="btn {% if active_status == 'approved' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Одобренные</a>
+  <a href="/admin/returns?status=refunded" class="btn {% if active_status == 'refunded' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Возвращённые</a>
+</div>
+
+{% if returns %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Дата</th><th>Причина</th><th>Комментарий</th><th style="text-align:center">Статус</th><th></th></tr></thead>
+    <tbody>
+      {% for r in returns %}
+      <tr>
+        <td style="color:var(--text-muted);white-space:nowrap">{{ r.created_at.strftime('%d.%m.%Y') }}</td>
+        <td style="color:var(--text)">{{ reason_ru.get(r.reason, r.reason) }}</td>
+        <td style="color:var(--text-muted);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.comment or '—' }}</td>
+        <td style="text-align:center"><span class="badge badge-{{ status_badge.get(r.status,'pending') }}">{{ status_ru.get(r.status, r.status) }}</span></td>
+        <td style="text-align:right"><a href="/admin/returns/{{ r.id }}" class="btn btn-secondary btn-sm">Открыть</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if total > per_page %}
+<div class="pagination">
+  {% if page > 1 %}<a href="?status={{ active_status }}&page={{ page-1 }}" class="page-link">← Назад</a>{% endif %}
+  <span class="page-info">{{ page }} / {{ ((total + per_page - 1) // per_page) }}</span>
+  {% if page * per_page < total %}<a href="?status={{ active_status }}&page={{ page+1 }}" class="page-link">Вперёд →</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+  <i class="ti ti-arrow-back-up" style="font-size:48px;display:block;margin-bottom:12px;opacity:.3" aria-hidden="true"></i>
+  Возвратов нет
+</div>
+{% endif %}
+{% endblock %}

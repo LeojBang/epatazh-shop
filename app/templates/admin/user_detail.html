@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% block title %}Пользователь{% endblock %}
+{% block page_title %}Профиль пользователя{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/users" class="btn btn-secondary">← К пользователям</a>
+{% endblock %}
+
+{% block content %}
+{% if request.query_params.get('success') %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Сохранено</div>
+{% endif %}
+{% if request.query_params.get('error') == 'last_super' %}
+<div class="alert alert-error"><i class="ti ti-alert-circle" aria-hidden="true"></i>Нельзя снять права у последнего администратора. Сначала назначьте другого.</div>
+{% endif %}
+
+<div class="grid-main">
+  <div class="card">
+    <div class="card-title">Данные пользователя</div>
+    <form method="post" action="/admin/users/{{ target.id }}/update">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="text" class="form-control" value="{{ target.email }}" readonly>
+        <p class="form-hint">Email изменить нельзя</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Имя</label>
+        <input type="text" name="full_name" class="form-control" value="{{ target.full_name or '' }}">
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" name="is_active" {% if target.is_active %}checked{% endif %}>
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:13px">Активен (может входить)</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" name="is_superuser" {% if target.is_superuser %}checked{% endif %}>
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:13px">Администратор (доступ в админку)</span>
+        </div>
+        <p class="form-hint">Даёт полный доступ к админ-панели</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Сохранить</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Информация</div>
+    <div style="font-size:12px;color:var(--text-muted)">Дата регистрации</div>
+    <div style="margin-bottom:10px">{{ target.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+    <div style="font-size:12px;color:var(--text-muted)">Роль</div>
+    <div style="margin-bottom:10px">
+      {% if target.is_superuser %}
+      <span class="badge badge-paid">Администратор</span>
+      {% else %}
+      <span style="color:var(--text-muted)">Покупатель</span>
+      {% endif %}
+    </div>
+    <div style="font-size:12px;color:var(--text-muted)">ID</div>
+    <div style="font-family:monospace;font-size:11px;color:var(--text-muted)">{{ target.id }}</div>
+  </div>
+</div>
+{% endblock %}

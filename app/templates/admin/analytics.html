@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block title %}Аналитика{% endblock %}
+{% block page_title %}Аналитика{% endblock %}
+{% block topbar_actions %}
+<select onchange="location.href='/admin/analytics?days='+this.value" class="form-control" style="width:auto">
+  <option value="7" {% if days == 7 %}selected{% endif %}>7 дней</option>
+  <option value="30" {% if days == 30 %}selected{% endif %}>30 дней</option>
+  <option value="90" {% if days == 90 %}selected{% endif %}>90 дней</option>
+</select>
+{% endblock %}
+
+{% block content %}
+<div class="grid-4" style="margin-bottom:16px">
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Выручка за {{ days }} дней</div>
+    <div style="font-size:24px;font-weight:600;color:var(--text)">{{ "{:,.0f}".format(revenue|float).replace(',', ' ') }} ₽</div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Заказов</div>
+    <div style="font-size:24px;font-weight:600;color:var(--text)">{{ orders_count }}</div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Новых клиентов</div>
+    <div style="font-size:24px;font-weight:600;color:var(--text)">{{ new_users }}</div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Средний чек</div>
+    <div style="font-size:24px;font-weight:600;color:var(--text)">{{ "{:,.0f}".format(avg_order|float).replace(',', ' ') }} ₽</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Топ товаров за {{ days }} дней</div>
+  {% if top_products %}
+  <div class="table-wrap" style="border:none">
+    <table>
+      <thead><tr><th>Товар</th><th style="text-align:center">Продано</th><th style="text-align:right">Выручка</th></tr></thead>
+      <tbody>
+        {% for p in top_products %}
+        <tr>
+          <td style="font-weight:500;color:var(--text)">{{ p.name }}</td>
+          <td style="text-align:center;color:var(--text-muted)">{{ p.qty }} шт</td>
+          <td style="text-align:right;font-weight:500">{{ "{:,.0f}".format(p.revenue|float).replace(',', ' ') }} ₽</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center">Нет продаж за выбранный период</p>
+  {% endif %}
+</div>
+{% endblock %}

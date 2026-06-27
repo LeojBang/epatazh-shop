@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block title %}Пользователи{% endblock %}
+{% block page_title %}Пользователи{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <form method="get" style="display:contents">
+    <input type="text" name="search" placeholder="Поиск по email…" value="{{ search }}" class="form-control" style="min-width:240px">
+    <button type="submit" class="btn btn-secondary">Найти</button>
+    {% if search %}<a href="/admin/users" class="btn btn-secondary">Сбросить</a>{% endif %}
+  </form>
+</div>
+
+{% if users %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Email</th><th>Имя</th><th style="text-align:center">Роль</th><th style="text-align:center">Активен</th><th>Регистрация</th><th></th></tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td style="color:var(--accent);font-weight:500">{{ u.email }}</td>
+        <td style="color:var(--text)">{{ u.full_name or '—' }}</td>
+        <td style="text-align:center">
+          {% if u.is_superuser %}
+          <span class="badge badge-paid">Админ</span>
+          {% else %}
+          <span style="color:var(--text-muted);font-size:12px">Покупатель</span>
+          {% endif %}
+        </td>
+        <td style="text-align:center">
+          {% if u.is_active %}
+          <i class="ti ti-check" style="color:var(--success)" aria-hidden="true"></i>
+          {% else %}
+          <i class="ti ti-x" style="color:var(--danger)" aria-hidden="true"></i>
+          {% endif %}
+        </td>
+        <td style="color:var(--text-muted)">{{ u.created_at.strftime('%d.%m.%Y') }}</td>
+        <td style="text-align:right"><a href="/admin/users/{{ u.id }}" class="btn btn-secondary btn-sm">Изменить</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if total > 30 %}
+<div class="pagination">
+  {% if page > 1 %}<a href="?search={{ search }}&page={{ page-1 }}" class="page-link">← Назад</a>{% endif %}
+  <span class="page-info">{{ page }} / {{ ((total + 29) // 30) }}</span>
+  {% if page * 30 < total %}<a href="?search={{ search }}&page={{ page+1 }}" class="page-link">Вперёд →</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+  <i class="ti ti-users" style="font-size:48px;display:block;margin-bottom:12px;opacity:.3" aria-hidden="true"></i>
+  Пользователей не найдено
+</div>
+{% endif %}
+{% endblock %}

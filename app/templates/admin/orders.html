@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}Заказы{% endblock %}
+{% block page_title %}Заказы{% endblock %}
+
+{% set status_ru = {'new':'Новый','pending':'Ожидает оплаты','paid':'Оплачен','shipped':'Отправлен','delivered':'Доставлен','cancelled':'Отменён'} %}
+
+{% block content %}
+<div class="filters">
+  <a href="/admin/orders?status=all" class="btn {% if active_status == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Все</a>
+  <a href="/admin/orders?status=new" class="btn {% if active_status == 'new' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Новые</a>
+  <a href="/admin/orders?status=paid" class="btn {% if active_status == 'paid' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Оплаченные</a>
+  <a href="/admin/orders?status=shipped" class="btn {% if active_status == 'shipped' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Отправленные</a>
+  <a href="/admin/orders?status=delivered" class="btn {% if active_status == 'delivered' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Доставленные</a>
+</div>
+
+{% if orders %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Дата</th><th>Покупатель</th><th>Телефон</th><th style="text-align:right">Сумма</th><th style="text-align:center">Статус</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td style="color:var(--text-muted);white-space:nowrap">{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        <td>
+          <div style="font-weight:500;color:var(--text)">{{ o.full_name }}</div>
+          <div style="font-size:12px;color:var(--text-muted)">{{ o.email }}</div>
+        </td>
+        <td style="color:var(--text-muted)">{{ o.phone }}</td>
+        <td style="text-align:right;font-weight:500;color:var(--text)">{{ o.total }} ₽</td>
+        <td style="text-align:center"><span class="badge badge-{{ o.status }}">{{ status_ru.get(o.status, o.status) }}</span></td>
+        <td style="text-align:right"><a href="/admin/orders/{{ o.id }}" class="btn btn-secondary btn-sm">Открыть</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if total > per_page %}
+<div class="pagination">
+  {% if page > 1 %}<a href="?status={{ active_status }}&page={{ page-1 }}" class="page-link">← Назад</a>{% endif %}
+  <span class="page-info">{{ page }} / {{ ((total + per_page - 1) // per_page) }}</span>
+  {% if page * per_page < total %}<a href="?status={{ active_status }}&page={{ page+1 }}" class="page-link">Вперёд →</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+  <i class="ti ti-shopping-bag" style="font-size:48px;display:block;margin-bottom:12px;opacity:.3" aria-hidden="true"></i>
+  Заказов нет
+</div>
+{% endif %}
+{% endblock %}

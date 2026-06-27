@@ -3,17 +3,20 @@
 {% block content %}
     <a href="/catalog" class="breadcrumb">← Назад в каталог</a>
 
+    {% set first_color = colors[0] if colors else None %}
+    {% set gallery_images = first_color.images if first_color and first_color.images else product.images %}
+
     <div class="product-detail">
         <div class="product-gallery">
-            {% if product.images %}
+            {% if gallery_images %}
                 <div class="gallery-main">
-                    {% for image in product.images %}
+                    {% for image in gallery_images %}
                         <img src="/static/uploads/{{ image.path }}"
                              class="gallery-img {% if loop.first %}active{% endif %}"
                              data-index="{{ loop.index0 }}"
                              alt="{{ product.name }}">
                     {% endfor %}
-                    {% if product.images|length > 1 %}
+                    {% if gallery_images|length > 1 %}
                         <button class="gallery-arrow gallery-prev" onclick="changeImage(-1)">‹</button>
                         <button class="gallery-arrow gallery-next" onclick="changeImage(1)">›</button>
                     {% endif %}
@@ -91,7 +94,14 @@
             </div>
             {% endif %}
 
-            {% set available = product.variants | selectattr("stock", "gt", 0) | list %}
+            {% set size_order = ['XS','S','M','L','XL','XXL','XXXL'] %}
+            {% set available_raw = product.variants | selectattr("stock", "gt", 0) | list %}
+            {% set ns = namespace(sorted=[]) %}
+            {% for sz in size_order %}
+              {% for v in available_raw if v.size == sz %}{% set ns.sorted = ns.sorted + [v] %}{% endfor %}
+            {% endfor %}
+            {% for v in available_raw|sort(attribute='size') if v.size not in size_order %}{% set ns.sorted = ns.sorted + [v] %}{% endfor %}
+            {% set available = ns.sorted %}
             {% if available %}
                 <form method="post" action="/cart/add" class="add-form">
                     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
@@ -160,38 +170,55 @@
 
 {% if colors %}
 <script>
+let currentIndex = 0;
 function switchColor(btn) {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('colorName').textContent = btn.dataset.colorName;
 
     const images = JSON.parse(btn.dataset.images);
-    if (!images.length) return;
-
     const gallery = document.querySelector('.gallery-main');
-    if (!gallery) return;
+    const placeholder = document.querySelector('.gallery-placeholder');
 
-    // удаляем старые фото
-    gallery.querySelectorAll('.gallery-img').forEach(img => img.remove());
+    // Если галереи нет (был placeholder) — создаём
+    let galleryEl = gallery;
+    if (!galleryEl && placeholder) {
+        galleryEl = document.createElement('div');
+        galleryEl.className = 'gallery-main';
+        placeholder.replaceWith(galleryEl);
+    }
+    if (!galleryEl) return;
 
-    // добавляем новые
-    const arrows = gallery.querySelectorAll('.gallery-arrow');
+    // удаляем старые фото и стрелки
+    galleryEl.querySelectorAll('.gallery-img, .gallery-arrow').forEach(el => el.remove());
+
+    if (!images.length) {
+        // у цвета нет фото — показываем заглушку
+        galleryEl.innerHTML = '<div class="gallery-placeholder">Нет фото</div>';
+        return;
+    }
+
     images.forEach((path, i) => {
         const img = document.createElement('img');
         img.src = '/static/uploads/' + path;
         img.className = 'gallery-img' + (i === 0 ? ' active' : '');
         img.dataset.index = i;
         img.alt = btn.dataset.colorName;
-        if (arrows.length) {
-            gallery.insertBefore(img, arrows[0]);
-        } else {
-            gallery.appendChild(img);
-        }
+        galleryEl.appendChild(img);
     });
 
-    // показываем/скрываем стрелки
-    const arrowBtns = gallery.querySelectorAll('.gallery-arrow');
-    arrowBtns.forEach(a => a.style.display = images.length > 1 ? '' : 'none');
+    if (images.length > 1) {
+        const prev = document.createElement('button');
+        prev.className = 'gallery-arrow gallery-prev';
+        prev.textContent = '‹';
+        prev.onclick = () => changeImage(-1);
+        const next = document.createElement('button');
+        next.className = 'gallery-arrow gallery-next';
+        next.textContent = '›';
+        next.onclick = () => changeImage(1);
+        galleryEl.appendChild(prev);
+        galleryEl.appendChild(next);
+    }
 
     currentIndex = 0;
 }

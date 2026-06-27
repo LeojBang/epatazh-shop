@@ -1,10 +1,5 @@
-from contextlib import asynccontextmanager
-
-from arq import create_pool
-from arq.connections import RedisSettings
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from sqladmin import Admin
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.redis import redis_pool
 import redis.asyncio as redis_lib
@@ -12,26 +7,10 @@ from fastapi import Request, status
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.admin.auth import AdminAuth
-from app.admin.views import (
-    CategoryAdmin,
-    OrderAdmin,
-    ProductAdmin,
-    ProductVariantAdmin,
-    ProductImageAdmin,
-    ProductColorAdmin,
-    ProductColorImageAdmin,
-    ReviewAdmin,
-    UserAdmin,
-    DashboardView,
-    StockView,
-    ReturnRequestAdmin,
-)
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
 from app.catalog.router import router as catalog_router
 from app.core.config import settings
-from app.core.database import engine
 from app.orders.router import router as orders_router
 from app.users.router import router as users_router
 from app.web.router import router as web_router
@@ -39,47 +18,14 @@ from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.returns.router import router as returns_router
 from app.favorites.router import router as favorites_router
+from app.admin2.router import router as admin_router
 from app.core.logging_config import setup_logging
 from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
 from starlette.responses import JSONResponse as StarletteJSON
 
 setup_logging()
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Старт: создаём arq-пул для постановки фоновых задач
-    app.state.arq_pool = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
-    yield
-    # Остановка: закрываем пул
-    pool = getattr(app.state, "arq_pool", None)
-    if pool:
-        await pool.close()
-
-
-app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG, lifespan=lifespan)
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Базовые заголовки безопасности на каждый ответ."""
-
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault(
-            "Referrer-Policy", "strict-origin-when-cross-origin"
-        )
-        response.headers.setdefault(
-            "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
-        )
-        # HSTS — только на проде (по HTTP в разработке он бессмыслен/вреден)
-        if settings.is_production:
-            response.headers.setdefault(
-                "Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains",
-            )
-        return response
+app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
@@ -98,26 +44,21 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             path = request.url.path
             exempt = any(path.startswith(p) for p in self.EXEMPT_PREFIXES)
             if not exempt:
-                # Читаем тело и сохраняем, чтобы прочитать заново после проверки
+                # Читаем тело и СОХРАНЯЕМ его, чтобы роут смог прочитать заново
                 body = await request.body()
 
-                def make_receive(data):
-                    async def receive():
-                        return {
-                            "type": "http.request",
-                            "body": data,
-                            "more_body": False,
-                        }
+                # Возвращаем тело обратно в поток запроса
+                async def receive():
+                    return {"type": "http.request", "body": body, "more_body": False}
 
-                    return receive
+                request._receive = receive
 
-                # Возвращаем тело для парсинга формы
-                request._receive = make_receive(body)
-                # Токен может прийти из формы ИЛИ из заголовка (для AJAX)
+                # Токен может прийти из заголовка (AJAX) ИЛИ из формы
                 header_token = request.headers.get("X-CSRF-Token")
                 if header_token:
                     form_token = header_token
                 else:
+                    # Парсим форму из сохранённого тела для проверки токена
                     form = await request.form()
                     form_token = form.get("csrf_token")
                 if not validate_csrf(request.cookies.get(CSRF_COOKIE), form_token):
@@ -128,8 +69,11 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                         status_code=403,
                     )
 
-                # Возвращаем тело снова — теперь для роута
-                request._receive = make_receive(body)
+                # Ещё раз возвращаем тело — форма выше его снова вычитала
+                async def receive2():
+                    return {"type": "http.request", "body": body, "more_body": False}
+
+                request._receive = receive2
 
         response = await call_next(request)
 
@@ -139,7 +83,6 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                 cookie_token,
                 httponly=False,
                 samesite="lax",
-                secure=settings.ENVIRONMENT != "local",
                 max_age=60 * 60 * 24 * 7,
             )
 
@@ -147,13 +90,14 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(CSRFMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
 
 
 class CartCountMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         # Значения по умолчанию — чтобы шаблон не падал, даже если что-то пойдёт не так
         request.state.cart_count = 0
+        request.state.favorites_count = 0
+        request.state.footer_pages = {"information": [], "company": [], "legal": []}
 
         # --- Счётчик корзины ---
         try:
@@ -169,16 +113,14 @@ class CartCountMiddleware(BaseHTTPMiddleware):
                 if payload and payload.get("type") == "access":
                     from app.core.database import AsyncSessionLocal
                     from app.users.service import get_user_by_email
+                    from app.favorites import service as favorites_service
 
                     async with AsyncSessionLocal() as db:
                         user = await get_user_by_email(db, payload["sub"])
                         if user:
                             cart_id = str(user.id)
-                            # Счётчик избранного для залогиненного
-                            from app.favorites import service as fav_service
-
                             request.state.favorites_count = (
-                                await fav_service.get_favorite_count(db, user.id)
+                                await favorites_service.get_favorite_count(db, user.id)
                             )
 
             if not cart_id:
@@ -197,56 +139,35 @@ class CartCountMiddleware(BaseHTTPMiddleware):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    accept = request.headers.get("accept", "")
-    is_html = "text/html" in accept
-
     # 401 на обычных страницах → отправляем на вход.
-    if exc.status_code == status.HTTP_401_UNAUTHORIZED and is_html:
-        return RedirectResponse(url="/login", status_code=303)
+    # Для API/JSON-запросов оставляем JSON.
+    if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            return RedirectResponse(url="/login", status_code=303)
 
-    # 404 на страницах → красивая страница
-    if exc.status_code == status.HTTP_404_NOT_FOUND and is_html:
-        from app.templates_env import templates
+    # 403 на страницах → красивая страница вместо голого JSON
+    if exc.status_code == status.HTTP_403_FORBIDDEN:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            from app.templates_env import templates
 
-        return templates.TemplateResponse(
-            request, "errors/404.html", {}, status_code=404
-        )
+            return templates.TemplateResponse(
+                request, "errors/403.html", {}, status_code=403
+            )
 
-    # 405 (метод не разрешён) на страницах → тоже показываем 404-страницу
-    # (для пользователя это «такой страницы/действия нет»)
-    if exc.status_code == status.HTTP_405_METHOD_NOT_ALLOWED and is_html:
-        from app.templates_env import templates
+    # 404 на страницах → красивая страница вместо голого JSON
+    if exc.status_code == status.HTTP_404_NOT_FOUND:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            from app.templates_env import templates
 
-        return templates.TemplateResponse(
-            request, "errors/404.html", {}, status_code=405
-        )
+            return templates.TemplateResponse(
+                request, "errors/404.html", {}, status_code=404
+            )
 
     # Остальное — стандартный JSON-ответ
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
-
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-    # Логируем полную ошибку для себя (со стектрейсом)
-    from app.core.logging_config import get_logger
-
-    get_logger("error").exception(
-        "Необработанная ошибка на %s: %s", request.url.path, exc
-    )
-
-    accept = request.headers.get("accept", "")
-    is_html = "text/html" in accept
-
-    # Пользователю — вежливая страница без технических деталей
-    if is_html:
-        from app.templates_env import templates
-
-        return templates.TemplateResponse(
-            request, "errors/500.html", {}, status_code=500
-        )
-
-    # Для API — JSON без деталей
-    return JSONResponse({"detail": "Внутренняя ошибка сервера"}, status_code=500)
 
 
 app.add_middleware(CartCountMiddleware)
@@ -262,23 +183,9 @@ app.include_router(payments_router)
 app.include_router(reviews_router)
 app.include_router(returns_router)
 app.include_router(favorites_router)
+app.include_router(admin_router)
 
-# --- Админка ---
-admin = Admin(
-    app, engine, authentication_backend=AdminAuth(secret_key=settings.SECRET_KEY)
-)
-admin.add_view(UserAdmin)
-admin.add_view(CategoryAdmin)
-admin.add_view(ProductAdmin)
-admin.add_view(OrderAdmin)
-admin.add_view(ProductVariantAdmin)
-admin.add_view(ProductImageAdmin)
-admin.add_view(ProductColorAdmin)
-admin.add_view(ProductColorImageAdmin)
-admin.add_view(ReviewAdmin)
-admin.add_view(DashboardView)
-admin.add_view(StockView)
-admin.add_view(ReturnRequestAdmin)
+# --- Кастомная админка подключена через admin_router ---
 
 
 @app.get("/health", tags=["system"])

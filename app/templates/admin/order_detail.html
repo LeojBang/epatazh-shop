@@ -1,0 +1,97 @@
+{% extends "admin/base.html" %}
+{% block title %}Заказ{% endblock %}
+{% block page_title %}Заказ от {{ order.created_at.strftime('%d.%m.%Y') }}{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/orders" class="btn btn-secondary">← К заказам</a>
+{% endblock %}
+
+{% set status_ru = {'new':'Новый','pending':'Ожидает оплаты','paid':'Оплачен','shipped':'Отправлен','delivered':'Доставлен','cancelled':'Отменён'} %}
+
+{% block content %}
+{% if request.query_params.get('success') %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Статус обновлён</div>
+{% endif %}
+
+<div class="grid-main">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <!-- СОСТАВ ЗАКАЗА -->
+    <div class="card">
+      <div class="card-title">Состав заказа</div>
+      <div class="table-wrap" style="border:none">
+        <table>
+          <thead><tr><th>Товар</th><th>Размер</th><th style="text-align:center">Кол-во</th><th style="text-align:right">Цена</th><th style="text-align:right">Сумма</th></tr></thead>
+          <tbody>
+            {% for item in order.items %}
+            <tr>
+              <td style="font-weight:500;color:var(--text)">{{ item.product_name }}</td>
+              <td style="color:var(--text-muted)">{{ item.size or '—' }}</td>
+              <td style="text-align:center">{{ item.quantity }}</td>
+              <td style="text-align:right">{{ item.price }} ₽</td>
+              <td style="text-align:right;font-weight:500">{{ item.price * item.quantity }} ₽</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="border-top:2px solid var(--border)">
+              <td colspan="4" style="text-align:right;font-weight:600;color:var(--text)">Итого:</td>
+              <td style="text-align:right;font-weight:700;font-size:15px;color:var(--text)">{{ order.total }} ₽</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- ДАННЫЕ ПОКУПАТЕЛЯ -->
+    <div class="card">
+      <div class="card-title">Покупатель</div>
+      <div class="grid-2" style="gap:16px">
+        <div>
+          <div style="font-size:12px;color:var(--text-muted)">Имя</div>
+          <div style="font-weight:500;margin-bottom:10px">{{ order.full_name }}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Email</div>
+          <div style="margin-bottom:10px">{{ order.email }}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Телефон</div>
+          <div>{{ order.phone }}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text-muted)">Адрес доставки</div>
+          <div style="line-height:1.5">{{ order.address }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- УПРАВЛЕНИЕ -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="card-title">Статус заказа</div>
+      <div style="margin-bottom:14px">
+        <span class="badge badge-{{ order.status }}" style="font-size:13px">{{ status_ru.get(order.status, order.status) }}</span>
+      </div>
+      <form method="post" action="/admin/orders/{{ order.id }}/update">
+        <div class="form-group">
+          <label class="form-label">Изменить статус</label>
+          <select name="new_status" class="form-control">
+            <option value="new" {% if order.status == 'new' %}selected{% endif %}>Новый</option>
+            <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Ожидает оплаты</option>
+            <option value="paid" {% if order.status == 'paid' %}selected{% endif %}>Оплачен</option>
+            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Отправлен</option>
+            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Доставлен</option>
+            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Отменён</option>
+          </select>
+          <p class="form-hint">При отмене товары вернутся на склад</p>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Сохранить статус</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Информация</div>
+      <div style="font-size:12px;color:var(--text-muted)">Создан</div>
+      <div style="margin-bottom:8px">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+      <div style="font-size:12px;color:var(--text-muted)">ID заказа</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--text-muted)">{{ order.id }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

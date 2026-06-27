@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Админ-панель{% endblock %} — Эпатаж</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --green-dark:#0b2a21;--green:#0f3a2e;--green-line:#1f5240;
+  --gold:#c79a3b;--gold-soft:#d4af37;
+  --bg:#f4f5f7;--surface:#fff;--border:#e5e7eb;--border-strong:#d1d5db;
+  --text:#111827;--text-muted:#6b7280;--text-sm:#374151;
+  --accent:#1d6f4e;--accent-bg:#e8f5ee;--accent-text:#0f5132;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-text:#991b1b;
+  --warning:#d97706;--warning-bg:#fffbeb;--warning-text:#92400e;
+  --success:#16a34a;--success-bg:#f0fdf4;--success-text:#14532d;
+  --sidebar-w:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+a{color:inherit;text-decoration:none}
+button{font-family:'Inter',sans-serif;cursor:pointer}
+input,select,textarea{font-family:'Inter',sans-serif}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;background:var(--green-dark);
+  display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;
+}
+.sidebar__logo{
+  padding:18px 16px;border-bottom:1px solid var(--green-line);
+}
+.sidebar__logo-name{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;font-style:italic;color:var(--gold-soft);letter-spacing:1px}
+.sidebar__logo-sub{font-size:11px;color:#6b9e87;letter-spacing:.5px;margin-top:2px}
+.sidebar__nav{padding:10px 8px;flex:1;overflow-y:auto}
+.sidebar__section{font-size:10px;color:#4a7a65;text-transform:uppercase;letter-spacing:1px;padding:10px 8px 4px}
+.nav-link{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
+  font-size:13px;color:#c8ddd4;transition:background .12s,color .12s;margin-bottom:2px;
+  position:relative;
+}
+.nav-link i{font-size:16px;flex-shrink:0}
+.nav-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-link.active{background:var(--green);color:#fff}
+.nav-link .badge{
+  margin-left:auto;background:var(--danger);color:#fff;
+  font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;
+}
+.sidebar__footer{
+  padding:12px 16px;border-top:1px solid var(--green-line);
+  font-size:12px;color:#4a7a65;
+}
+.sidebar__footer a{color:#6b9e87;font-size:12px}
+.sidebar__footer a:hover{color:var(--gold-soft)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.topbar__title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar__actions{display:flex;gap:8px;align-items:center}
+.content{padding:24px;flex:1}
+
+/* ── КНОПКИ ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid transparent;transition:all .12s}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#155e3b}
+.btn-secondary{background:var(--surface);color:var(--text-sm);border-color:var(--border-strong)}
+.btn-secondary:hover{background:var(--bg)}
+.btn-danger{background:var(--danger-bg);color:var(--danger-text);border-color:#fca5a5}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:6px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+.btn-icon:hover{background:var(--bg);color:var(--text)}
+
+/* ── ТАБЛИЦЫ ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:10px 14px;text-align:left;color:var(--text-muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:11px 14px;color:var(--text-sm);border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafafa}
+
+/* ── КАРТОЧКИ ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+
+/* ── ФОРМЫ ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--text-sm);margin-bottom:5px}
+.form-hint{font-size:11px;color:var(--text-muted);margin-top:3px}
+.form-control{
+  width:100%;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;
+  font-size:13px;color:var(--text);background:var(--surface);transition:border-color .12s;
+}
+.form-control:focus{outline:none;border-color:var(--accent)}
+.form-control[readonly]{background:var(--bg);color:var(--text-muted)}
+textarea.form-control{resize:vertical;min-height:80px}
+select.form-control{cursor:pointer}
+
+/* ── БЕЙДЖИ ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-new{background:var(--danger-bg);color:var(--danger-text)}
+.badge-paid{background:var(--success-bg);color:var(--success-text)}
+.badge-shipped{background:var(--accent-bg);color:var(--accent-text)}
+.badge-delivered{background:#f0fdf4;color:#166534}
+.badge-cancelled{background:#f9fafb;color:var(--text-muted)}
+.badge-pending{background:var(--warning-bg);color:var(--warning-text)}
+.badge-active{background:var(--success-bg);color:var(--success-text)}
+.badge-hidden{background:#f9fafb;color:var(--text-muted);border:1px solid var(--border)}
+
+/* ── ФИЛЬТРЫ ── */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filters input,.filters select{padding:7px 10px;border:1px solid var(--border-strong);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text)}
+.filters input{min-width:200px}
+
+/* ── УВЕДОМЛЕНИЕ ── */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.alert-success{background:var(--success-bg);color:var(--success-text);border:1px solid #bbf7d0}
+.alert-error{background:var(--danger-bg);color:var(--danger-text);border:1px solid #fca5a5}
+
+/* ── СЕТКИ ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.grid-cols{display:grid;gap:16px}
+.grid-main{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+
+/* ── МИНИАТЮРЫ ── */
+.thumb-grid{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{width:72px;height:72px;border-radius:8px;border:1px solid var(--border);background:var(--bg);object-fit:cover;position:relative}
+.thumb-add{width:72px;height:72px;border-radius:8px;border:1px dashed var(--border-strong);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;cursor:pointer;color:var(--text-muted);font-size:11px}
+.thumb-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.thumb-wrap{position:relative;display:inline-block}
+.thumb-del{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+
+/* ── ПЕРЕКЛЮЧАТЕЛЬ ── */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:22px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:"";position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+/* ── ЦВЕТОВОЙ КРУЖОК ── */
+.color-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.1);display:inline-block;flex-shrink:0}
+
+/* ── ПАГИНАЦИЯ ── */
+.pagination{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:20px}
+.page-link{padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text-sm)}
+.page-link:hover{background:var(--bg)}
+.page-link.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-info{font-size:13px;color:var(--text-muted);padding:0 8px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar__logo">
+    <div class="sidebar__logo-name">Эпатаж</div>
+    <div class="sidebar__logo-sub">Админ-панель</div>
+  </div>
+  <nav class="sidebar__nav">
+    <div class="sidebar__section">Каталог</div>
+    <a href="/admin/products" class="nav-link {% if active_section == 'products' %}active{% endif %}">
+      <i class="ti ti-shirt" aria-hidden="true"></i>Товары
+    </a>
+    <a href="/admin/categories" class="nav-link {% if active_section == 'categories' %}active{% endif %}">
+      <i class="ti ti-category" aria-hidden="true"></i>Категории
+    </a>
+    <div class="sidebar__section">Продажи</div>
+    <a href="/admin/orders" class="nav-link {% if active_section == 'orders' %}active{% endif %}">
+      <i class="ti ti-shopping-bag" aria-hidden="true"></i>Заказы
+      {% if new_orders_count %}<span class="badge">{{ new_orders_count }}</span>{% endif %}
+    </a>
+    <a href="/admin/returns" class="nav-link {% if active_section == 'returns' %}active{% endif %}">
+      <i class="ti ti-arrow-back-up" aria-hidden="true"></i>Возвраты
+    </a>
+    <div class="sidebar__section">Сервис</div>
+    <a href="/admin/analytics" class="nav-link {% if active_section == 'analytics' %}active{% endif %}">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i>Аналитика
+    </a>
+    <a href="/admin/users" class="nav-link {% if active_section == 'users' %}active{% endif %}">
+      <i class="ti ti-users" aria-hidden="true"></i>Пользователи
+    </a>
+  </nav>
+  <div class="sidebar__footer">
+    {{ admin_user.email }}<br>
+    <a href="/" target="_blank">← На сайт</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar__title">{% block page_title %}{% endblock %}</span>
+    <div class="topbar__actions">{% block topbar_actions %}{% endblock %}</div>
+  </div>
+  <div class="content">
+    {% if success %}<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>{{ success }}</div>{% endif %}
+    {% if error %}<div class="alert alert-error"><i class="ti ti-alert-circle" aria-hidden="true"></i>{{ error }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+</body>
+</html>

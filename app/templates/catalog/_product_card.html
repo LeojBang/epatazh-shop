@@ -1,8 +1,10 @@
 <div class="product-card-wrap">
     <a href="/catalog/{{ product.slug }}" class="product-card">
         <div class="card-img-wrap">
-            {% if product.images %}
-                <img src="/static/uploads/{{ product.images[0].path }}" class="card-img" alt="{{ product.name }}">
+            {% set first_color = product.colors[0] if product.colors else None %}
+            {% set card_images = first_color.images if first_color and first_color.images else product.images %}
+            {% if card_images %}
+                <img src="/static/uploads/{{ card_images[0].path }}" class="card-img" alt="{{ product.name }}">
             {% else %}
                 <div class="card-img-placeholder">Нет фото</div>
             {% endif %}

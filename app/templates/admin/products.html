@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+{% block title %}Товары{% endblock %}
+{% block page_title %}Товары{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/products/new" class="btn btn-primary">
+  <i class="ti ti-plus" aria-hidden="true"></i>Добавить товар
+</a>
+{% endblock %}
+
+{% block content %}
+{% if request.query_params.get('success') == 'deleted' %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Товар удалён</div>
+{% elif request.query_params.get('success') == 'hidden' %}
+<div class="alert alert-success"><i class="ti ti-eye-off" aria-hidden="true"></i>Товар есть в заказах, поэтому его нельзя удалить — он скрыт с сайта</div>
+{% endif %}
+<div class="filters">
+  <form method="get" style="display:contents">
+    <input type="text" name="search" placeholder="Поиск по названию…" value="{{ search }}" class="form-control" style="min-width:220px">
+    <select name="category" class="form-control" style="width:auto">
+      <option value="">Все категории</option>
+      {% for cat in categories %}
+      <option value="{{ cat.slug }}" {% if active_category == cat.slug %}selected{% endif %}>{{ cat.icon or '' }} {{ cat.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" class="form-control" style="width:auto">
+      <option value="all" {% if active_status == 'all' %}selected{% endif %}>Все статусы</option>
+      <option value="active" {% if active_status == 'active' %}selected{% endif %}>Активные</option>
+      <option value="hidden" {% if active_status == 'hidden' %}selected{% endif %}>Скрытые</option>
+    </select>
+    <button type="submit" class="btn btn-secondary">Найти</button>
+    {% if search or active_category or active_status != 'all' %}
+    <a href="/admin/products" class="btn btn-secondary">Сбросить</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if products %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Товар</th>
+        <th>Категория</th>
+        <th>Пол</th>
+        <th style="text-align:right">Цена</th>
+        <th style="text-align:center">Остаток</th>
+        <th style="text-align:center">Статус</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      {% set total_stock = p.variants | sum(attribute="stock") %}
+      <tr>
+        <td>
+          <div style="font-weight:500;color:var(--text)">{{ p.name }}</div>
+          {% if p.badge %}<span style="font-size:11px;color:var(--text-muted)">{{ p.badge }}</span>{% endif %}
+        </td>
+        <td style="color:var(--text-muted)">{{ p.category.name if p.category else '—' }}</td>
+        <td style="color:var(--text-muted)">{{ p.gender or '—' }}</td>
+        <td style="text-align:right">
+          {% if p.sale_price and p.sale_price < p.price %}
+          <span style="text-decoration:line-through;color:var(--text-muted);font-size:12px">{{ p.price }} ₽</span><br>
+          <span style="color:var(--danger);font-weight:500">{{ p.sale_price }} ₽</span>
+          {% else %}
+          {{ p.price }} ₽
+          {% endif %}
+        </td>
+        <td style="text-align:center">
+          {% if total_stock == 0 %}
+          <span style="color:var(--danger)">0</span>
+          {% elif total_stock < 5 %}
+          <span style="color:var(--warning)">{{ total_stock }}</span>
+          {% else %}
+          <span style="color:var(--success)">{{ total_stock }}</span>
+          {% endif %}
+        </td>
+        <td style="text-align:center">
+          {% if p.is_active %}
+          <span class="badge badge-active">Активен</span>
+          {% else %}
+          <span class="badge badge-hidden">Скрыт</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right">
+          <a href="/admin/products/{{ p.id }}/edit" class="btn btn-secondary btn-sm">Изменить</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if total > per_page %}
+<div class="pagination">
+  {% if page > 1 %}<a href="?page={{ page-1 }}&search={{ search }}&category={{ active_category }}&status={{ active_status }}" class="page-link">← Назад</a>{% endif %}
+  <span class="page-info">{{ page }} / {{ ((total + per_page - 1) // per_page) }}</span>
+  {% if page * per_page < total %}<a href="?page={{ page+1 }}&search={{ search }}&category={{ active_category }}&status={{ active_status }}" class="page-link">Вперёд →</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+  <i class="ti ti-shirt" style="font-size:48px;display:block;margin-bottom:12px;opacity:.3" aria-hidden="true"></i>
+  {% if search or active_category %}
+  Товаров по фильтру не найдено. <a href="/admin/products" style="color:var(--accent)">Сбросить</a>
+  {% else %}
+  Товаров пока нет. <a href="/admin/products/new" style="color:var(--accent)">Добавить первый</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

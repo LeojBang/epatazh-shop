@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+{% block title %}Возврат{% endblock %}
+{% block page_title %}Заявка на возврат{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/returns" class="btn btn-secondary">← К возвратам</a>
+{% endblock %}
+
+{% set reason_ru = {'size':'Не подошёл размер','look':'Не понравился','defect':'Брак / дефект','other':'Другая причина'} %}
+{% set status_ru = {'pending':'На рассмотрении','approved':'Одобрена','rejected':'Отклонена','refunded':'Деньги возвращены'} %}
+{% set status_badge = {'pending':'pending','approved':'paid','rejected':'cancelled','refunded':'delivered'} %}
+
+{% block content %}
+{% if request.query_params.get('success') == 'refunded' %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Деньги возвращены покупателю</div>
+{% elif request.query_params.get('success') %}
+<div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Заявка обновлена</div>
+{% endif %}
+{% if request.query_params.get('error') == 'refund_failed' %}
+<div class="alert alert-error"><i class="ti ti-alert-circle" aria-hidden="true"></i>Не удалось вернуть деньги. Проверьте что заявка одобрена и платёж существует.</div>
+{% endif %}
+
+<div class="grid-main">
+  <div class="card">
+    <div class="card-title">Детали заявки</div>
+    <div style="font-size:12px;color:var(--text-muted)">Причина</div>
+    <div style="font-weight:500;margin-bottom:12px">{{ reason_ru.get(ret.reason, ret.reason) }}</div>
+    <div style="font-size:12px;color:var(--text-muted)">Комментарий покупателя</div>
+    <div style="margin-bottom:12px;line-height:1.5">{{ ret.comment or '—' }}</div>
+    <div style="font-size:12px;color:var(--text-muted)">Дата заявки</div>
+    <div style="margin-bottom:12px">{{ ret.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+    <div style="font-size:12px;color:var(--text-muted)">ID заказа</div>
+    <div style="font-family:monospace;font-size:11px;color:var(--text-muted);margin-bottom:12px">{{ ret.order_id }}</div>
+    {% if ret.payment_external_id %}
+    <div style="font-size:12px;color:var(--text-muted)">ID платежа (YooKassa)</div>
+    <div style="font-family:monospace;font-size:11px;color:var(--text-muted)">{{ ret.payment_external_id }}</div>
+    {% endif %}
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="card-title">Обработка</div>
+      <div style="margin-bottom:14px">
+        <span class="badge badge-{{ status_badge.get(ret.status,'pending') }}" style="font-size:13px">{{ status_ru.get(ret.status, ret.status) }}</span>
+      </div>
+      <form method="post" action="/admin/returns/{{ ret.id }}/update">
+        <div class="form-group">
+          <label class="form-label">Статус</label>
+          <select name="new_status" class="form-control">
+            <option value="pending" {% if ret.status == 'pending' %}selected{% endif %}>На рассмотрении</option>
+            <option value="approved" {% if ret.status == 'approved' %}selected{% endif %}>Одобрить</option>
+            <option value="rejected" {% if ret.status == 'rejected' %}selected{% endif %}>Отклонить</option>
+            <option value="refunded" {% if ret.status == 'refunded' %}selected{% endif %}>Деньги возвращены</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ответ покупателю</label>
+          <textarea name="admin_comment" class="form-control" rows="3">{{ ret.admin_comment or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Сохранить</button>
+      </form>
+    </div>
+
+    {% if ret.status == 'approved' %}
+    <div class="card" style="border-color:#fca5a5">
+      <div class="card-title">Возврат денег</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Заявка одобрена. Можно вернуть деньги покупателю через YooKassa.</p>
+      <form method="post" action="/admin/returns/{{ ret.id }}/refund" onsubmit="return confirm('Вернуть деньги покупателю через YooKassa?')">
+        <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
+          <i class="ti ti-cash" aria-hidden="true"></i>Вернуть деньги
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
