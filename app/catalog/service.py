@@ -47,7 +47,11 @@ async def get_products(
 
     # Фильтр по полу
     if gender:
-        query = query.where(Product.gender == gender)
+        # Унисекс-товары показываем и в мужском, и в женском фильтре
+        if gender in ("мужское", "женское"):
+            query = query.where(Product.gender.in_([gender, "унисекс"]))
+        else:
+            query = query.where(Product.gender == gender)
 
     # Сортировка
     if sort == "price_asc":
@@ -121,14 +125,51 @@ async def search_products(db: AsyncSession, query: str) -> list[Product]:
 
 
 async def get_available_sizes(db: AsyncSession) -> list[str]:
-    """Уникальные размеры, доступные в каталоге (для фильтра)."""
+    """Уникальные размеры в каталоге, отсортированные по-человечески."""
     result = await db.execute(
-        select(ProductVariant.size)
-        .distinct()
-        .where(ProductVariant.stock > 0)
-        .order_by(ProductVariant.size)
+        select(ProductVariant.size).distinct().where(ProductVariant.stock > 0)
     )
-    return [row[0] for row in result.all()]
+    sizes = [row[0] for row in result.all() if row[0]]
+    return sort_sizes(sizes)
+
+
+# Порядок буквенных размеров (от меньшего к большему)
+_SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL"]
+
+
+def sort_sizes(sizes: list[str]) -> list[str]:
+    """
+    Сортирует размеры по-человечески:
+    сначала буквенные по росту (XS, S, M, L, XL, XXL),
+    затем числовые по возрастанию (28, 30, 32...).
+    """
+
+    def key(size: str):
+        s = size.strip().upper()
+        if s in _SIZE_ORDER:
+            return (0, _SIZE_ORDER.index(s), 0)
+        # числовой размер
+        if s.isdigit():
+            return (1, int(s), 0)
+        # всё остальное — в конец по алфавиту
+        return (2, 0, s)
+
+    return sorted(sizes, key=key)
+
+
+def filter_sizes_by_gender(sizes: list[str], gender: str | None) -> list[str]:
+    """
+    Размеры под выбранный пол:
+    - детское → только числовые размеры (28, 30, 32...)
+    - мужское/женское/унисекс → только буквенные (XS, S, M, L...)
+    - пол не выбран → все размеры
+    """
+    if not gender:
+        return sizes
+    if gender == "детское":
+        return [s for s in sizes if s.strip().isdigit()]
+    # взрослые/унисекс — всё, кроме чисто числовых
+    return [s for s in sizes if not s.strip().isdigit()]
 
 
 async def get_featured_products(db: AsyncSession, limit: int = 4) -> list[Product]:

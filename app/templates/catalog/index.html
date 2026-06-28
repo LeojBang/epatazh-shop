@@ -37,6 +37,8 @@
                        class="filter-chip {% if active_gender == 'женское' %}active{% endif %}">Женское</a>
                     <a href="{{ update_query(request, gender='детское', page=None) }}"
                        class="filter-chip {% if active_gender == 'детское' %}active{% endif %}">Детское</a>
+                    <a href="{{ update_query(request, gender='унисекс', page=None) }}"
+                       class="filter-chip {% if active_gender == 'унисекс' %}active{% endif %}">Унисекс</a>
                 </div>
 
                 <div class="filter-group">

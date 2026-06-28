@@ -38,6 +38,15 @@ async def catalog_page(
     per_page = 12
     total_pages = (total + per_page - 1) // per_page
     all_sizes = await service.get_available_sizes(db)
+    # Размеры под выбранный пол: детям — числовые, взрослым — буквенные
+    all_sizes = service.filter_sizes_by_gender(all_sizes, gender)
+    # Если выбранный размер не подходит под пол — сбрасываем его
+    if size and size not in all_sizes:
+        size = None
+        products, total = await service.get_products(
+            db, category_slug=category, size=size, gender=gender, sort=sort, page=page
+        )
+        total_pages = (total + per_page - 1) // per_page
 
     # Множество id избранного — для подсветки сердечек на карточках
     favorite_ids = set()

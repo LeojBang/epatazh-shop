@@ -137,7 +137,6 @@ class TestUpdateProfile:
             full_name="Новое имя",
             email="prof@example.com",
             phone="+79001234567",
-            address="Москва",
         )
         assert error is None
         assert updated.full_name == "Новое имя"
@@ -162,7 +161,6 @@ class TestUpdateProfile:
             full_name="B",
             email="first@example.com",
             phone=None,
-            address=None,
         )
         assert updated is None
         assert error is not None  # email занят
