@@ -54,6 +54,11 @@ async def checkout(
     phone: str = Form(...),
     full_name: str = Form(...),
     address: str = Form(...),
+    delivery_type: str = Form("pvz"),
+    cdek_city_code: int | None = Form(None),
+    cdek_city_name: str | None = Form(None),
+    cdek_pvz_code: str | None = Form(None),
+    cdek_pvz_address: str | None = Form(None),
     guest_id: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
     r: redis.Redis = Depends(get_redis),
@@ -64,7 +69,15 @@ async def checkout(
     # Валидация формы
     try:
         form = CheckoutForm(
-            email=email, phone=phone, full_name=full_name, address=address
+            email=email,
+            phone=phone,
+            full_name=full_name,
+            address=address,
+            delivery_type=delivery_type,
+            cdek_city_code=cdek_city_code,
+            cdek_city_name=cdek_city_name,
+            cdek_pvz_code=cdek_pvz_code,
+            cdek_pvz_address=cdek_pvz_address,
         )
     except ValidationError:
         items, total = await cart_service.get_cart_with_products(r, db, cart_user_id)
@@ -80,6 +93,21 @@ async def checkout(
             status_code=400,
         )
 
+    # Для ПВЗ обязателен выбранный пункт
+    if form.delivery_type == "pvz" and not form.cdek_pvz_code:
+        items, total = await cart_service.get_cart_with_products(r, db, cart_user_id)
+        return templates.TemplateResponse(
+            request,
+            "orders/checkout.html",
+            {
+                "items": items,
+                "total": total,
+                "user": user,
+                "error": "Выберите пункт выдачи на карте",
+            },
+            status_code=400,
+        )
+
     try:
         order = await service.create_order(
             db,
@@ -90,6 +118,11 @@ async def checkout(
             phone=form.phone,
             full_name=form.full_name,
             address=form.address,
+            delivery_type=form.delivery_type,
+            cdek_city_code=form.cdek_city_code,
+            cdek_city_name=form.cdek_city_name,
+            cdek_pvz_code=form.cdek_pvz_code,
+            cdek_pvz_address=form.cdek_pvz_address,
         )
     except CheckoutError as e:
         items, total = await cart_service.get_cart_with_products(r, db, cart_user_id)
@@ -183,6 +216,26 @@ async def payment_return(
                     "Не удалось поставить письмо об оплате: %s", e
                 )
 
+            # Передаём оплаченный заказ в СДЭК (резервный путь к вебхуку —
+            # срабатывает при возврате покупателя, в т.ч. при локальном тесте)
+            try:
+                from app.cdek import service as cdek_service
+
+                order_full = await service.get_order(db, str(order.id))
+                if (
+                    order_full
+                    and order_full.cdek_pvz_code
+                    and not order_full.cdek_order_uuid
+                ):
+                    res = await cdek_service.send_order_to_cdek(order_full)
+                    if res and res.get("uuid"):
+                        order_full.cdek_order_uuid = res["uuid"]
+                        await db.commit()
+            except Exception as e:
+                from app.core.logging_config import get_logger
+
+                get_logger("cdek").warning("Не удалось передать заказ в СДЭК: %s", e)
+
     return templates.TemplateResponse(
         request, "orders/payment_return.html", {"order": order, "user": user}
     )
@@ -249,9 +302,57 @@ async def cancel_order(
 @router.get("/track", response_class=HTMLResponse)
 async def track_form(
     request: Request,
+    db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_current_user_optional),
 ):
-    return templates.TemplateResponse(request, "orders/track.html", {"user": user})
+    number = request.query_params.get("number", "").strip()
+
+    # Если передан трек-номер и пользователь залогинен — ищем автоматически
+    if number and user:
+        order = None
+        error = None
+        tracking = None
+        try:
+            found = await service.get_order(db, number)
+            if found and found.email.lower() == user.email.lower():
+                order = found
+            else:
+                error = "Заказ не найден или принадлежит другому аккаунту."
+        except Exception:
+            error = "Неверный формат номера заказа."
+
+        if order and order.cdek_order_uuid:
+            try:
+                from app.cdek import service as cdek_service
+
+                tracking = await cdek_service.get_tracking(order.cdek_order_uuid)
+                if (
+                    tracking
+                    and tracking.get("cdek_number")
+                    and not order.cdek_track_number
+                ):
+                    order.cdek_track_number = tracking["cdek_number"]
+                    await db.commit()
+            except Exception as e:
+                from app.core.logging_config import get_logger
+
+                get_logger("cdek").warning("Не удалось получить статус СДЭК: %s", e)
+
+        return templates.TemplateResponse(
+            request,
+            "orders/track.html",
+            {
+                "user": user,
+                "order": order,
+                "error": error,
+                "tracking": tracking,
+                "prefill_number": number,
+            },
+        )
+
+    return templates.TemplateResponse(
+        request, "orders/track.html", {"user": user, "prefill_number": number}
+    )
 
 
 @router.post("/track", response_class=HTMLResponse)
@@ -264,21 +365,59 @@ async def track_order(
 ):
     order = None
     error = None
+    tracking = None
 
-    # UUID может быть невалидным — оборачиваем поиск, чтобы не упасть
+    order_id_clean = order_id.strip()
+    email_clean = email.strip().lower()
+
+    # Сначала ищем по UUID заказа
     try:
-        found = await service.get_order(db, order_id.strip())
-        if found and found.email.lower() == email.strip().lower():
+        found = await service.get_order(db, order_id_clean)
+        if found and found.email.lower() == email_clean:
             order = found
-        else:
-            error = "Заказ с такими данными не найден. Проверьте номер и email."
     except Exception:
-        error = "Неверный формат номера заказа."
+        pass
+
+    # Если не нашли — пробуем по трек-номеру СДЭК
+    if not order:
+        try:
+            from sqlalchemy import select as sa_select
+            from app.models.order import Order
+            from sqlalchemy.orm import selectinload
+
+            result = await db.execute(
+                sa_select(Order)
+                .where(Order.cdek_track_number == order_id_clean)
+                .options(selectinload(Order.items))
+            )
+            found = result.scalar_one_or_none()
+            if found and found.email.lower() == email_clean:
+                order = found
+        except Exception:
+            pass
+
+    if not order:
+        error = "Заказ с такими данными не найден. Проверьте номер заказа (или трек-номер СДЭК) и email."
+
+    # Если заказ передан в СДЭК — подтянем реальный статус доставки
+    if order and order.cdek_order_uuid:
+        try:
+            from app.cdek import service as cdek_service
+
+            tracking = await cdek_service.get_tracking(order.cdek_order_uuid)
+            # Сохраним номер СДЭК в заказ, если ещё не сохранён
+            if tracking and tracking.get("cdek_number") and not order.cdek_track_number:
+                order.cdek_track_number = tracking["cdek_number"]
+                await db.commit()
+        except Exception as e:
+            from app.core.logging_config import get_logger
+
+            get_logger("cdek").warning("Не удалось получить статус СДЭК: %s", e)
 
     return templates.TemplateResponse(
         request,
         "orders/track.html",
-        {"user": user, "order": order, "error": error},
+        {"user": user, "order": order, "error": error, "tracking": tracking},
     )
 
 

@@ -1009,3 +1009,418 @@ body { max-width: 100%; overflow-x: clip; }
     }
     .qty-input { width: 70px; }
 }
+
+/* ============================================================
+   ОФОРМЛЕНИЕ ЗАКАЗА: блок доставки СДЭК, подсказки города, карта
+   ============================================================ */
+.delivery-block {
+    margin: 1.25rem 0;
+    padding: 1.25rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.delivery-block__title {
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Поле города с подсказками */
+.city-autocomplete { position: relative; }
+.city-suggest {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    z-index: 400;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.city-suggest__item {
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.92rem;
+}
+.city-suggest__item:hover { background: var(--bg); color: var(--green); }
+
+/* Карта пунктов выдачи */
+.pvz-map-wrap { margin-top: 1rem; }
+.pvz-map {
+    width: 100%;
+    height: 380px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    overflow: hidden;
+    z-index: 1;
+}
+.pvz-hint {
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.pvz-chosen {
+    margin-top: 0.85rem;
+    padding: 0.8rem 1rem;
+    background: rgba(199,154,59,0.12);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.92rem;
+}
+.pvz-chosen strong { color: var(--green); }
+
+/* Кнопка выбора в попапе карты */
+.pvz-pick-btn {
+    margin-top: 6px;
+    background: var(--gold);
+    color: var(--green-dark);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+.pvz-pick-btn:hover { background: var(--gold-soft); }
+
+/* ============================================================
+   Блок доставки СДЭК в деталях заказа (ЛК пользователя)
+   ============================================================ */
+.delivery-info {
+    margin-top: 0.75rem;
+    padding: 0.9rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.delivery-info__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 0.6rem;
+}
+.delivery-info__head i { color: var(--gold); font-size: 1.2rem; }
+.delivery-info p { margin: 0.4rem 0; }
+.btn-sm {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+/* ============================================================
+   Отслеживание СДЭК на странице /track
+   ============================================================ */
+.track-cdek {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.track-cdek__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 0.6rem;
+}
+.track-cdek__head i { color: var(--gold); font-size: 1.2rem; }
+.track-cdek__num {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.track-cdek__current {
+    padding: 0.6rem 0.8rem;
+    background: rgba(199,154,59,0.12);
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+}
+.track-cdek__current strong { color: var(--green); }
+.track-cdek__date,
+.track-timeline__date {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.track-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-left: 2px solid var(--border-strong);
+}
+.track-timeline__item {
+    position: relative;
+    padding: 0.5rem 0 0.5rem 1.1rem;
+}
+.track-timeline__item::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 0.85rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+}
+.track-timeline__item:first-child::before { background: var(--green); }
+.track-timeline__name { font-weight: 500; }
+.track-timeline__city {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: 0.4rem;
+}
+.track-cdek__pending {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background: var(--bg);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+/* ============================================================
+   ДЕТАЛИ ЗАКАЗА: читаемость на тёмном фоне
+   ============================================================ */
+
+/* Ссылка «← К списку заказов» */
+a.breadcrumb {
+    color: #9aa8a0;
+}
+a.breadcrumb:hover { color: var(--gold-soft); }
+
+/* Номер и дата заказа — делаем заметнее */
+.order-detail-number {
+    color: #c8d2cc !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.3px;
+}
+.order-detail-date {
+    color: #a9b5ae !important;
+}
+
+/* Белые карточки — отрываем от тёмного фона */
+.order-detail-items,
+.order-detail-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    box-shadow: var(--shadow-card);
+}
+/* Заголовки внутри белых карточек — тёмные */
+.order-detail-items h3,
+.order-detail-info h3 {
+    color: var(--text) !important;
+}
+
+/* Разделитель итого — золотой */
+.order-detail-total {
+    border-top-color: var(--gold) !important;
+    color: var(--text);
+}
+
+/* ============================================================
+   ОФОРМЛЕНИЕ ЗАКАЗА: шире форма, читаемость
+   ============================================================ */
+
+/* Блок заказа — шире, белый */
+.checkout-summary {
+    max-width: 720px;
+}
+
+/* Форма на всю доступную ширину, но ограничена */
+.auth-card {
+    max-width: 720px;
+}
+
+/* Карта на всю ширину блока доставки */
+.pvz-map {
+    height: 420px !important;
+}
+
+/* Итого в сводке заказа на тёмном фоне — читаемо */
+.checkout-summary .cart-total {
+    color: var(--text-on-dark);
+}
+
+/* Блок доставки — чуть шире, удобнее */
+.delivery-block {
+    margin-top: 1.5rem;
+}
+
+/* ============================================================
+   ОФОРМЛЕНИЕ ЗАКАЗА: двухколоночный лэйаут
+   ============================================================ */
+
+/* Обёртка страницы checkout — grid из двух колонок */
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.75rem;
+    align-items: start;
+}
+
+/* Левая колонка: форма без ограничений ширины */
+.checkout-form-col {
+    min-width: 0;
+}
+
+/* Правая колонка: сводка заказа — прилипает при прокрутке */
+.checkout-summary-col {
+    position: sticky;
+    top: 90px;
+}
+
+/* Сводка заказа в правой колонке */
+.checkout-summary-col .checkout-summary {
+    margin-bottom: 0;
+}
+
+/* Убираем ограничение ширины у auth-card на странице checkout */
+.checkout-form-col .auth-card {
+    max-width: none;
+    margin: 0;
+}
+
+/* Поле города — на всю ширину */
+.checkout-form-col #cityInput,
+.city-autocomplete input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Цена в строке товара — всегда видима */
+.checkout-item {
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0;
+}
+.checkout-item:last-of-type { border-bottom: none; }
+.checkout-item span:last-child {
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text);
+}
+
+/* Итого — крупно и золотом */
+.checkout-summary .cart-total {
+    color: var(--text-muted);
+    margin: 0.75rem 0 0;
+    font-size: 1rem;
+}
+.checkout-summary .cart-total strong {
+    color: var(--gold);
+    font-size: 1.25rem;
+}
+
+/* Кнопка подтвердить — на всю ширину формы */
+.checkout-form-col .btn-primary {
+    width: 100%;
+    padding: 0.9rem;
+    font-size: 1rem;
+}
+
+/* Мобильные: одна колонка */
+@media (max-width: 820px) {
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+    .checkout-summary-col {
+        position: static;
+        order: -1; /* сводка сверху на мобильном */
+    }
+}
+
+/* ============================================================
+   СТРАНИЦА УСПЕШНОЙ ОПЛАТЫ (payment_return)
+   ============================================================ */
+
+/* Итого внутри белой карточки order-card — золотое и заметное */
+.order-card .cart-total {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin: 0.75rem 0;
+}
+.order-card .cart-total strong {
+    color: var(--gold);
+    font-size: 1.3rem;
+}
+
+/* «Отследить заказ» — кнопка-ссылка, а не бледная ссылочка */
+.order-card a.breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--gold-soft);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 0.5rem 1.1rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    margin-top: 0.25rem;
+}
+.order-card a.breadcrumb:hover {
+    background: var(--gold);
+    color: var(--green-dark);
+}
+
+/* Строки товаров — читаемые */
+.order-card .checkout-item {
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0;
+}
+.order-card .checkout-item:last-of-type { border-bottom: none; }
+.order-card .checkout-item span:last-child {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   МОИ ВОЗВРАТЫ: белые карточки на тёмном фоне
+   ============================================================ */
+.return-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--text);
+}
+.return-reason {
+    color: var(--text);
+}
+.return-card p.muted {
+    color: var(--text-muted);
+}
+.return-card p {
+    color: var(--text);
+}
+.admin-comment {
+    background: var(--bg);
+    border-left: 3px solid var(--gold);
+    color: var(--text);
+}
+/* Пустое состояние */
+p.muted {
+    color: #b9c4bd;
+}

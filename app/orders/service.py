@@ -28,6 +28,11 @@ async def create_order(
     phone: str,
     full_name: str,
     address: str,
+    delivery_type: str = "pvz",
+    cdek_city_code: int | None = None,
+    cdek_city_name: str | None = None,
+    cdek_pvz_code: str | None = None,
+    cdek_pvz_address: str | None = None,
 ) -> Order:
     cart = await cart_service.get_cart(r, cart_user_id)
     if not cart:
@@ -87,6 +92,11 @@ async def create_order(
         phone=phone,
         full_name=full_name,
         address=address,
+        delivery_type=delivery_type,
+        cdek_city_code=cdek_city_code,
+        cdek_city_name=cdek_city_name,
+        cdek_pvz_code=cdek_pvz_code,
+        cdek_pvz_address=cdek_pvz_address,
         items=order_items,
     )
     db.add(order)

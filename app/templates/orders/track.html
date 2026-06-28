@@ -3,21 +3,27 @@
 {% block content %}
     <div class="auth-card">
         <h1>Отслеживание заказа</h1>
+
+        {% if not (order and prefill_number and user) %}
         <p style="color: var(--text-muted); font-size: 0.9rem;">
             Введите номер заказа и email, указанный при оформлении.
         </p>
+        {% endif %}
 
         {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
 
+        {% if not (order and prefill_number and user) %}
         <form method="post" action="/track" class="auth-form">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <label for="order_id">Номер заказа</label>
+            <label for="order_id">Номер заказа или трек-номер СДЭК</label>
             <input type="text" id="order_id" name="order_id" required
-                   value="{{ request.query_params.get('order_id', '') }}">
+                   value="{{ prefill_number or request.query_params.get('order_id', '') }}">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" required
+                   value="{{ user.email if user else '' }}">
             <button type="submit" class="btn-primary">Найти заказ</button>
         </form>
+        {% endif %}
     </div>
 
     {% if order %}
@@ -32,7 +38,42 @@
                     <span>{{ "%.2f"|format(item.price * item.quantity) }} ₽</span>
                 </div>
             {% endfor %}
-            <p class="cart-total">Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong></p>
+            <p class="cart-total">Итого: <strong>{{ "%.0f"|format(order.total) }} ₽</strong></p>
+
+            {% if tracking %}
+                <div class="track-cdek">
+                    <div class="track-cdek__head">
+                        <i class="ti ti-truck-delivery" aria-hidden="true"></i>
+                        Доставка СДЭК
+                        {% if tracking.cdek_number %}
+                            <span class="track-cdek__num">№ {{ tracking.cdek_number }}</span>
+                        {% endif %}
+                    </div>
+                    {% if tracking.current_status %}
+                        <div class="track-cdek__current">
+                            Текущий статус: <strong>{{ tracking.current_status }}</strong>
+                            {% if tracking.current_date %}
+                                <span class="track-cdek__date">{{ tracking.current_date }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% if tracking.history and tracking.history|length > 1 %}
+                        <ul class="track-timeline">
+                            {% for h in tracking.history %}
+                                <li class="track-timeline__item">
+                                    <span class="track-timeline__name">{{ h.name }}</span>
+                                    {% if h.city %}<span class="track-timeline__city">{{ h.city }}</span>{% endif %}
+                                    {% if h.date %}<span class="track-timeline__date">{{ h.date }}</span>{% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% elif order.cdek_pvz_code and order.status != "pending" %}
+                <p class="track-cdek__pending">
+                    Заказ оформлен в пункт выдачи СДЭК. Статус доставки появится после передачи заказа в службу.
+                </p>
+            {% endif %}
 
             {% if order.status == "pending" %}
                 <form method="post" action="/orders/{{ order.id }}/pay" class="inline-form">

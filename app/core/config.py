@@ -19,6 +19,21 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: str
     YOOKASSA_SECRET_KEY: str
 
+    # --- СДЭК (доставка) ---
+    # Тестовая среда: https://api.edu.cdek.ru + публичные тестовые ключи.
+    # Боевая среда:   https://api.cdek.ru + ключи из lk.cdek.ru/integration.
+    CDEK_API_URL: str = "https://api.edu.cdek.ru"
+    CDEK_ACCOUNT: str = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"  # тестовый account
+    CDEK_SECURE_PASSWORD: str = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"  # тестовый пароль
+    # Город отправления (откуда едут посылки). Тамбов.
+    # Код города в СДЭК получаем из API по названию при первом обращении
+    # (надёжнее, чем хардкодить число). Индекс — запасной вариант.
+    CDEK_SENDER_CITY_NAME: str = "Тамбов"
+    CDEK_SENDER_CITY_CODE: int = 298  # код Тамбова в СДЭК (проверено через API)
+    CDEK_SENDER_POSTAL_CODE: str = "392000"
+    # Включён ли курьер до двери (пока только ПВЗ). Включишь — появится в форме.
+    CDEK_COURIER_ENABLED: bool = False
+
     # Код НДС для чеков (1 = без НДС/УСН, 3 = НДС 10%, 4 = НДС 20%)
     # Уточняется у заказчика по его системе налогообложения
     RECEIPT_VAT_CODE: int = 1
@@ -31,18 +46,6 @@ class Settings(BaseSettings):
     SMTP_FROM: str = ""  # от кого (обычно = SMTP_USER)
     EMAILS_ENABLED: bool = False  # переключатель: реально слать или только логировать
     SMTP_FROM_NAME: str = "Магазин Эпатаж"  # отображаемое имя отправителя
-
-    # --- СДЭК (доставка) ---
-    # Тестовая среда: https://api.edu.cdek.ru + публичные тестовые ключи.
-    # Боевая среда:   https://api.cdek.ru + ключи из lk.cdek.ru/integration.
-    CDEK_API_URL: str = "https://api.edu.cdek.ru"
-    CDEK_ACCOUNT: str = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"  # тестовый account
-    CDEK_SECURE_PASSWORD: str = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"  # тестовый пароль
-    # Город отправления (откуда едут посылки). Тамбов.
-    CDEK_SENDER_CITY_NAME: str = "Тамбов"
-    CDEK_SENDER_POSTAL_CODE: str = "392000"
-    # Включён ли курьер до двери (пока только ПВЗ).
-    CDEK_COURIER_ENABLED: bool = False
 
     @property
     def is_production(self) -> bool:

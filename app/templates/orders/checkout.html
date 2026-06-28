@@ -1,38 +1,88 @@
 {% extends "base.html" %}
 {% block title %}Оформление заказа — Эпатаж{% endblock %}
 {% block content %}
-    <h1>Оформление заказа</h1>
-    {% if not user %}
-        <div class="guest-notice">
-            <a href="/login">Войдите</a> или <a href="/register">зарегистрируйтесь</a>,
-            чтобы отслеживать заказы в личном кабинете. Можно оформить и без аккаунта.
+
+<h1>Оформление заказа</h1>
+
+{% if not user %}
+<div class="guest-notice">
+    <a href="/login">Войдите</a> или <a href="/register">зарегистрируйтесь</a>,
+    чтобы отслеживать заказы в личном кабинете. Можно оформить и без аккаунта.
+</div>
+{% endif %}
+
+{% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+
+<div class="checkout-layout">
+
+    <!-- Левая колонка: форма -->
+    <div class="checkout-form-col">
+        <div class="auth-card" style="margin: 0;">
+            <form method="post" action="/checkout" class="auth-form" id="checkoutForm">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+                <label for="full_name">ФИО</label>
+                <input type="text" id="full_name" name="full_name"
+                       value="{{ user.full_name if user else '' }}" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email"
+                       value="{{ user.email if user else '' }}" required>
+
+                <label for="phone">Телефон</label>
+                <input type="tel" id="phone" name="phone"
+                       value="{{ user.phone if user else '' }}" required>
+
+                <div class="delivery-block">
+                    <div class="delivery-block__title">Доставка СДЭК — в пункт выдачи</div>
+
+                    <label for="cityInput">Город</label>
+                    <div class="city-autocomplete">
+                        <input type="text" id="cityInput" autocomplete="off"
+                               placeholder="Начните вводить город…">
+                        <ul class="city-suggest" id="citySuggest" hidden></ul>
+                    </div>
+
+                    <input type="hidden" name="delivery_type" value="pvz">
+                    <input type="hidden" name="cdek_city_code" id="cdekCityCode">
+                    <input type="hidden" name="cdek_city_name" id="cdekCityName">
+                    <input type="hidden" name="cdek_pvz_code" id="cdekPvzCode">
+                    <input type="hidden" name="cdek_pvz_address" id="cdekPvzAddress">
+                    <input type="hidden" name="address" id="addressField" required>
+
+                    <div class="pvz-map-wrap" id="pvzMapWrap" hidden>
+                        <div id="pvzMap" class="pvz-map"></div>
+                        <div class="pvz-chosen" id="pvzChosen" hidden>
+                            <strong>Выбран пункт:</strong>
+                            <span id="pvzChosenText"></span>
+                        </div>
+                        <p class="pvz-hint" id="pvzHint">Выберите пункт выдачи на карте.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">Подтвердить заказ</button>
+            </form>
         </div>
-    {% endif %}
-    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+    </div>
 
-    <div class="checkout-summary">
-        <h3 style="margin-top:0;">Ваш заказ</h3>
-        {% for item in items %}
+    <!-- Правая колонка: сводка заказа (прилипает) -->
+    <div class="checkout-summary-col">
+        <div class="checkout-summary">
+            <h3 style="margin-top:0; margin-bottom: 0.75rem;">Ваш заказ</h3>
+            {% for item in items %}
             <div class="checkout-item">
-                <span>{{ item.product.name }} ({{ item.variant.size }}) × {{ item.quantity }}</span>
-                <span>{{ "%.2f"|format(item.subtotal) }} ₽</span>
+                <span>{{ item.product.name }} ({{ item.variant.size }}) &times; {{ item.quantity }}</span>
+                <span>{{ "%.0f"|format(item.subtotal) }} &#8381;</span>
             </div>
-        {% endfor %}
-        <p class="cart-total">Итого: <strong>{{ "%.2f"|format(total) }} ₽</strong></p>
+            {% endfor %}
+            <p class="cart-total">Итого: <strong>{{ "%.0f"|format(total) }} &#8381;</strong></p>
+        </div>
     </div>
 
-    <div class="auth-card" style="margin: 0;">
-        <form method="post" action="/checkout" class="auth-form">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <label for="full_name">ФИО</label>
-            <input type="text" id="full_name" name="full_name" value="{{ user.full_name if user else '' }}" required>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ user.email if user else '' }}" required>
-            <label for="phone">Телефон</label>
-            <input type="tel" id="phone" name="phone" value="{{ user.phone if user else '' }}" required>
-            <label for="address">Адрес доставки</label>
-            <textarea id="address" name="address" rows="3" required>{{ user.address if user else '' }}</textarea>
-            <button type="submit" class="btn-primary">Подтвердить заказ</button>
-        </form>
-    </div>
+</div>
+
+<!-- Замените YOUR_API_KEY на ваш ключ Яндекс.Карт -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=64e089ce-97fa-42e7-844b-a9d8b1fd06cf" type="text/javascript"></script>
+<script src="/static/js/checkout-cdek.js"></script>
+
 {% endblock %}

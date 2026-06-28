@@ -55,4 +55,22 @@ async def yookassa_webhook(
                 )
         except Exception as e:
             logger.warning("Не удалось поставить письмо об оплате: %s", e)
+
+        # Передаём оплаченный заказ в СДЭК (получаем uuid для отслеживания)
+        try:
+            from app.cdek import service as cdek_service
+            from app.orders import service as orders_service
+
+            order_full = await orders_service.get_order(db, str(payment.order_id))
+            if (
+                order_full
+                and order_full.cdek_pvz_code
+                and not order_full.cdek_order_uuid
+            ):
+                result = await cdek_service.send_order_to_cdek(order_full)
+                if result and result.get("uuid"):
+                    order_full.cdek_order_uuid = result["uuid"]
+                    await db.commit()
+        except Exception as e:
+            logger.warning("Не удалось передать заказ в СДЭК: %s", e)
     return JSONResponse({"status": "ok"}, status_code=200)

@@ -44,7 +44,25 @@
             <p><span class="info-label">Получатель:</span><br>{{ order.full_name }}</p>
             <p><span class="info-label">Телефон:</span><br>{{ order.phone }}</p>
             <p><span class="info-label">Email:</span><br>{{ order.email }}</p>
-            <p><span class="info-label">Адрес:</span><br>{{ order.address }}</p>
+
+            {% if order.cdek_pvz_code %}
+                <div class="delivery-info">
+                    <div class="delivery-info__head">
+                        <i class="ti ti-package" aria-hidden="true"></i>
+                        Доставка СДЭК — пункт выдачи
+                    </div>
+                    {% if order.cdek_city_name %}
+                        <p><span class="info-label">Город:</span> {{ order.cdek_city_name }}</p>
+                    {% endif %}
+                    <p><span class="info-label">Пункт выдачи:</span><br>{{ order.cdek_pvz_address or order.address }}</p>
+                    {% if order.cdek_track_number %}
+                        <p><span class="info-label">Трек-номер:</span> <strong>{{ order.cdek_track_number }}</strong></p>
+                        <a href="/track?number={{ order.id }}" class="btn-outline btn-sm">Отследить заказ</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p><span class="info-label">Адрес:</span><br>{{ order.address }}</p>
+            {% endif %}
 
             {% if order.status == "pending" %}
                 <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
