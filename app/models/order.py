@@ -28,6 +28,21 @@ class Order(UUIDMixin, TimeStampMixin, Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     address: Mapped[str] = mapped_column(Text, nullable=False)
 
+    # --- Доставка СДЭК ---
+    # тип доставки: "pvz" (пункт выдачи) или "courier" (курьер до двери)
+    delivery_type: Mapped[str] = mapped_column(
+        String(16), default="pvz", nullable=False
+    )
+    # город получателя в системе СДЭК
+    cdek_city_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cdek_city_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # выбранный пункт выдачи (для delivery_type == "pvz")
+    cdek_pvz_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    cdek_pvz_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # идентификаторы заказа в СДЭК (появляются после передачи заказа)
+    cdek_order_uuid: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    cdek_track_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )

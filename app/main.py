@@ -18,6 +18,7 @@ from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
 from app.returns.router import router as returns_router
 from app.favorites.router import router as favorites_router
+from app.cdek.router import router as cdek_router
 from app.admin2.router import router as admin_router
 from app.core.logging_config import setup_logging
 from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
@@ -183,6 +184,7 @@ app.include_router(payments_router)
 app.include_router(reviews_router)
 app.include_router(returns_router)
 app.include_router(favorites_router)
+app.include_router(cdek_router)
 app.include_router(admin_router)
 
 # --- Кастомная админка подключена через admin_router ---

@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     EMAILS_ENABLED: bool = False  # переключатель: реально слать или только логировать
     SMTP_FROM_NAME: str = "Магазин Эпатаж"  # отображаемое имя отправителя
 
+    # --- СДЭК (доставка) ---
+    # Тестовая среда: https://api.edu.cdek.ru + публичные тестовые ключи.
+    # Боевая среда:   https://api.cdek.ru + ключи из lk.cdek.ru/integration.
+    CDEK_API_URL: str = "https://api.edu.cdek.ru"
+    CDEK_ACCOUNT: str = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"  # тестовый account
+    CDEK_SECURE_PASSWORD: str = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"  # тестовый пароль
+    # Город отправления (откуда едут посылки). Тамбов.
+    CDEK_SENDER_CITY_NAME: str = "Тамбов"
+    CDEK_SENDER_POSTAL_CODE: str = "392000"
+    # Включён ли курьер до двери (пока только ПВЗ).
+    CDEK_COURIER_ENABLED: bool = False
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"
