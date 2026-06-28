@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Ошибка сервера — Эпатаж{% endblock %}
 {% block content %}
-    <div style="text-align: center; padding: 3rem 1rem;">
-        <h1 style="font-size: 3rem; color: var(--green);">500</h1>
-        <p style="font-size: 1.2rem; color: var(--text-muted);">Что-то пошло не так</p>
-        <p style="color: var(--text-muted);">Мы уже знаем о проблеме и работаем над ней. Попробуйте позже.</p>
-        <a href="/" class="btn-primary" style="margin-top: 1rem;">На главную</a>
+    <div class="error-page">
+        <div class="error-page__code">500</div>
+        <p class="error-page__text">Что-то пошло не так</p>
+        <p class="error-page__sub">Мы уже знаем о проблеме и работаем над ней. Попробуйте позже.</p>
+        <a href="/" class="btn-primary error-page__btn">На главную</a>
     </div>
 {% endblock %}

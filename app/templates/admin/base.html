@@ -161,11 +161,39 @@ select.form-control{cursor:pointer}
 .page-link:hover{background:var(--bg)}
 .page-link.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .page-info{font-size:13px;color:var(--text-muted);padding:0 8px}
+/* ── Бургер скрыт на десктопе ── */
+.topbar__burger{
+  display:none;background:none;border:none;color:var(--text);
+  font-size:22px;cursor:pointer;padding:4px 8px;margin-right:4px;line-height:1;
+}
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;
+}
+
+/* ── Мобильная адаптация админки ── */
+@media (max-width:768px){
+  .topbar__burger{display:flex;align-items:center}
+  .sidebar{
+    position:fixed;top:0;left:0;height:100vh;z-index:100;
+    transform:translateX(-100%);transition:transform .25s ease;
+    width:260px;
+  }
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.show{display:block}
+  .topbar{padding:0 14px}
+  .content{padding:14px}
+  /* Многоколоночные сетки (категории и т.п.) — в одну колонку */
+  .grid-main{grid-template-columns:1fr !important}
+  /* Таблицы прокручиваются по горизонтали внутри своей обёртки */
+  .content table{display:block;overflow-x:auto;white-space:nowrap}
+  .table-wrap{overflow-x:auto}
+}
 </style>
 </head>
 <body>
 
-<aside class="sidebar">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="adminSidebar">
   <div class="sidebar__logo">
     <div class="sidebar__logo-name">Эпатаж</div>
     <div class="sidebar__logo-sub">Админ-панель</div>
@@ -202,6 +230,9 @@ select.form-control{cursor:pointer}
 
 <div class="main">
   <div class="topbar">
+    <button type="button" class="topbar__burger" id="sidebarToggle" aria-label="Меню">
+      <i class="ti ti-menu-2" aria-hidden="true"></i>
+    </button>
     <span class="topbar__title">{% block page_title %}{% endblock %}</span>
     <div class="topbar__actions">{% block topbar_actions %}{% endblock %}</div>
   </div>
@@ -211,6 +242,23 @@ select.form-control{cursor:pointer}
     {% block content %}{% endblock %}
   </div>
 </div>
+
+<script>
+(function () {
+    var sb = document.getElementById('adminSidebar');
+    var ov = document.getElementById('sidebarOverlay');
+    var btn = document.getElementById('sidebarToggle');
+    if (!sb || !ov || !btn) return;
+    function open() { sb.classList.add('open'); ov.classList.add('show'); }
+    function close() { sb.classList.remove('open'); ov.classList.remove('show'); }
+    btn.addEventListener('click', open);
+    ov.addEventListener('click', close);
+    // закрывать при клике на пункт меню
+    sb.querySelectorAll('.nav-link').forEach(function (l) {
+        l.addEventListener('click', close);
+    });
+})();
+</script>
 
 </body>
 </html>

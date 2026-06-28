@@ -56,6 +56,7 @@ async def catalog_page(
             "active_sort": sort,
             "page": page,
             "total_pages": total_pages,
+            "total": total,
             "all_sizes": all_sizes,
             "user": user,
             "favorite_ids": favorite_ids,

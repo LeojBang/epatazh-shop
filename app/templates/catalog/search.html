@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Поиск: {{ query }} — Эпатаж{% endblock %}
 {% block content %}
+    {% import "_macros.html" as m %}
     <h1>Поиск{% if query %}: «{{ query }}»{% endif %}</h1>
 
     {% if query and products %}
@@ -16,7 +17,7 @@
                     <div class="product-card__body">
                         <h3>{{ product.name }}</h3>
                         <span class="product-category">{{ product.category.name }}</span>
-                        <span class="product-price">{{ product.price }} ₽</span>
+                        <span class="product-price">{{ m.price(product.price) }}</span>
                     </div>
                 </a>
             {% endfor %}

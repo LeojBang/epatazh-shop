@@ -3,54 +3,72 @@
 {% block content %}
     <h1>Каталог</h1>
 
-    <nav class="category-nav">
-        <a href="{{ update_query(request, category=None, page=None) }}"
-           class="{% if not active_category %}active{% endif %}">Все</a>
-        {% for cat in categories %}
-            <a href="{{ update_query(request, category=cat.slug, page=None) }}"
-               class="{% if active_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
-        {% endfor %}
-    </nav>
-
-    <div class="catalog-filters">
-        <div class="filter-group">
-            <span class="filter-label">Размер:</span>
-            <a href="{{ update_query(request, size=None, page=None) }}"
-               class="filter-chip {% if not active_size %}active{% endif %}">Все</a>
-            {% for s in all_sizes %}
-                <a href="{{ update_query(request, size=s, page=None) }}"
-                   class="filter-chip {% if active_size == s %}active{% endif %}">{{ s }}</a>
+    <div class="catalog-panel">
+        <nav class="catalog-panel__tabs">
+            <a href="{{ update_query(request, category=None, page=None) }}"
+               class="cat-tab {% if not active_category %}active{% endif %}">Все</a>
+            {% for cat in categories %}
+                <a href="{{ update_query(request, category=cat.slug, page=None) }}"
+                   class="cat-tab {% if active_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
             {% endfor %}
-        </div>
+        </nav>
 
-        <div class="filter-group">
-            <span class="filter-label">Пол:</span>
-            <a href="{{ update_query(request, gender=None, page=None) }}"
-               class="filter-chip {% if not active_gender %}active{% endif %}">Все</a>
-            <a href="{{ update_query(request, gender='мужское', page=None) }}"
-               class="filter-chip {% if active_gender == 'мужское' %}active{% endif %}">Мужское</a>
-            <a href="{{ update_query(request, gender='женское', page=None) }}"
-               class="filter-chip {% if active_gender == 'женское' %}active{% endif %}">Женское</a>
-            <a href="{{ update_query(request, gender='детское', page=None) }}"
-               class="filter-chip {% if active_gender == 'детское' %}active{% endif %}">Детское</a>
-        </div>
+        <div class="catalog-panel__body">
+            <div class="filter-group">
+                <span class="filter-label">Размер:</span>
+                <a href="{{ update_query(request, size=None, page=None) }}"
+                   class="filter-chip {% if not active_size %}active{% endif %}">Все</a>
+                {% for s in all_sizes %}
+                    <a href="{{ update_query(request, size=s, page=None) }}"
+                       class="filter-chip {% if active_size == s %}active{% endif %}">{{ s }}</a>
+                {% endfor %}
+            </div>
 
-        <div class="filter-group">
-            <span class="filter-label">Сортировка:</span>
-            <select class="filter-select" onchange="window.location.href=this.value">
-                <option value="{{ update_query(request, sort=None, page=None) }}"
-                        {% if active_sort == 'name' %}selected{% endif %}>По названию</option>
-                <option value="{{ update_query(request, sort='price_asc', page=None) }}"
-                        {% if active_sort == 'price_asc' %}selected{% endif %}>Сначала дешёвые</option>
-                <option value="{{ update_query(request, sort='price_desc', page=None) }}"
-                        {% if active_sort == 'price_desc' %}selected{% endif %}>Сначала дорогие</option>
-                <option value="{{ update_query(request, sort='new', page=None) }}"
-                        {% if active_sort == 'new' %}selected{% endif %}>Новинки</option>
-            </select>
+            <div class="filter-divider"></div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">Пол:</span>
+                    <a href="{{ update_query(request, gender=None, page=None) }}"
+                       class="filter-chip {% if not active_gender %}active{% endif %}">Все</a>
+                    <a href="{{ update_query(request, gender='мужское', page=None) }}"
+                       class="filter-chip {% if active_gender == 'мужское' %}active{% endif %}">Мужское</a>
+                    <a href="{{ update_query(request, gender='женское', page=None) }}"
+                       class="filter-chip {% if active_gender == 'женское' %}active{% endif %}">Женское</a>
+                    <a href="{{ update_query(request, gender='детское', page=None) }}"
+                       class="filter-chip {% if active_gender == 'детское' %}active{% endif %}">Детское</a>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Сортировка:</span>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ update_query(request, sort=None, page=None) }}"
+                                {% if active_sort == 'name' %}selected{% endif %}>По названию</option>
+                        <option value="{{ update_query(request, sort='price_asc', page=None) }}"
+                                {% if active_sort == 'price_asc' %}selected{% endif %}>Сначала дешёвые</option>
+                        <option value="{{ update_query(request, sort='price_desc', page=None) }}"
+                                {% if active_sort == 'price_desc' %}selected{% endif %}>Сначала дорогие</option>
+                        <option value="{{ update_query(request, sort='new', page=None) }}"
+                                {% if active_sort == 'new' %}selected{% endif %}>Новинки</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
     {% if products %}
+        {% if total is defined %}
+            {% set n = total %}
+            {% set word = 'товаров' %}
+            {% set n100 = n % 100 %}
+            {% set n10 = n % 10 %}
+            {% if not (11 <= n100 <= 14) %}
+                {% if n10 == 1 %}{% set word = 'товар' %}
+                {% elif 2 <= n10 <= 4 %}{% set word = 'товара' %}
+                {% endif %}
+            {% endif %}
+            <p class="catalog-count">Найдено: {{ total }} {{ word }}</p>
+        {% endif %}
         <div class="product-grid">
             {% for product in products %}
                 {% include "catalog/_product_card.html" %}

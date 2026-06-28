@@ -1,10 +1,33 @@
 <div class="product-card-wrap">
+    {% import "_macros.html" as m %}
     <a href="/catalog/{{ product.slug }}" class="product-card">
         <div class="card-img-wrap">
             {% set first_color = product.colors[0] if product.colors else None %}
             {% set card_images = first_color.images if first_color and first_color.images else product.images %}
             {% if card_images %}
-                <img src="/static/uploads/{{ card_images[0].path }}" class="card-img" alt="{{ product.name }}">
+                <div class="card-gallery" data-count="{{ card_images|length }}">
+                    {% for image in card_images %}
+                        <img src="/static/uploads/{{ image.path }}"
+                             class="card-img {% if loop.first %}active{% endif %}"
+                             data-idx="{{ loop.index0 }}"
+                             loading="lazy"
+                             alt="{{ product.name }}">
+                    {% endfor %}
+                    {% if card_images|length > 1 %}
+                        {# зоны наведения: каждая отвечает за своё фото #}
+                        <div class="card-hover-zones">
+                            {% for image in card_images %}
+                                <span class="card-hover-zone" data-idx="{{ loop.index0 }}"></span>
+                            {% endfor %}
+                        </div>
+                        {# точки-индикаторы #}
+                        <div class="card-dots">
+                            {% for image in card_images %}
+                                <span class="card-dot {% if loop.first %}active{% endif %}" data-idx="{{ loop.index0 }}"></span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
             {% else %}
                 <div class="card-img-placeholder">Нет фото</div>
             {% endif %}
@@ -46,11 +69,11 @@
             {% endif %}
             {% if product.sale_price and product.sale_price < product.price %}
                 <span class="product-price">
-                    <span class="product-price__old">{{ product.price }} ₽</span>
-                    <span class="product-price__new">{{ product.sale_price }} ₽</span>
+                    <span class="product-price__old">{{ m.price(product.price) }}</span>
+                    <span class="product-price__new">{{ m.price(product.sale_price) }}</span>
                 </span>
             {% else %}
-                <span class="product-price">{{ product.price }} ₽</span>
+                <span class="product-price">{{ m.price(product.price) }}</span>
             {% endif %}
             {% set total_stock = product.variants | sum(attribute="stock") %}
             {% if total_stock > 0 %}

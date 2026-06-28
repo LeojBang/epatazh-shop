@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Доступ запрещён — Эпатаж{% endblock %}
 {% block content %}
-    <div style="text-align: center; padding: 3rem 1rem;">
-        <h1 style="font-size: 3rem; color: var(--green);">403</h1>
-        <p style="font-size: 1.2rem; color: var(--text-muted);">У вас нет доступа к этой странице</p>
-        <a href="/" class="btn-primary" style="margin-top: 1rem;">На главную</a>
+    <div class="error-page">
+        <div class="error-page__code">403</div>
+        <p class="error-page__text">Доступ запрещён</p>
+        <p class="error-page__sub">У вас нет прав для просмотра этой страницы.</p>
+        <a href="/" class="btn-primary error-page__btn">На главную</a>
     </div>
 {% endblock %}

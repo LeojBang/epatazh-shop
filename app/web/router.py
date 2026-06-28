@@ -37,3 +37,36 @@ async def index(
             "favorite_ids": favorite_ids,
         },
     )
+
+
+# --- Информационные страницы (футер) ---
+# slug -> (имя шаблона, заголовок)
+_INFO_PAGES = {
+    "delivery": ("info/delivery.html", "Доставка и оплата"),
+    "return": ("info/return.html", "Обмен и возврат"),
+    "sizes": ("info/sizes.html", "Размерная сетка"),
+    "about": ("info/about.html", "О компании"),
+    "contacts": ("info/contacts.html", "Контакты"),
+    "terms": ("info/terms.html", "Пользовательское соглашение"),
+    "privacy": ("info/privacy.html", "Политика конфиденциальности"),
+    "offer": ("info/offer.html", "Публичная оферта"),
+}
+
+
+@router.get("/info/{slug}", response_class=HTMLResponse)
+async def info_page(
+    slug: str,
+    request: Request,
+    user: User | None = Depends(get_current_user_optional),
+):
+    from fastapi import HTTPException
+
+    page = _INFO_PAGES.get(slug)
+    if not page:
+        raise HTTPException(status_code=404)
+    template_name, title = page
+    return templates.TemplateResponse(
+        request,
+        template_name,
+        {"user": user, "page_title": title},
+    )

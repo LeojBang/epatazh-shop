@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Размерная сетка — Эпатаж{% endblock %}
+{% block content %}
+    <h1>Размерная сетка</h1>
+    <div class="info-page">
+        <p class="info-lead">Снимите мерки сантиметровой лентой и сверьтесь с таблицей. Все значения указаны в сантиметрах.</p>
+        <div class="info-size-table">
+            {% include "catalog/_size_chart.html" %}
+        </div>
+    </div>
+{% endblock %}

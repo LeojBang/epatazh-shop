@@ -128,3 +128,29 @@ async function toggleFavorite(event, productId) {
         console.error('Ошибка избранного:', e);
     }
 }
+
+// --- Листание фото на карточках каталога наведением курсора ---
+(function () {
+    function setActive(gallery, idx) {
+        gallery.querySelectorAll('.card-img').forEach(function (img) {
+            img.classList.toggle('active', img.dataset.idx === String(idx));
+        });
+        gallery.querySelectorAll('.card-dot').forEach(function (dot) {
+            dot.classList.toggle('active', dot.dataset.idx === String(idx));
+        });
+    }
+
+    document.addEventListener('mouseover', function (e) {
+        var zone = e.target.closest('.card-hover-zone');
+        if (!zone) return;
+        var gallery = zone.closest('.card-gallery');
+        if (!gallery) return;
+        setActive(gallery, zone.dataset.idx);
+    });
+
+    // Когда курсор уходит с карточки — возвращаем первое фото
+    document.addEventListener('mouseleave', function (e) {
+        var gallery = e.target.closest ? e.target.closest('.card-gallery') : null;
+        if (gallery) setActive(gallery, 0);
+    }, true);
+})();

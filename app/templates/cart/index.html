@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Корзина — Эпатаж{% endblock %}
  {% block content %}
+    {% import "_macros.html" as m %}
     <h1>Корзина</h1>
 
     {% if items %}
@@ -18,10 +19,10 @@
             <tbody>
                 {% for item in items %}
                 <tr>
-                    <td><a href="/catalog/{{ item.product.slug }}">{{ item.product.name }}</a></td>
-                    <td>{{ item.variant.size }}</td>
-                    <td>{{ item.product.price }} ₽</td>
-                    <td>
+                    <td data-label="Товар"><a href="/catalog/{{ item.product.slug }}">{{ item.product.name }}</a></td>
+                    <td data-label="Размер">{{ item.variant.size }}</td>
+                    <td data-label="Цена">{{ m.price(item.product.price) }}</td>
+                    <td data-label="Количество">
                         <form method="post" action="/cart/update" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
@@ -30,8 +31,8 @@
                                    onchange="this.form.submit()" class="qty-input">
                         </form>
                     </td>
-                    <td>{{ "%.2f"|format(item.subtotal) }} ₽</td>
-                    <td>
+                    <td data-label="Сумма">{{ m.price(item.subtotal) }}</td>
+                    <td data-label="">
                         <form method="post" action="/cart/remove" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                             <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
@@ -43,7 +44,7 @@
             </tbody>
         </table>
 
-        <p class="cart-total">Итого: <strong>{{ "%.2f"|format(total) }} ₽</strong></p>
+        <p class="cart-total">Итого: <strong>{{ m.price(total) }}</strong></p>
         <a href="/checkout" class="btn-primary">Оформить заказ</a>
     {% else %}
         <p>Корзина пуста. <a href="/catalog">Перейти в каталог</a></p>

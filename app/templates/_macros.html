@@ -1,0 +1,19 @@
+{# ============================================================
+   Макросы форматирования. Подключать в шаблоне через:
+   {% import "_macros.html" as m %}
+   и вызывать {{ m.price(product.price) }}
+   ============================================================ #}
+
+{# Цена: 1590.00 → «1 590 ₽» (без копеек, разделитель тысяч — узкий пробел) #}
+{% macro price(value) -%}
+    {%- set rub = value | round(0, 'floor') | int -%}
+    {%- set s = rub | string -%}
+    {%- set ns = namespace(out='') -%}
+    {%- for i in range(s | length) -%}
+        {%- if i > 0 and (s | length - i) % 3 == 0 -%}
+            {%- set ns.out = ns.out ~ '\u202f' -%}
+        {%- endif -%}
+        {%- set ns.out = ns.out ~ s[i] -%}
+    {%- endfor -%}
+    {{ ns.out }}{{ '\u00a0' }}₽
+{%- endmacro %}
