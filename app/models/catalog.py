@@ -38,6 +38,8 @@ class Product(UUIDMixin, TimeStampMixin, Base):
     gender: Mapped[str | None] = mapped_column(String(16), nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     sale_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    # Вес единицы товара в граммах — для расчёта доставки СДЭК
+    weight: Mapped[int] = mapped_column(Integer, default=500, nullable=False)
     badge: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

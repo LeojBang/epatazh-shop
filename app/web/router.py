@@ -20,7 +20,7 @@ async def index(
     user: User | None = Depends(get_current_user_optional),
 ):
     categories = await catalog_service.get_categories(db)
-    featured = await catalog_service.get_featured_products(db, limit=4)
+    featured = await catalog_service.get_featured_products(db, limit=3)
 
     # Избранное — для подсветки сердечек
     favorite_ids = set()

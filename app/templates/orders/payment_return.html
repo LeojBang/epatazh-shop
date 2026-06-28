@@ -6,12 +6,12 @@
             <h1 style="color: var(--success);">Оплата прошла успешно</h1>
             <div class="order-number-box">
                 <span>Номер заказа:</span>
-                <strong>{{ order.id }}</strong>
+                <strong>{{ (order.id | string)[:8] | upper }}</strong>
                 <small>Сохраните номер — по нему можно отследить заказ</small>
             </div>
         {% elif order.status == "pending" %}
             <h1>Ожидаем подтверждение оплаты</h1>
-            <p>Оплата заказа <strong>{{ order.id }}</strong> обрабатывается. Обновите страницу через минуту или проверьте в личном кабинете.</p>
+            <p>Оплата заказа <strong>{{ (order.id | string)[:8] | upper }}</strong> обрабатывается. Обновите страницу через минуту или проверьте в личном кабинете.</p>
         {% else %}
             <h1>Оплата не завершена</h1>
             <p>Статус заказа: {{ order.status | order_status_ru }}</p>

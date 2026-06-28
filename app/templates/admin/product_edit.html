@@ -36,6 +36,12 @@
             <input type="text" name="sale_price" class="form-control" placeholder="—" value="{{ product.sale_price if product and product.sale_price else '' }}">
           </div>
           <div class="form-group">
+            <label class="form-label">Вес, грамм</label>
+            <input type="number" name="weight" class="form-control" required min="1" step="1"
+                   value="{{ product.weight if product else 500 }}"
+                   placeholder="напр. 300">
+          </div>
+          <div class="form-group">
             <label class="form-label">Бейдж</label>
             <select name="badge" class="form-control">
               <option value="">— нет —</option>

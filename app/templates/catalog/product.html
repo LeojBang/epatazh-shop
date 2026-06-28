@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{{ product.name }} — Эпатаж{% endblock %}
+{% block title %}{{ product.name }} — купить в магазине Эпатаж{% endblock %}
+{% block meta_description %}{{ product.name }}{% if product.category %} ({{ product.category.name }}){% endif %} — {{ product.description[:120] if product.description else 'экипировка для единоборств от магазина Эпатаж' }}. Цена {{ "%.0f"|format(product.effective_price) }} ₽. Доставка СДЭК.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.name }} — {{ "%.0f"|format(product.effective_price) }} ₽{% endblock %}
+{% block og_description %}{{ product.description[:150] if product.description else 'Экипировка для единоборств от магазина Эпатаж.' }}{% endblock %}
+{% block og_image %}{% set first_img = (product.colors[0].images[0].path if product.colors and product.colors[0].images else (product.images[0].path if product.images else None)) %}{% if first_img %}{{ request.base_url }}static/uploads/{{ first_img }}{% else %}{{ request.base_url }}static/og-default.jpg{% endif %}{% endblock %}
 {% block content %}
     {% import "_macros.html" as m %}
     <nav class="breadcrumbs">
@@ -154,7 +159,15 @@
     <section class="reviews">
         <h2>Отзывы
             {% if reviews_count %}
-                <span class="rating-summary">{{ avg_rating }} ★ ({{ reviews_count }})</span>
+                <span class="rating-summary">
+                    <span class="rating-summary__num">{{ avg_rating }}</span>
+                    <span class="rating-stars" aria-label="Рейтинг {{ avg_rating }} из 5">
+                        {%- for i in range(1,6) -%}
+                            <span class="rating-star {% if i <= avg_rating|round(0,'common')|int %}is-full{% endif %}">★</span>
+                        {%- endfor -%}
+                    </span>
+                    <span class="rating-summary__count">{{ reviews_count }}&nbsp;отз.</span>
+                </span>
             {% endif %}
         </h2>
 
@@ -168,33 +181,42 @@
         {% if can_review %}
             <form method="post" action="/catalog/{{ product.slug }}/review" class="review-form">
                 <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                <label for="rating">Оценка</label>
-                <select name="rating" id="rating" required>
-                    <option value="5">5 — отлично</option>
-                    <option value="4">4 — хорошо</option>
-                    <option value="3">3 — нормально</option>
-                    <option value="2">2 — плохо</option>
-                    <option value="1">1 — ужасно</option>
-                </select>
+                <label>Ваша оценка</label>
+                <div class="star-input" id="starInput">
+                    <input type="radio" name="rating" id="star5" value="5" required><label for="star5" title="Отлично">★</label>
+                    <input type="radio" name="rating" id="star4" value="4"><label for="star4" title="Хорошо">★</label>
+                    <input type="radio" name="rating" id="star3" value="3"><label for="star3" title="Нормально">★</label>
+                    <input type="radio" name="rating" id="star2" value="2"><label for="star2" title="Плохо">★</label>
+                    <input type="radio" name="rating" id="star1" value="1"><label for="star1" title="Ужасно">★</label>
+                </div>
                 <label for="text">Ваш отзыв</label>
-                <textarea name="text" id="text" rows="3" required></textarea>
+                <textarea name="text" id="text" rows="3" required placeholder="Поделитесь впечатлением о товаре — качество, размер, доставка…"></textarea>
                 <button type="submit" class="btn-primary">Отправить отзыв</button>
             </form>
         {% endif %}
 
         {% if reviews %}
+            <div class="review-list">
             {% for review in reviews %}
                 <div class="review-card">
                     <div class="review-header">
-                        <span>{{ review.user.full_name or review.user.email }}</span>
-                        <span class="review-rating">{{ review.rating }} ★</span>
+                        <span class="review-author">{{ review.user.full_name or review.user.email }}</span>
+                        <span class="review-stars" aria-label="{{ review.rating }} из 5">
+                            {%- for i in range(1,6) -%}
+                                <span class="rating-star {% if i <= review.rating %}is-full{% endif %}">★</span>
+                            {%- endfor -%}
+                        </span>
                     </div>
-                    <p>{{ review.text }}</p>
+                    <p class="review-text">{{ review.text }}</p>
                     <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
                 </div>
             {% endfor %}
+            </div>
         {% else %}
-            <p>Пока нет отзывов.</p>
+            <div class="reviews-empty">
+                <p class="reviews-empty__title">Отзывов пока нет</p>
+                <p class="reviews-empty__text">Станьте первым, кто оставит отзыв об этом товаре{% if not can_review %} — после покупки{% endif %}.</p>
+            </div>
         {% endif %}
     </section>
 
@@ -369,4 +391,31 @@ function switchColor(btn) {
 }
 </script>
 {% endif %}
+
+{# --- Schema.org разметка товара (звёзды и цена в выдаче Яндекса/Google) --- #}
+{% set total_stock = product.variants | sum(attribute="stock") %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": {{ product.name | tojson }},
+  {% set img = (product.colors[0].images[0].path if product.colors and product.colors[0].images else (product.images[0].path if product.images else None)) %}
+  {% if img %}"image": "{{ request.base_url }}static/uploads/{{ img }}",{% endif %}
+  "description": {{ (product.description or product.name) | tojson }},
+  {% if product.category %}"category": {{ product.category.name | tojson }},{% endif %}
+  "brand": { "@type": "Brand", "name": "Эпатаж" },
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ "%.0f"|format(product.effective_price) }}",
+    "priceCurrency": "RUB",
+    "availability": "https://schema.org/{% if total_stock > 0 %}InStock{% else %}OutOfStock{% endif %}",
+    "url": "{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}"
+  }{% if reviews_count and reviews_count > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ "%.1f"|format(avg_rating) }}",
+    "reviewCount": "{{ reviews_count }}"
+  }{% endif %}
+}
+</script>
 {% endblock %}

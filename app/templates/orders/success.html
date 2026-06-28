@@ -2,7 +2,7 @@
 {% block title %}Заказ оформлен — Shop{% endblock %}
 {% block content %}
     <h1>Спасибо за заказ!</h1>
-    <p>Номер заказа: <strong>{{ order.id }}</strong></p>
+    <p>Номер заказа: <strong>{{ (order.id | string)[:8] | upper }}</strong></p>
     <p>Статус: {{ order.status }}</p>
 
     <h3>Состав заказа</h3>

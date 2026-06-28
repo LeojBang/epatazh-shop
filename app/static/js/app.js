@@ -20,7 +20,7 @@ function changeImage(direction) {
         const q = input.value.trim();
         clearTimeout(timer);
 
-        if (q.length < 2) {
+        if (q.length < 1) {
             box.innerHTML = '';
             box.classList.remove('active');
             return;

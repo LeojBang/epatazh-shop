@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.admin2.auth import get_admin_user
 from app.admin2 import service
+from app.reviews import service as reviews_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="app/templates")
@@ -25,10 +26,26 @@ async def _base_ctx(db: AsyncSession, admin_user: User, active_section: str) -> 
     new_orders_count = (
         await db.scalar(select(func.count()).where(Order.status == "new")) or 0
     )
+    from app.reviews import service as reviews_service
+
+    pending_reviews_count = await reviews_service.get_pending_count(db)
+
+    from app.models.return_request import ReturnRequest
+
+    pending_returns_count = (
+        await db.scalar(
+            select(func.count())
+            .select_from(ReturnRequest)
+            .where(ReturnRequest.status == "pending")
+        )
+        or 0
+    )
     return {
         "admin_user": admin_user,
         "active_section": active_section,
         "new_orders_count": new_orders_count,
+        "pending_reviews_count": pending_reviews_count,
+        "pending_returns_count": pending_returns_count,
     }
 
 
@@ -129,6 +146,7 @@ async def product_save(
     category_id: str = Form(...),
     price: str = Form(...),
     sale_price: str = Form(default=""),
+    weight: int = Form(default=500),
     badge: str = Form(default=""),
     gender: str = Form(default=""),
     description: str = Form(default=""),
@@ -159,6 +177,7 @@ async def product_save(
         "category_id": uuid.UUID(category_id),
         "price": price_val,
         "sale_price": sale_price_val,
+        "weight": max(1, weight),
         "badge": badge.strip() or None,
         "gender": gender.strip() or None,
         "description": description.strip() or None,
@@ -612,3 +631,40 @@ async def user_update(
     )
     await db.commit()
     return RedirectResponse(f"/admin/users/{user_id}?success=1", status_code=303)
+
+
+# ─── ОТЗЫВЫ: модерация ───────────────────────────────────────────────────────
+
+
+@router.get("/reviews", response_class=HTMLResponse)
+async def reviews_list(
+    request: Request,
+    pending: str = "",
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_admin_user),
+):
+    only_pending = pending == "1"
+    reviews = await reviews_service.get_all_reviews(db, only_pending=only_pending)
+    ctx = await _base_ctx(db, admin_user, "reviews")
+    ctx.update({"reviews": reviews, "only_pending": only_pending})
+    return templates.TemplateResponse(request, "admin/reviews.html", ctx)
+
+
+@router.post("/reviews/{review_id}/approve")
+async def review_approve(
+    review_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_admin_user),
+):
+    await reviews_service.approve_review(db, review_id)
+    return RedirectResponse("/admin/reviews", status_code=303)
+
+
+@router.post("/reviews/{review_id}/delete")
+async def review_delete(
+    review_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_admin_user),
+):
+    await reviews_service.delete_review(db, review_id)
+    return RedirectResponse("/admin/reviews", status_code=303)

@@ -213,6 +213,11 @@ select.form-control{cursor:pointer}
     </a>
     <a href="/admin/returns" class="nav-link {% if active_section == 'returns' %}active{% endif %}">
       <i class="ti ti-arrow-back-up" aria-hidden="true"></i>Возвраты
+      {% if pending_returns_count %}<span class="badge">{{ pending_returns_count }}</span>{% endif %}
+    </a>
+    <a href="/admin/reviews" class="nav-link {% if active_section == 'reviews' %}active{% endif %}">
+      <i class="ti ti-star" aria-hidden="true"></i>Отзывы
+      {% if pending_reviews_count %}<span class="badge">{{ pending_reviews_count }}</span>{% endif %}
     </a>
     <div class="sidebar__section">Сервис</div>
     <a href="/admin/analytics" class="nav-link {% if active_section == 'analytics' %}active{% endif %}">

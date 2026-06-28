@@ -61,9 +61,11 @@
                         <ul class="track-timeline">
                             {% for h in tracking.history %}
                                 <li class="track-timeline__item">
-                                    <span class="track-timeline__name">{{ h.name }}</span>
-                                    {% if h.city %}<span class="track-timeline__city">{{ h.city }}</span>{% endif %}
-                                    {% if h.date %}<span class="track-timeline__date">{{ h.date }}</span>{% endif %}
+                                    <div class="track-timeline__row">
+                                        <span class="track-timeline__name">{{ h.name }}</span>
+                                        {% if h.city %}<span class="track-timeline__city">{{ h.city }}</span>{% endif %}
+                                    </div>
+                                    {% if h.date %}<div class="track-timeline__date">{{ h.date }}</div>{% endif %}
                                 </li>
                             {% endfor %}
                         </ul>

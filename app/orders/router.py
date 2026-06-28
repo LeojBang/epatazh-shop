@@ -167,6 +167,10 @@ async def order_success(
     order = await service.get_order(db, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Заказ не найден")
+    # Защита от чужого доступа: заказ зарегистрированного пользователя
+    # виден только ему. Гостевой заказ (без владельца) доступен по ссылке.
+    if order.user_id and (not user or order.user_id != user.id):
+        raise HTTPException(status_code=404, detail="Заказ не найден")
     return templates.TemplateResponse(
         request, "orders/success.html", {"order": order, "user": user}
     )
@@ -181,6 +185,9 @@ async def payment_return(
 ):
     order = await service.get_order(db, order_id)
     if not order:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+    # Защита от чужого доступа (см. order_success)
+    if order.user_id and (not user or order.user_id != user.id):
         raise HTTPException(status_code=404, detail="Заказ не найден")
 
     # Находим платёж заказа и спрашиваем у YooKassa актуальный статус
@@ -377,6 +384,15 @@ async def track_order(
             order = found
     except Exception:
         pass
+
+    # Если не нашли по полному UUID — пробуем по короткому номеру (начало UUID)
+    if not order:
+        try:
+            found = await service.find_order_by_short_id(db, order_id_clean)
+            if found and found.email.lower() == email_clean:
+                order = found
+        except Exception:
+            pass
 
     # Если не нашли — пробуем по трек-номеру СДЭК
     if not order:

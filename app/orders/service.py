@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 import redis.asyncio as redis
-from sqlalchemy import select, text
+from sqlalchemy import String, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -81,6 +81,7 @@ async def create_order(
                 size=variant.size,
                 price=variant.product.effective_price,
                 quantity=qty,
+                weight=variant.product.weight or 500,
             )
         )
 
@@ -160,3 +161,22 @@ async def cancel_expired_orders(db: AsyncSession, max_age_minutes: int = 15) -> 
         await cancel_order_return_stock(db, order)
 
     return len(expired)
+
+
+async def find_order_by_short_id(db: AsyncSession, short_id: str) -> Order | None:
+    """
+    Ищет заказ по началу UUID (короткий номер, который видит покупатель).
+    Используется на странице отслеживания, если ввели короткий номер.
+    """
+    short = short_id.strip().lower()
+    if len(short) < 6:  # слишком коротко — не ищем, чтобы не было коллизий
+        return None
+    result = await db.execute(
+        select(Order)
+        .where(func.cast(Order.id, String).ilike(f"{short}%"))
+        .options(selectinload(Order.items))
+        .limit(2)
+    )
+    rows = list(result.scalars().all())
+    # если под префикс попало больше одного — неоднозначно, не возвращаем
+    return rows[0] if len(rows) == 1 else None

@@ -25,7 +25,8 @@ def _build_packages(order) -> list[dict]:
     items = []
     total_weight = 0
     for it in order.items:
-        weight = DEFAULT_ITEM_WEIGHT_G
+        # вес единицы зафиксирован в заказе; запасной вариант — константа
+        weight = getattr(it, "weight", None) or DEFAULT_ITEM_WEIGHT_G
         total_weight += weight * it.quantity
         items.append(
             {
@@ -87,6 +88,21 @@ async def send_order_to_cdek(order) -> dict | None:
     return None
 
 
+def _fmt_date(raw: str | None) -> str | None:
+    """ISO-дату СДЭК (2026-06-28T12:50:02+0000) → '28.06.2026 15:50'."""
+    if not raw:
+        return None
+    from datetime import datetime
+
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            dt = datetime.strptime(raw, fmt)
+            return dt.strftime("%d.%m.%Y %H:%M")
+        except (ValueError, TypeError):
+            continue
+    return raw  # не распарсили — отдаём как есть
+
+
 async def get_tracking(cdek_uuid: str) -> dict | None:
     """
     Возвращает информацию по заказу из СДЭК: номер, текущий статус, история.
@@ -105,7 +121,7 @@ async def get_tracking(cdek_uuid: str) -> dict | None:
     history = [
         {
             "name": s.get("name"),
-            "date": s.get("date_time"),
+            "date": _fmt_date(s.get("date_time")),
             "city": s.get("city"),
         }
         for s in statuses
@@ -113,6 +129,47 @@ async def get_tracking(cdek_uuid: str) -> dict | None:
     return {
         "cdek_number": entity.get("cdek_number"),
         "current_status": current.get("name"),
-        "current_date": current.get("date_time"),
+        "current_date": _fmt_date(current.get("date_time")),
         "history": history,
+    }
+
+
+async def calculate_delivery(to_city_code: int, items: list[dict]) -> dict | None:
+    """
+    Считает стоимость и срок доставки в пункт выдачи (тариф 136).
+
+    items — список словарей {"weight": граммы, "quantity": шт}.
+    Возвращает {"price": int, "period_min": int, "period_max": int} или None.
+
+    Несколько товаров считаем единой коробкой (одно грузоместо),
+    вес = сумма весов всех единиц.
+    """
+    total_weight = sum(
+        (it.get("weight") or DEFAULT_ITEM_WEIGHT_G) * it.get("quantity", 1)
+        for it in items
+    )
+    total_weight = max(total_weight, DEFAULT_ITEM_WEIGHT_G)
+
+    payload = {
+        "type": 1,  # интернет-магазин
+        "tariff_code": TARIFF_PVZ,
+        "from_location": {"code": settings.CDEK_SENDER_CITY_CODE},
+        "to_location": {"code": to_city_code},
+        "packages": [{"weight": total_weight}],
+    }
+
+    try:
+        resp = await cdek_client.calculate_tariff(payload)
+    except CdekError as e:
+        logger.warning("Не удалось рассчитать доставку в город %s: %s", to_city_code, e)
+        return None
+
+    if not resp or resp.get("total_sum") is None:
+        logger.info("СДЭК не вернул стоимость для города %s: %s", to_city_code, resp)
+        return None
+
+    return {
+        "price": int(round(float(resp["total_sum"]))),
+        "period_min": resp.get("period_min"),
+        "period_max": resp.get("period_max"),
     }

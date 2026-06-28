@@ -956,6 +956,11 @@ body { max-width: 100%; overflow-x: clip; }
     /* Таблица размеров может быть шире экрана — даём прокрутку внутри */
     .size-modal__dialog,
     .info-size-table { overflow-x: auto; }
+    /* Уплотняем таблицу размеров, чтобы помещалась на телефоне */
+    .size-table { font-size: 0.72rem; }
+    .size-table th { padding: 0.4rem 0.2rem; }
+    .size-table td { padding: 0.32rem 0.2rem; }
+    .size-table-title { font-size: 0.95rem; }
 }
 
 /* ============================================================
@@ -1168,24 +1173,32 @@ body { max-width: 100%; overflow-x: clip; }
 }
 .track-timeline__item {
     position: relative;
-    padding: 0.5rem 0 0.5rem 1.1rem;
+    padding: 0.45rem 0 0.45rem 1.25rem;
 }
 .track-timeline__item::before {
     content: "";
     position: absolute;
-    left: -5px;
-    top: 0.85rem;
-    width: 8px;
-    height: 8px;
+    left: -6px;
+    top: 0.7rem;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--gold);
+    border: 2px solid var(--surface);
 }
 .track-timeline__item:first-child::before { background: var(--green); }
-.track-timeline__name { font-weight: 500; }
+.track-timeline__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+.track-timeline__name { font-weight: 600; color: var(--text); }
 .track-timeline__city {
     font-size: 0.85rem;
     color: var(--text-muted);
-    margin-left: 0.4rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .track-cdek__pending {
     margin-top: 1rem;
@@ -1423,4 +1436,132 @@ a.breadcrumb:hover { color: var(--gold-soft); }
 /* Пустое состояние */
 p.muted {
     color: #b9c4bd;
+}
+/* ============================================================
+   КАТАЛОГ: крупнее карточки (3 в ряд) + вертикальное фото
+   ============================================================ */
+/* 3 колонки вместо 4 — карточки шире, фото крупнее */
+.product-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .product-grid { grid-template-columns: 1fr; } }
+
+/* Вертикальное фото (3:4) — одежда смотрится выигрышнее, чем в квадрате */
+.card-gallery { aspect-ratio: 3 / 4; }
+.card-img { aspect-ratio: 3 / 4; }
+.card-img-placeholder { aspect-ratio: 3 / 4; }
+
+/* Название и цена чуть крупнее под широкую карточку */
+.product-card__body h3 { font-size: 1.08rem; }
+.product-price { font-size: 1.25rem; }
+
+/* ============================================================
+   Стоимость доставки при оформлении
+   ============================================================ */
+.delivery-cost {
+    margin: 0.85rem 0;
+    padding: 0.7rem 1rem;
+    background: rgba(199,154,59,0.12);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+}
+.delivery-cost__label { color: var(--text); }
+.delivery-cost__price { color: var(--green); font-size: 1.1rem; }
+.delivery-cost__term { color: var(--text-muted); }
+.delivery-cost__loading { color: var(--text-muted); }
+.delivery-cost__err { color: var(--text-muted); font-size: 0.9rem; }
+.delivery-cost__free { color: var(--text); }
+.delivery-cost__free strong { color: var(--green); }
+
+/* ============================================================
+   ОТЗЫВЫ: звёзды, карточки, форма
+   ============================================================ */
+/* Кликабельные звёзды в форме (приём оценки) */
+.star-input {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 4px;
+    margin: 0.3rem 0 0.8rem;
+    font-size: 2rem;
+    line-height: 1;
+}
+.star-input input { display: none; }
+.star-input label {
+    color: var(--border-strong);
+    cursor: pointer;
+    transition: color 0.15s, transform 0.1s;
+    margin: 0;
+}
+/* подсветка выбранной и всех левее (CSS sibling-трюк через row-reverse) */
+.star-input input:checked ~ label,
+.star-input label:hover,
+.star-input label:hover ~ label { color: var(--gold-soft); }
+.star-input label:hover { transform: scale(1.12); }
+
+/* Отображение рейтинга звёздами */
+.rating-star { color: var(--border-strong); font-size: 1em; }
+.rating-star.is-full { color: var(--gold-soft); }
+
+/* Шапка с рейтингом */
+.rating-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    margin-left: 0.6rem;
+    vertical-align: middle;
+}
+.rating-summary__num { font-weight: 700; color: var(--gold-soft); font-size: 1.15rem; }
+.rating-summary__count { color: var(--text-muted); }
+
+/* Список карточек отзывов */
+.review-list { display: grid; gap: 0.85rem; margin-top: 0.5rem; }
+.review-card {
+    padding: 1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+.review-author { font-weight: 600; color: var(--text); }
+.review-stars { white-space: nowrap; font-size: 0.95rem; }
+.review-text { color: var(--text); margin: 0.2rem 0 0.5rem; line-height: 1.5; }
+.review-date { font-size: 0.82rem; color: var(--text-muted); }
+
+/* Пустое состояние */
+.reviews-empty {
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+}
+.reviews-empty__title { font-weight: 600; color: var(--text); margin: 0 0 0.3rem; }
+.reviews-empty__text { color: var(--text-muted); margin: 0; font-size: 0.92rem; }
+
+/* Порядок цены: сначала актуальная, потом зачёркнутая старая */
+.product-price__old { margin-right: 0; margin-left: 0.4rem; }
+
+/* Кликабельные контакты в футере (телефон, почта) */
+.footer__contact-link {
+    text-decoration: none;
+    color: inherit;
+    border-radius: 10px;
+    padding: 0.35rem 0.5rem;
+    margin: -0.35rem -0.5rem;
+    width: fit-content;
+    transition: background 0.15s;
+}
+.footer__contact-link:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.footer__contact-link:hover .footer__contact-icon {
+    color: var(--gold-soft);
+    background: #1d5244;
 }

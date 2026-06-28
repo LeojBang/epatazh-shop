@@ -25,7 +25,7 @@
         var q = cityInput.value.trim();
         cityCodeField.value = "";
         clearTimeout(debounceTimer);
-        if (q.length < 2) { hideSuggest(); return; }
+        if (q.length < 2) { hideSuggest(); return; }  // город — от 2 букв (СДЭК)
         debounceTimer = setTimeout(function () { fetchCities(q); }, 300);
     });
 
@@ -61,6 +61,29 @@
         hideSuggest();
         resetChosenPvz();
         loadPoints(c.code);
+        calcDelivery(c.code);
+    }
+
+    // ---------- Доставка бесплатная: показываем «бесплатно» + срок ----------
+    function calcDelivery(cityCode) {
+        var box = document.getElementById("deliveryCost");
+        if (!box) return;
+        box.hidden = false;
+        box.innerHTML = '<span class="delivery-cost__free">Доставка СДЭК — <strong>бесплатно</strong></span>';
+        // срок доставки показываем, если СДЭК его вернёт (стоимость не показываем)
+        fetch("/api/cdek/calculate?city_code=" + encodeURIComponent(cityCode))
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d && d.ok && d.period_min != null && d.period_max != null) {
+                    var term = d.period_min === d.period_max
+                        ? (d.period_min + " дн.")
+                        : (d.period_min + "–" + d.period_max + " дн.");
+                    box.innerHTML =
+                        '<span class="delivery-cost__free">Доставка СДЭК — <strong>бесплатно</strong></span>' +
+                        '<span class="delivery-cost__term"> · срок ' + term + '</span>';
+                }
+            })
+            .catch(function () { /* срок не критичен — оставляем «бесплатно» */ });
     }
 
     document.addEventListener("click", function (e) {

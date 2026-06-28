@@ -10,6 +10,7 @@
 """
 
 import asyncio
+import os
 import random
 from decimal import Decimal
 
@@ -104,6 +105,10 @@ CATEGORIES = {
 
 
 async def seed():
+    # Защита: скрипт удаляет каталог — запрещён на production
+    if os.getenv("ENVIRONMENT") == "production":
+        print("ОТКАЗ: скрипт очищает каталог и запрещён на production.")
+        return
     async with AsyncSessionLocal() as db:
         # --- ОЧИСТКА каталога (без заказов/юзеров) ---
         print("Очищаю каталог...")

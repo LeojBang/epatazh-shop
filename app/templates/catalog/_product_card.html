@@ -69,8 +69,8 @@
             {% endif %}
             {% if product.sale_price and product.sale_price < product.price %}
                 <span class="product-price">
-                    <span class="product-price__old">{{ m.price(product.price) }}</span>
                     <span class="product-price__new">{{ m.price(product.sale_price) }}</span>
+                    <span class="product-price__old">{{ m.price(product.price) }}</span>
                 </span>
             {% else %}
                 <span class="product-price">{{ m.price(product.price) }}</span>

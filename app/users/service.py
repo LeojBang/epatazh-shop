@@ -37,7 +37,6 @@ async def update_profile(
     full_name: str | None,
     email: str,
     phone: str | None,
-    address: str | None,
 ) -> tuple[User | None, str | None]:
     """Обновляет профиль. Возвращает (user, error)."""
     # Если email меняется — проверяем, что он не занят другим пользователем
@@ -49,7 +48,6 @@ async def update_profile(
     user.full_name = full_name or None
     user.email = email
     user.phone = phone or None
-    user.address = address or None
     await db.commit()
     await db.refresh(user)
     return user, None

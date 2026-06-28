@@ -71,6 +71,8 @@ class OrderItem(UUIDMixin, TimeStampMixin, Base):
     product_image: Mapped[str | None] = mapped_column(String(255), nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Вес единицы в граммах (фиксируется на момент заказа, для СДЭК)
+    weight: Mapped[int] = mapped_column(Integer, default=500, nullable=False)
 
     order: Mapped["Order"] = relationship(back_populates="items")
 

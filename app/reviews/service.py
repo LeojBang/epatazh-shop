@@ -86,3 +86,51 @@ async def get_rating_summary(db: AsyncSession, product_id: str) -> tuple[float, 
     )
     avg, count = result.one()
     return (round(float(avg), 1) if avg else 0.0, count or 0)
+
+
+# ─── Админка: модерация отзывов ──────────────────────────────────────────────
+
+
+async def get_all_reviews(db: AsyncSession, only_pending: bool = False) -> list[Review]:
+    """Все отзывы для модерации (с товаром и автором). Новые сверху."""
+    q = (
+        select(Review)
+        .options(selectinload(Review.user), selectinload(Review.product))
+        .order_by(Review.created_at.desc())
+    )
+    if only_pending:
+        q = q.where(Review.is_approved.is_(False))
+    result = await db.execute(q)
+    return list(result.scalars().all())
+
+
+async def get_pending_count(db: AsyncSession) -> int:
+    """Сколько отзывов ждут модерации (для счётчика в меню)."""
+    return (
+        await db.scalar(
+            select(func.count())
+            .select_from(Review)
+            .where(Review.is_approved.is_(False))
+        )
+        or 0
+    )
+
+
+async def approve_review(db: AsyncSession, review_id: str) -> bool:
+    """Одобряет отзыв — он становится виден на витрине."""
+    review = await db.get(Review, review_id)
+    if not review:
+        return False
+    review.is_approved = True
+    await db.commit()
+    return True
+
+
+async def delete_review(db: AsyncSession, review_id: str) -> bool:
+    """Удаляет отзыв (отклонение модерации)."""
+    review = await db.get(Review, review_id)
+    if not review:
+        return False
+    await db.delete(review)
+    await db.commit()
+    return True

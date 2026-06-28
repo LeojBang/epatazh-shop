@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Заказ — Эпатаж{% endblock %}
 {% block content %}
+    {% import "_macros.html" as m %}
     <a href="/account/orders" class="breadcrumb">← К списку заказов</a>
 
     <div class="order-detail-head">
         <div>
             <h1>Заказ</h1>
-            <p class="order-detail-number">№ {{ order.id }}</p>
+            <p class="order-detail-number">№ {{ (order.id | string)[:8] | upper }}</p>
             <p class="order-detail-date">от {{ order.created_at | msk_datetime }}</p>
         </div>
         <span class="order-status order-status--big">{{ order.status | order_status_ru }}</span>
@@ -29,13 +30,13 @@
                         </div>
                     </div>
                     <div class="order-detail-item-price">
-                        <span>{{ item.quantity }} × {{ "%.2f"|format(item.price) }} ₽</span>
-                        <strong>{{ "%.2f"|format(item.price * item.quantity) }} ₽</strong>
+                        <span>{{ item.quantity }} × {{ m.price(item.price) }}</span>
+                        <strong>{{ m.price(item.price * item.quantity) }}</strong>
                     </div>
                 </div>
             {% endfor %}
             <div class="order-detail-total">
-                Итого: <strong>{{ "%.2f"|format(order.total) }} ₽</strong>
+                Итого: <strong>{{ m.price(order.total) }}</strong>
             </div>
         </div>
 
@@ -57,7 +58,7 @@
                     <p><span class="info-label">Пункт выдачи:</span><br>{{ order.cdek_pvz_address or order.address }}</p>
                     {% if order.cdek_track_number %}
                         <p><span class="info-label">Трек-номер:</span> <strong>{{ order.cdek_track_number }}</strong></p>
-                        <a href="/track?number={{ order.id }}" class="btn-outline btn-sm">Отследить заказ</a>
+                        <a href="/track?order_id={{ order.id }}" class="btn-outline btn-sm">Отследить заказ</a>
                     {% endif %}
                 </div>
             {% else %}

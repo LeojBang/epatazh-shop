@@ -148,12 +148,11 @@ async def update_account(
     full_name: str = Form(""),
     email: str = Form(...),
     phone: str = Form(""),
-    address: str = Form(""),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     updated, error = await service.update_profile(
-        db, user, full_name=full_name, email=email, phone=phone, address=address
+        db, user, full_name=full_name, email=email, phone=phone
     )
     if error:
         return templates.TemplateResponse(

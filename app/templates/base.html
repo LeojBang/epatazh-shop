@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Эпатаж{% endblock %}</title>
+    <title>{% block title %}Эпатаж — экипировка для единоборств{% endblock %}</title>
+
+    {# --- SEO мета-теги --- #}
+    <meta name="description" content="{% block meta_description %}Эпатаж — экипировка для единоборств и спорта: джерси, бинты, гамаши, леггинсы. Собственное производство, пошив под заказ. Доставка СДЭК по России.{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}{% endblock %}">
+
+    {# --- Open Graph (превью в соцсетях: VK, Telegram) --- #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="Эпатаж">
+    <meta property="og:title" content="{% block og_title %}Эпатаж — экипировка для единоборств{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Экипировка для единоборств и спорта. Собственное производство, пошив под заказ, доставка СДЭК.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.base_url }}static/og-default.jpg{% endblock %}">
+    <meta property="og:url" content="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,20 +140,20 @@
             <div class="footer__col">
                 <h4>Контакты</h4>
                 <div class="footer__contacts">
-                    <div class="footer__contact-item">
+                    <a href="tel:+79304704007" class="footer__contact-item footer__contact-link">
                         <div class="footer__contact-icon"><i class="ti ti-phone"></i></div>
                         <div class="footer__contact-text">
                             <strong>+7 (930) 470-40-07</strong>
                             <span>Пн-Пт с 9:00 до 18:00</span>
                         </div>
-                    </div>
-                    <div class="footer__contact-item">
+                    </a>
+                    <a href="mailto:info@epatajextra.ru" class="footer__contact-item footer__contact-link">
                         <div class="footer__contact-icon"><i class="ti ti-mail"></i></div>
                         <div class="footer__contact-text">
                             <strong>info@epatajextra.ru</strong>
                             <span>Ответим в течение часа</span>
                         </div>
-                    </div>
+                    </a>
                     <div class="footer__contact-item">
                         <div class="footer__contact-icon"><i class="ti ti-map-pin"></i></div>
                         <div class="footer__contact-text">
@@ -146,8 +161,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <h4 style="margin-top: 1.25rem;">Мы в соцсетях</h4>
+            <!-- Мы в соцсетях -->
+            <div class="footer__col">
+                <h4>Мы в соцсетях</h4>
                 <div class="footer__social">
                     <a href="https://vk.com/epataj68" aria-label="ВКонтакте"><i class="ti ti-brand-vk" aria-hidden="true"></i></a>
                 </div>

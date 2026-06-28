@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+{% block title %}Отзывы{% endblock %}
+{% block page_title %}Отзывы{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <a href="/admin/reviews" class="btn {% if not only_pending %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Все</a>
+  <a href="/admin/reviews?pending=1" class="btn {% if only_pending %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Ожидают модерации</a>
+</div>
+
+{% if reviews %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Дата</th>
+        <th>Товар</th>
+        <th>Автор</th>
+        <th style="text-align:center">Оценка</th>
+        <th>Текст</th>
+        <th style="text-align:center">Статус</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rev in reviews %}
+      <tr>
+        <td style="color:var(--text-muted);white-space:nowrap">{{ rev.created_at.strftime('%d.%m.%Y') }}</td>
+        <td style="color:var(--text)">{{ rev.product.name if rev.product else '—' }}</td>
+        <td style="color:var(--text-muted)">{{ rev.user.full_name or rev.user.email if rev.user else '—' }}</td>
+        <td style="text-align:center;white-space:nowrap">{{ '★' * rev.rating }}<span style="color:var(--border-strong)">{{ '★' * (5 - rev.rating) }}</span></td>
+        <td style="color:var(--text);max-width:320px">{{ rev.text }}</td>
+        <td style="text-align:center">
+          {% if rev.is_approved %}
+            <span class="badge badge-delivered">Одобрен</span>
+          {% else %}
+            <span class="badge badge-pending">Ожидает</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right;white-space:nowrap">
+          {% if not rev.is_approved %}
+            <form method="post" action="/admin/reviews/{{ rev.id }}/approve" style="display:inline">
+              <button type="submit" class="btn btn-primary btn-sm">Одобрить</button>
+            </form>
+          {% endif %}
+          <form method="post" action="/admin/reviews/{{ rev.id }}/delete" style="display:inline"
+                onsubmit="return confirm('Удалить отзыв? Действие необратимо.')">
+            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p style="color:var(--text-muted);margin-top:1rem">
+  {% if only_pending %}Нет отзывов, ожидающих модерации.{% else %}Отзывов пока нет.{% endif %}
+</p>
+{% endif %}
+{% endblock %}

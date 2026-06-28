@@ -38,11 +38,11 @@ class Settings(BaseSettings):
     # Уточняется у заказчика по его системе налогообложения
     RECEIPT_VAT_CODE: int = 1
 
-    # Почта (SMTP) — письма покупателям через Яндекс
-    SMTP_HOST: str = "smtp.yandex.ru"
+    # Почта (SMTP) — письма покупателям через reg.ru (ящик epatajextra.ru)
+    SMTP_HOST: str = "mail.hosting.reg.ru"
     SMTP_PORT: int = 465
-    SMTP_USER: str = ""  # email-ящик на Яндексе
-    SMTP_PASSWORD: str = ""  # пароль приложения (не обычный пароль!)
+    SMTP_USER: str = ""  # email-ящик на reg.ru (info@epatajextra.ru)
+    SMTP_PASSWORD: str = ""  # пароль от почтового ящика
     SMTP_FROM: str = ""  # от кого (обычно = SMTP_USER)
     EMAILS_ENABLED: bool = False  # переключатель: реально слать или только логировать
     SMTP_FROM_NAME: str = "Магазин Эпатаж"  # отображаемое имя отправителя

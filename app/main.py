@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -6,6 +8,8 @@ import redis.asyncio as redis_lib
 from fastapi import Request, status
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from arq import create_pool
+from arq.connections import RedisSettings
 
 import app.models  # noqa: F401  — регистрирует все модели в SQLAlchemy
 from app.cart.router import router as cart_router
@@ -19,6 +23,7 @@ from app.reviews.router import router as reviews_router
 from app.returns.router import router as returns_router
 from app.favorites.router import router as favorites_router
 from app.cdek.router import router as cdek_router
+from app.seo.router import router as seo_router
 from app.admin2.router import router as admin_router
 from app.core.logging_config import setup_logging
 from app.core.csrf import CSRF_COOKIE, generate_csrf_token, validate_csrf
@@ -26,7 +31,18 @@ from starlette.responses import JSONResponse as StarletteJSON
 
 setup_logging()
 
-app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Жизненный цикл приложения: создаём пул arq для постановки задач (письма)."""
+    app.state.arq_pool = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+    try:
+        yield
+    finally:
+        await app.state.arq_pool.close()
+
+
+app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG, lifespan=lifespan)
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
@@ -185,6 +201,7 @@ app.include_router(reviews_router)
 app.include_router(returns_router)
 app.include_router(favorites_router)
 app.include_router(cdek_router)
+app.include_router(seo_router)
 app.include_router(admin_router)
 
 # --- Кастомная админка подключена через admin_router ---

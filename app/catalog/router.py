@@ -146,7 +146,7 @@ async def search_suggest(
     db: AsyncSession = Depends(get_db),
 ):
     query = q.strip()
-    if len(query) < 2:
+    if len(query) < 1:
         return JSONResponse({"results": []})
 
     products = await service.search_products(db, query)
