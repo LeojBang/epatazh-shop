@@ -45,6 +45,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["product_id"],
             ["products.id"],
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["user_id"],

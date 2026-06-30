@@ -40,11 +40,13 @@
         <td style="text-align:right;white-space:nowrap">
           {% if not rev.is_approved %}
             <form method="post" action="/admin/reviews/{{ rev.id }}/approve" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <button type="submit" class="btn btn-primary btn-sm">Одобрить</button>
             </form>
           {% endif %}
           <form method="post" action="/admin/reviews/{{ rev.id }}/delete" style="display:inline"
                 onsubmit="return confirm('Удалить отзыв? Действие необратимо.')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
           </form>
         </td>

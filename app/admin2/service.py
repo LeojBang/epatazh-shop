@@ -69,6 +69,14 @@ async def get_product_for_edit(
     return result.scalar_one_or_none()
 
 
+async def slug_is_taken(db: AsyncSession, slug: str, exclude_id=None) -> bool:
+    """Проверяет, занят ли slug другим товаром."""
+    q = select(Product.id).where(Product.slug == slug)
+    if exclude_id:
+        q = q.where(Product.id != exclude_id)
+    return await db.scalar(q) is not None
+
+
 async def create_product(db: AsyncSession, data: dict) -> Product:
     product = Product(**data)
     db.add(product)
@@ -88,6 +96,8 @@ async def delete_product(db: AsyncSession, product: Product) -> bool:
     тогда скрываем товар (is_active=False). Возвращает True если удалён, False если скрыт.
     """
     from app.models.order import OrderItem
+    from app.models.review import Review
+    from sqlalchemy import delete as sa_delete
 
     # Есть ли варианты этого товара в заказах
     variant_ids = [v.id for v in product.variants]
@@ -102,6 +112,9 @@ async def delete_product(db: AsyncSession, product: Product) -> bool:
             product.is_active = False
             await db.flush()
             return False
+
+    # Удаляем отзывы на товар (FK без CASCADE — чистим вручную)
+    await db.execute(sa_delete(Review).where(Review.product_id == product.id))
 
     await db.delete(product)
     await db.flush()

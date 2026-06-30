@@ -43,6 +43,7 @@
         <span class="badge badge-{{ status_badge.get(ret.status,'pending') }}" style="font-size:13px">{{ status_ru.get(ret.status, ret.status) }}</span>
       </div>
       <form method="post" action="/admin/returns/{{ ret.id }}/update">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div class="form-group">
           <label class="form-label">Статус</label>
           <select name="new_status" class="form-control">
@@ -65,6 +66,7 @@
       <div class="card-title">Возврат денег</div>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Заявка одобрена. Можно вернуть деньги покупателю через YooKassa.</p>
       <form method="post" action="/admin/returns/{{ ret.id }}/refund" onsubmit="return confirm('Вернуть деньги покупателю через YooKassa?')">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
           <i class="ti ti-cash" aria-hidden="true"></i>Вернуть деньги
         </button>

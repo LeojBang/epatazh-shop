@@ -146,7 +146,6 @@ async def product_save(
     category_id: str = Form(...),
     price: str = Form(...),
     sale_price: str = Form(default=""),
-    weight: int = Form(default=500),
     badge: str = Form(default=""),
     gender: str = Form(default=""),
     description: str = Form(default=""),
@@ -177,7 +176,7 @@ async def product_save(
         "category_id": uuid.UUID(category_id),
         "price": price_val,
         "sale_price": sale_price_val,
-        "weight": max(1, weight),
+        "weight": 500,  # фиксированный вес — клиент не платит за доставку
         "badge": badge.strip() or None,
         "gender": gender.strip() or None,
         "description": description.strip() or None,
@@ -196,6 +195,27 @@ async def product_save(
                 sizes_stock[size_name] = int(value)
             except ValueError:
                 sizes_stock[size_name] = 0
+
+    # Проверяем уникальность slug до INSERT/UPDATE
+    existing_id = uuid.UUID(product_id) if product_id else None
+    if await service.slug_is_taken(db, data["slug"], exclude_id=existing_id):
+        categories = await service.get_categories_list(db)
+        ctx = await _base_ctx(db, admin_user, "products")
+        product_obj = None
+        if product_id:
+            product_obj = await service.get_product_for_edit(db, uuid.UUID(product_id))
+        return templates.TemplateResponse(
+            request,
+            "admin/product_edit.html",
+            {
+                **ctx,
+                "product": product_obj,
+                "categories": categories,
+                "error": f"Slug «{data['slug']}» уже занят другим товаром. Выберите другой slug.",
+                "form_data": data,
+            },
+            status_code=422,
+        )
 
     if product_id:
         product = await service.get_product_for_edit(db, uuid.UUID(product_id))

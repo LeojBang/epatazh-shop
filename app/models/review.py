@@ -17,7 +17,7 @@ class Review(UUIDMixin, TimeStampMixin, Base):
         ForeignKey("users.id"), nullable=False, index=True
     )
     product_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("products.id"), nullable=False, index=True
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True
     )
     rating: Mapped[int] = mapped_column(Integer, nullable=False)  # 1..5
     text: Mapped[str] = mapped_column(Text, nullable=False)

@@ -81,6 +81,7 @@
         <span class="badge badge-{{ order.status }}" style="font-size:13px">{{ status_ru.get(order.status, order.status) }}</span>
       </div>
       <form method="post" action="/admin/orders/{{ order.id }}/update">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div class="form-group">
           <label class="form-label">Изменить статус</label>
           <select name="new_status" class="form-control">

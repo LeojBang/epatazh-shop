@@ -16,6 +16,7 @@
 
     <!-- ОСНОВНОЕ + РАЗМЕРЫ (главная форма) -->
     <form method="post" action="/admin/products/save" id="productForm" style="display:flex;flex-direction:column;gap:16px">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="product_id" value="{{ product.id if product else '' }}">
 
       <div class="card">
@@ -34,12 +35,6 @@
           <div class="form-group">
             <label class="form-label">Цена со скидкой</label>
             <input type="text" name="sale_price" class="form-control" placeholder="—" value="{{ product.sale_price if product and product.sale_price else '' }}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Вес, грамм</label>
-            <input type="number" name="weight" class="form-control" required min="1" step="1"
-                   value="{{ product.weight if product else 500 }}"
-                   placeholder="напр. 300">
           </div>
           <div class="form-group">
             <label class="form-label">Бейдж</label>
@@ -67,7 +62,6 @@
               <option value="мужское" {% if product and product.gender == 'мужское' %}selected{% endif %}>Мужское</option>
               <option value="женское" {% if product and product.gender == 'женское' %}selected{% endif %}>Женское</option>
               <option value="детское" {% if product and product.gender == 'детское' %}selected{% endif %}>Детское</option>
-              <option value="унисекс" {% if product and product.gender == 'унисекс' %}selected{% endif %}>Унисекс</option>
               <option value="унисекс" {% if product and product.gender == 'унисекс' %}selected{% endif %}>Унисекс</option>
             </select>
           </div>
@@ -136,6 +130,7 @@
             <span style="font-size:12px;color:var(--text-muted)">{{ color.hex }}</span>
             <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">{{ color.images|length }} фото</span>
             <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить цвет {{ color.name }} со всеми фото?')">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
             </form>
           </div>
@@ -144,11 +139,13 @@
             <div class="thumb-wrap">
               <img src="/static/uploads/{{ img.path }}" class="thumb" alt="">
               <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/images/{{ img.id }}/delete" style="position:absolute;top:-4px;right:-4px">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <button type="submit" class="thumb-del" title="Удалить фото">×</button>
               </form>
             </div>
             {% endfor %}
             <form method="post" action="/admin/products/{{ product.id }}/colors/{{ color.id }}/images/upload" enctype="multipart/form-data" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <label class="thumb-add">
                 <i class="ti ti-plus" aria-hidden="true"></i>фото
                 <input type="file" name="file" accept="image/*" style="display:none" onchange="this.form.submit()">
@@ -162,6 +159,7 @@
         <details style="border:1px dashed var(--border-strong);border-radius:10px;padding:12px 14px" {% if not product.colors %}open{% endif %}>
           <summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:500">+ Добавить цвет</summary>
           <form method="post" action="/admin/products/{{ product.id }}/colors/save" style="margin-top:12px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <div>
               <label class="form-label">Название</label>
               <input type="text" name="name" placeholder="Чёрный" class="form-control" style="width:140px" required>
@@ -195,6 +193,7 @@
       </button>
       {% if product %}
       <form method="post" action="/admin/products/{{ product.id }}/delete" onsubmit="return confirm('Удалить товар «{{ product.name }}» полностью?')">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
           <i class="ti ti-trash" aria-hidden="true"></i>Удалить товар
         </button>
@@ -222,11 +221,13 @@
         <div class="thumb-wrap">
           <img src="/static/uploads/{{ img.path }}" class="thumb" alt="">
           <form method="post" action="/admin/products/{{ product.id }}/images/{{ img.id }}/delete" style="position:absolute;top:-4px;right:-4px">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="thumb-del" title="Удалить">×</button>
           </form>
         </div>
         {% endfor %}
         <form method="post" action="/admin/products/{{ product.id }}/images/upload" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
           <label class="thumb-add">
             <i class="ti ti-plus" aria-hidden="true"></i>добавить
             <input type="file" name="file" accept="image/*" style="display:none" onchange="this.form.submit()">

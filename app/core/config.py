@@ -22,9 +22,12 @@ class Settings(BaseSettings):
     # --- СДЭК (доставка) ---
     # Тестовая среда: https://api.edu.cdek.ru + публичные тестовые ключи.
     # Боевая среда:   https://api.cdek.ru + ключи из lk.cdek.ru/integration.
-    CDEK_API_URL: str = "https://api.edu.cdek.ru"
-    CDEK_ACCOUNT: str = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"  # тестовый account
-    CDEK_SECURE_PASSWORD: str = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"  # тестовый пароль
+    # CDEK_API_URL: str = "https://api.cdek.ru"
+    # CDEK_ACCOUNT: str = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"  # тестовый account
+    # CDEK_SECURE_PASSWORD: str = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"  # тестовый пароль
+    CDEK_ACCOUNT: str
+    CDEK_SECURE_PASSWORD: str
+    CDEK_API_URL: str
     # Город отправления (откуда едут посылки). Тамбов.
     # Код города в СДЭК получаем из API по названию при первом обращении
     # (надёжнее, чем хардкодить число). Индекс — запасной вариант.

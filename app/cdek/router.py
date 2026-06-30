@@ -158,6 +158,35 @@ async def cdek_webhook(
         logger.warning("Вебхук СДЭК: заказ с трек-номером %s не найден", cdek_number)
         return Response(status_code=200)
 
+    # Верификация: не доверяем статусу из тела вебхука —
+    # перезапрашиваем реальный статус у СДЭК по cdek_order_uuid.
+    # Это защищает от подделки вебхука с произвольным статусом.
+    if order.cdek_order_uuid:
+        try:
+            cdek_data = await cdek_client.get_order(str(order.cdek_order_uuid))
+            statuses = cdek_data.get("entity", {}).get("statuses", [])
+            # Берём последний статус из ответа СДЭК
+            if statuses:
+                real_code = str(statuses[-1].get("code", ""))
+                if real_code != status_code:
+                    logger.info(
+                        "Вебхук СДЭК: код из тела=%s, реальный из API=%s — используем реальный",
+                        status_code,
+                        real_code,
+                    )
+                    status_code = real_code
+                    new_order_status = _CDEK_STATUS_MAP.get(status_code)
+                    if not new_order_status:
+                        return Response(status_code=200)
+        except Exception as exc:
+            logger.warning("Вебхук СДЭК: не удалось верифицировать через API: %s", exc)
+            # Не блокируем обработку при недоступности СДЭК-API
+    else:
+        logger.warning(
+            "Вебхук СДЭК: у заказа %s нет cdek_order_uuid, пропускаем верификацию",
+            cdek_number,
+        )
+
     # Не понижаем статус (например не меняем delivered → shipped)
     _STATUS_RANK = {
         "pending": 0,

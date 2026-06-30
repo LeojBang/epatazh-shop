@@ -26,6 +26,7 @@
           <td style="text-align:right">
             <button class="btn btn-secondary btn-sm" onclick="editCat('{{ cat.id }}','{{ cat.name }}','{{ cat.slug }}','{{ cat.icon or '' }}')">Изменить</button>
             <form method="post" action="/admin/categories/{{ cat.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить категорию {{ cat.name }}?')">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <button type="submit" class="btn btn-danger btn-sm">×</button>
             </form>
           </td>
@@ -38,6 +39,7 @@
   <div class="card">
     <div class="card-title" id="formTitle">Новая категория</div>
     <form method="post" action="/admin/categories/save">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="category_id" id="catId" value="">
       <div class="form-group">
         <label class="form-label">Название</label>

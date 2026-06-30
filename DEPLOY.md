@@ -19,7 +19,7 @@
 6. [Чек-лист безопасности перед запуском](#6-чек-лист-безопасности-перед-запуском)
 7. [Запуск приложения](#7-запуск-приложения)
 8. [Настройка поддомена (DNS)](#8-настройка-поддомена-dns)
-9. [Nginx + SSL-сертификат](#9-nginx--ssl-сертификат)
+9. [Nginx + SSL-сертификат + рейт-лимит](#9-nginx--ssl-сертификат--рейт-лимит)
 10. [Финальная проверка](#10-финальная-проверка)
 11. [Обновление сайта в будущем](#11-обновление-сайта-в-будущем)
 12. [Резервные копии](#12-резервные-копии)
@@ -80,13 +80,9 @@ docker compose version
 
 ## 4. Загрузка кода
 
-Вариант через git (рекомендуется):
-
 ```bash
-# Установите git, если нужно
 sudo apt install -y git
 
-# Склонируйте репозиторий магазина
 git clone https://github.com/ВАШ_АККАУНТ/ВАШ_РЕПОЗИТОРИЙ.git shop
 cd shop
 ```
@@ -96,8 +92,6 @@ cd shop
 ---
 
 ## 5. Настройка .env (боевые ключи)
-
-Создайте `.env` из шаблона и заполните **боевыми** значениями:
 
 ```bash
 cp .env.example .env
@@ -115,12 +109,17 @@ DEBUG=False
 SECRET_KEY=<новый_сгенерированный_ключ>
 
 # База данных (пароль придумайте надёжный)
+POSTGRES_USER=postgres
 POSTGRES_PASSWORD=<надёжный_пароль>
+POSTGRES_DB=shop
 DATABASE_URL=postgresql+asyncpg://postgres:<надёжный_пароль>@db:5432/shop
 
 # ЮKassa — БОЕВЫЕ ключи рабочего магазина
 YOOKASSA_SHOP_ID=<боевой_shop_id>
 YOOKASSA_SECRET_KEY=<боевой_секретный_ключ>
+
+# Система налогообложения: 1 = без НДС (УСН), 3 = НДС 10%, 4 = НДС 20%
+RECEIPT_VAT_CODE=1
 
 # СДЭК — БОЕВОЙ режим
 CDEK_API_URL=https://api.cdek.ru
@@ -129,11 +128,12 @@ CDEK_SECURE_PASSWORD=<боевой_password>
 
 # Почта
 EMAILS_ENABLED=True
-SMTP_PASSWORD=<пароль_ящика_info@epatajextra.ru>
+SMTP_USER=info@epatajextra.ru
+SMTP_FROM=info@epatajextra.ru
+SMTP_PASSWORD=<пароль_ящика>
 ```
 
-> **Важно:** в `DATABASE_URL` для прода хост — `db` (имя сервиса в compose),
-> а не `localhost`.
+> **Важно:** в `DATABASE_URL` хост — `db` (имя сервиса в compose), не `localhost`.
 
 Сохраните: `Ctrl+O`, `Enter`, `Ctrl+X`.
 
@@ -141,84 +141,141 @@ SMTP_PASSWORD=<пароль_ящика_info@epatajextra.ru>
 
 ## 6. Чек-лист безопасности перед запуском
 
-Проверьте перед первым стартом — это критично для боевого сайта:
-
-- [ ] `DEBUG=False` в `.env` (скрывает трейсбэки от посторонних)
-- [ ] `ENVIRONMENT=production` (включает secure-cookie по HTTPS)
-- [ ] `SECRET_KEY` — **новый**, сгенерированный (не из разработки)
+- [ ] `DEBUG=False` в `.env`
+- [ ] `ENVIRONMENT=production` (включает secure-cookie по HTTPS и валидацию конфига при старте)
+- [ ] `SECRET_KEY` — новый, сгенерированный (минимум 32 символа, не из разработки)
 - [ ] Пароль БД — надёжный, не из примеров
 - [ ] Ключи ЮKassa — боевые (не тестовые `test_…`)
+- [ ] `RECEIPT_VAT_CODE` уточнён (УСН → 1)
 - [ ] Ключи СДЭК — боевые, `CDEK_API_URL=https://api.cdek.ru`
+- [ ] `EMAILS_ENABLED=True`, SMTP-пароль заполнен
 - [ ] Файл `.env` не попадёт в git (он уже в `.gitignore`)
 
 ---
 
 ## 7. Запуск приложения
 
-Запускаем через продакшен-конфиг `docker-compose.prod.yml`:
-
 ```bash
-# Собрать и поднять контейнеры в фоне
+# Собрать образы и поднять все сервисы
 docker compose -f docker-compose.prod.yml up -d --build
+```
 
-# Применить миграции базы
-docker compose -f docker-compose.prod.yml exec app alembic upgrade head
+**Миграции запускаются автоматически** — сервис `migrate` прогонит
+`alembic upgrade head` и создаст все таблицы перед стартом приложения.
+`app` и `worker` стартуют только после успешного завершения миграций.
 
-# Проверить, что всё поднялось
+Проверьте что всё поднялось:
+```bash
 docker compose -f docker-compose.prod.yml ps
 ```
 
-Приложение слушает `127.0.0.1:8000` (только локально — наружу его отдаст nginx).
+Должны быть запущены: `app` (healthy), `worker`, `db`, `redis`.
+Сервис `migrate` завершится с кодом 0 — это нормально.
 
-**Создание первого администратора** — если в проекте есть скрипт создания
-суперпользователя, выполните его; иначе зарегистрируйтесь на сайте и выдайте
-себе права через базу (`is_superuser = true` для вашего пользователя).
+**Создание первого администратора** (один раз):
+```bash
+docker compose -f docker-compose.prod.yml exec app python create_admin.py
+```
 
 ---
 
 ## 8. Настройка поддомена (DNS)
 
-В панели управления доменом `epatajextra.ru` (там, где он зарегистрирован)
-добавьте **A-запись**:
+В панели управления доменом `epatajextra.ru` добавьте **A-запись**:
 
 | Тип | Имя (host) | Значение |
 |-----|-----------|----------|
-| A   | `shop`    | IP вашего VPS (например `123.45.67.89`) |
+| A   | `shop`    | IP вашего VPS |
 
-После этого `shop.epatajextra.ru` будет указывать на сервер магазина.
-Обновление DNS занимает от нескольких минут до пары часов.
-
-Проверить можно так:
+Проверить:
 ```bash
 ping shop.epatajextra.ru
+# должен отвечать IP вашего VPS
 ```
-(должен отвечать IP вашего VPS)
+
+Обновление DNS занимает от нескольких минут до пары часов.
 
 ---
 
-## 9. Nginx + SSL-сертификат
-
-Nginx принимает запросы из интернета и передаёт их приложению на порт 8000.
-SSL-сертификат (бесплатный, Let's Encrypt) включает https.
+## 9. Nginx + SSL-сертификат + рейт-лимит
 
 ```bash
-# Установка nginx и certbot
 sudo apt install -y nginx certbot python3-certbot-nginx
 ```
 
-Создайте конфиг сайта:
+### 9.1 Зоны рейт-лимита
+
+```bash
+sudo nano /etc/nginx/conf.d/rate_limits.conf
+```
+
+Вставьте:
+```nginx
+# 5 запросов/минуту с IP — для регистрации и входа
+limit_req_zone $binary_remote_addr zone=auth:1m rate=5r/m;
+
+# 30 запросов/минуту с IP — для вебхуков (ЮKassa и СДЭК шлют повторы)
+limit_req_zone $binary_remote_addr zone=webhooks:1m rate=30r/m;
+```
+
+### 9.2 Конфиг сайта
+
 ```bash
 sudo nano /etc/nginx/sites-available/shop
 ```
 
-Вставьте (домен уже подставлен):
+Вставьте:
 ```nginx
 server {
     listen 80;
     server_name shop.epatajextra.ru;
+    return 301 https://$host$request_uri;
+}
 
-    client_max_body_size 50M;  # для загрузки фото товаров
+server {
+    listen 443 ssl;
+    server_name shop.epatajextra.ru;
 
+    # SSL — certbot пропишет эти строки сам (шаг 9.3)
+    # ssl_certificate     /etc/letsencrypt/live/shop.epatajextra.ru/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/shop.epatajextra.ru/privkey.pem;
+
+    client_max_body_size 50M;
+
+    # Регистрация и вход: 5 запросов/минуту с IP
+    location ~ ^/(register|login) {
+        limit_req zone=auth burst=5 nodelay;
+        limit_req_status 429;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Вебхук ЮKassa
+    location /payments/webhook {
+        limit_req zone=webhooks burst=10 nodelay;
+        limit_req_status 429;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Вебхук СДЭК
+    location /api/cdek/webhook {
+        limit_req zone=webhooks burst=10 nodelay;
+        limit_req_status 429;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Все остальные запросы
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -229,46 +286,34 @@ server {
 }
 ```
 
-Активируйте конфиг и получите SSL:
+### 9.3 Активация и SSL
+
 ```bash
-# Включить сайт
 sudo ln -s /etc/nginx/sites-available/shop /etc/nginx/sites-enabled/
-sudo nginx -t          # проверка конфига
+sudo nginx -t          # должно быть "syntax is ok"
 sudo systemctl reload nginx
 
-# Получить SSL-сертификат (certbot сам пропишет https в конфиг)
+# SSL-сертификат (certbot сам пропишет https в конфиг и настроит автопродление)
 sudo certbot --nginx -d shop.epatajextra.ru
 ```
-
-Certbot спросит email и согласие — ответьте, выберите редирект на https.
-Сертификат продлевается автоматически.
 
 ---
 
 ## 10. Финальная проверка
 
-Откройте в браузере `https://shop.epatajextra.ru` и проверьте:
+### Подключите ЮKassa-вебхук
 
-- [ ] Сайт открывается по **https** (замок в адресной строке)
-- [ ] Каталог, карточки товаров, корзина работают
-- [ ] Оформление заказа: выбор города и пункта СДЭК на карте
-- [ ] Тестовый заказ → оплата → приходит письмо «оплачен»
-- [ ] Отслеживание заказа показывает статус СДЭК
-- [ ] `https://shop.epatajextra.ru/robots.txt` отдаётся
-- [ ] `https://shop.epatajextra.ru/sitemap.xml` отдаётся
-- [ ] Админка `/admin` открывается и требует вход
+В ЛК ЮKassa (раздел «Интеграция → HTTP-уведомления»):
+```
+https://shop.epatajextra.ru/payments/webhook
+```
 
-**Подключите ЮKassa-вебхук:** в личном кабинете ЮKassa укажите URL для
-уведомлений: `https://shop.epatajextra.ru/payments/webhook`
-(точный путь — как настроен в коде платежей).
+### Зарегистрируйте вебхук СДЭК (один раз)
 
-**Зарегистрируйте вебхук СДЭК** (один раз после деплоя):
 ```bash
 docker compose -f docker-compose.prod.yml exec app \
     python -m app.scripts.register_cdek_webhook
 ```
-После этого СДЭК будет автоматически уведомлять магазин об изменении
-статусов заказов, и статусы будут меняться сами (shipped / delivered).
 
 Проверить что подписка создана:
 ```bash
@@ -276,47 +321,60 @@ docker compose -f docker-compose.prod.yml exec app \
     python -m app.scripts.register_cdek_webhook --list
 ```
 
-Если нужно отключить автоматические статусы — удалите подписку и выключите в `.env`:
+Если нужно отключить автоматические статусы:
 ```bash
-# 1. Узнать UUID подписки
+# Узнать UUID подписки
 docker compose -f docker-compose.prod.yml exec app \
     python -m app.scripts.register_cdek_webhook --list
 
-# 2. Удалить подписку
+# Удалить подписку
 docker compose -f docker-compose.prod.yml exec app \
     python -m app.scripts.register_cdek_webhook --delete <uuid>
 
-# 3. В .env поменять и перезапустить
+# В .env поменять и перезапустить
 CDEK_AUTO_STATUS=false
 docker compose -f docker-compose.prod.yml restart app
 ```
 
-**Свяжите с лендингом:** на лендинге кнопки «Каталог / Магазин» направьте
-на `https://shop.epatajextra.ru`.
+### Тестовый заказ
 
-**SEO:** добавьте сайт в Яндекс.Вебмастер и Google Search Console, укажите
-адрес sitemap — поисковики начнут индексацию.
+- [ ] Сайт открывается по **https** (замок в адресной строке)
+- [ ] Каталог, карточки товаров, корзина работают
+- [ ] Выбор города и ПВЗ СДЭК на карте работает
+- [ ] Оформить заказ → оплатить тестовой картой ЮKassa
+- [ ] Пришло письмо «заказ оплачен»
+- [ ] В БД у заказа появился `cdek_order_uuid` (заказ создался в СДЭК)
+- [ ] **Отменить тестовый заказ в ЛК СДЭК** (`lk.cdek.ru` → Заказы → Отмена)
+- [ ] Админка `/admin` открывается и требует вход
+- [ ] `https://shop.epatajextra.ru/robots.txt` отдаётся
+- [ ] `https://shop.epatajextra.ru/sitemap.xml` отдаётся
+
+### Свяжите с лендингом
+
+На лендинге кнопки «Каталог / Магазин» направьте на `https://shop.epatajextra.ru`.
+
+### SEO
+
+Добавьте сайт в Яндекс.Вебмастер и Google Search Console, укажите адрес sitemap.
 
 ---
 
 ## 11. Обновление сайта в будущем
 
-Когда вносите изменения в код (через git):
-
 ```bash
 cd ~/shop
-git pull                                            # забрать новый код
+git pull
 docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec app alembic upgrade head
 ```
 
-Если менялись только шаблоны/CSS — пересборка не обязательна, но не повредит.
+Миграции (если есть новые) применятся автоматически через сервис `migrate`.
+
+> Если добавились новые переменные окружения — добавьте их в `.env` на сервере
+> перед пересборкой, иначе приложение не запустится.
 
 ---
 
 ## 12. Резервные копии
-
-Регулярно делайте бэкап базы данных (заказы, товары, пользователи):
 
 ```bash
 # Создать дамп базы
@@ -324,12 +382,11 @@ docker compose -f docker-compose.prod.yml exec db \
   pg_dump -U postgres shop > backup_$(date +%F).sql
 ```
 
-Храните дампы вне сервера (скачивайте к себе). Можно настроить
-автоматический бэкап по расписанию через cron.
+Храните дампы вне сервера (скачивайте к себе).
 
 **Восстановление из дампа:**
 ```bash
-cat backup_2026-06-29.sql | docker compose -f docker-compose.prod.yml exec -T db \
+cat backup_2026-07-01.sql | docker compose -f docker-compose.prod.yml exec -T db \
   psql -U postgres shop
 ```
 
@@ -341,7 +398,10 @@ cat backup_2026-06-29.sql | docker compose -f docker-compose.prod.yml exec -T db
 # Логи приложения
 docker compose -f docker-compose.prod.yml logs app --tail 100
 
-# Логи воркера (письма, фоновые задачи)
+# Логи миграций (если app не стартует)
+docker compose -f docker-compose.prod.yml logs migrate --tail 50
+
+# Логи воркера
 docker compose -f docker-compose.prod.yml logs worker --tail 100
 
 # Логи nginx
@@ -351,5 +411,18 @@ sudo tail -50 /var/log/nginx/error.log
 docker compose -f docker-compose.prod.yml restart app
 ```
 
-Частые причины проблем: незаполненный `.env`, не применены миграции,
-DNS ещё не обновился, забыли открыть порты 80/443 в файрволе VPS.
+Частые причины проблем: незаполненный `.env`, ошибка в миграциях (смотрите
+`logs migrate`), DNS ещё не обновился, забыли открыть порты 80/443 в файрволе VPS.
+
+---
+
+## Изменения по сравнению с разработкой
+
+- **CSRF-защита включена для всей админки** — все POST-формы защищены токеном
+- **Ключи СДЭК** убраны из хардкода — теперь обязательны через `.env`
+- **Slug товара** — дублирование показывает ошибку вместо 500
+- **Удаление товара с отзывами** — отзывы удаляются автоматически (CASCADE)
+- **Верификация СДЭК-вебхука** — статус перепроверяется через API СДЭК
+- **Рейт-лимит** — nginx защищает `/register`, `/login`, `/payments/webhook`, `/api/cdek/webhook`
+- **Миграции автоматические** — сервис `migrate` в compose прогоняет `alembic upgrade head` перед стартом
+- **Продовый Docker-образ** — отдельный `Dockerfile.prod` с `requirements.prod.txt` без dev-зависимостей
