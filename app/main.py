@@ -47,7 +47,7 @@ app = FastAPI(title=settings.PROJECT_NAME, debug=settings.DEBUG, lifespan=lifesp
 
 class CSRFMiddleware(BaseHTTPMiddleware):
     # Пути, которые НЕ проверяем (webhook от YooKassa — он внешний, у него нет нашей cookie)
-    EXEMPT_PREFIXES = ("/payments/webhook", "/admin")
+    EXEMPT_PREFIXES = ("/payments/webhook", "/admin", "/api/cdek/webhook")
 
     async def dispatch(self, request, call_next):
         cookie_token = request.cookies.get(CSRF_COOKIE)

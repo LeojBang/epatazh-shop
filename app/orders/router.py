@@ -256,7 +256,7 @@ async def my_orders(
 ):
     all_orders = await service.get_user_orders(db, user.id)
 
-    active_statuses = {"pending", "paid", "shipped"}
+    active_statuses = {"new", "pending", "paid", "shipped"}
     active = [o for o in all_orders if o.status in active_statuses]
     completed = [o for o in all_orders if o.status not in active_statuses]
 

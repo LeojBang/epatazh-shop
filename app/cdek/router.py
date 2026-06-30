@@ -9,12 +9,15 @@ API-эндпоинты СДЭК для фронтенда (страница оф
   GET /api/cdek/points?city_code=.. — список ПВЗ в городе (для карты)
 """
 
-from fastapi import APIRouter, Query, Depends, Cookie
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Query, Depends, Cookie, Request
+from fastapi.responses import JSONResponse, Response
 import redis.asyncio as redis
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cdek.client import cdek_client, CdekError
+from app.core.config import settings
+from app.models.order import Order
 from app.cdek import service as cdek_service
 from app.core.database import get_db
 from app.core.redis import get_redis
@@ -79,3 +82,101 @@ async def calculate(
     if not result:
         return JSONResponse({"ok": False, "error": "Не удалось рассчитать доставку"})
     return JSONResponse({"ok": True, **result})
+
+
+# ---------------------------------------------------------------------------
+# Таблица: числовой status_code СДЭК → статус заказа в магазине.
+# Только те коды, которые реально меняют статус.
+# Полный список кодов: https://confluence.cdek.ru/pages/viewpage.action?pageId=29934408
+# ---------------------------------------------------------------------------
+_CDEK_STATUS_MAP: dict[str, str] = {
+    # Принят на склад / передан перевозчику → "Отправлен"
+    "2": "shipped",  # Принят на склад отправителя
+    "3": "shipped",  # Принят на склад СДЭК
+    "16": "shipped",  # Выдан на доставку
+    "17": "shipped",  # Транзит
+    "6": "shipped",  # Передан в доставку
+    # Вручён получателю → "Доставлен"
+    "4": "delivered",  # Вручён получателю
+}
+
+
+@router.post("/webhook")
+async def cdek_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Вебхук от СДЭК: автоматически обновляет статус заказа.
+    Управляется флагом CDEK_AUTO_STATUS в .env.
+    Если флаг выключен — принимает запрос, логирует, не меняет статус.
+    """
+    try:
+        payload = await request.json()
+    except Exception:
+        return Response(status_code=200)  # всегда 200, иначе СДЭК будет слать повторно
+
+    event_type = payload.get("type")
+    if event_type != "ORDER_STATUS":
+        return Response(status_code=200)
+
+    attrs = payload.get("attributes", {})
+    cdek_number = attrs.get("cdek_number")  # трек-номер СДЭК
+    status_code = str(attrs.get("status_code", ""))
+    is_return = attrs.get("is_return", False)
+
+    logger.info(
+        "Вебхук СДЭК: cdek_number=%s status_code=%s auto=%s",
+        cdek_number,
+        status_code,
+        settings.CDEK_AUTO_STATUS,
+    )
+
+    # Возвраты не трогаем — у них своя логика
+    if is_return:
+        return Response(status_code=200)
+
+    # Флаг выключен — логируем и выходим
+    if not settings.CDEK_AUTO_STATUS:
+        logger.info("CDEK_AUTO_STATUS=False — статус не обновляется")
+        return Response(status_code=200)
+
+    # Ищем нужный статус в таблице
+    new_order_status = _CDEK_STATUS_MAP.get(status_code)
+    if not new_order_status:
+        return Response(status_code=200)  # код нам неинтересен
+
+    # Находим заказ по трек-номеру СДЭК
+    if not cdek_number:
+        return Response(status_code=200)
+
+    result = await db.execute(
+        select(Order).where(Order.cdek_track_number == cdek_number)
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        logger.warning("Вебхук СДЭК: заказ с трек-номером %s не найден", cdek_number)
+        return Response(status_code=200)
+
+    # Не понижаем статус (например не меняем delivered → shipped)
+    _STATUS_RANK = {
+        "pending": 0,
+        "paid": 1,
+        "shipped": 2,
+        "delivered": 3,
+        "cancelled": -1,
+    }
+    current_rank = _STATUS_RANK.get(order.status, 0)
+    new_rank = _STATUS_RANK.get(new_order_status, 0)
+    if new_rank <= current_rank:
+        return Response(status_code=200)
+
+    order.status = new_order_status
+    await db.commit()
+    logger.info(
+        "Вебхук СДЭК: заказ %s → статус %s (трек %s)",
+        str(order.id)[:8].upper(),
+        new_order_status,
+        cdek_number,
+    )
+    return Response(status_code=200)

@@ -705,14 +705,14 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 
 .category-tiles {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.25rem;
 }
-/* планшет — 2 в ряд */
+/* планшет */
 @media (max-width: 900px) {
     .category-tiles { grid-template-columns: repeat(2, 1fr); }
 }
-/* мобильный — 1 в ряд */
+/* мобильный */
 @media (max-width: 560px) {
     .category-tiles { grid-template-columns: 1fr; }
 }
