@@ -40,4 +40,8 @@ jobs:
           YOOKASSA_SHOP_ID: "test-shop-id"
           YOOKASSA_SECRET_KEY: "test-secret-key"
           ENVIRONMENT: "local"
+          # СДЭК — тестовые значения только для CI, боевые ключи в .env на сервере
+          CDEK_ACCOUNT: "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP"
+          CDEK_SECURE_PASSWORD: "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5"
+          CDEK_API_URL: "https://api.edu.cdek.ru"
         run: python -m pytest
