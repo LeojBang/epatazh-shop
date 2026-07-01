@@ -84,7 +84,7 @@ docker compose version
 sudo apt install -y git
 
 git clone https://github.com/ВАШ_АККАУНТ/ВАШ_РЕПОЗИТОРИЙ.git shop
-cd shop
+cd epatazh-shop
 ```
 
 > Если репозиторий приватный — настройте SSH-ключ или используйте токен доступа.

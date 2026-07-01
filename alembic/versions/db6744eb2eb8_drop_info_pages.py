@@ -20,8 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_index(op.f("ix_info_pages_slug"), table_name="info_pages")
-    op.drop_table("info_pages")
+    # IF EXISTS — на чистой БД таблица могла никогда не существовать
+    op.execute("DROP INDEX IF EXISTS ix_info_pages_slug")
+    op.execute("DROP TABLE IF EXISTS info_pages")
 
 
 def downgrade() -> None:
