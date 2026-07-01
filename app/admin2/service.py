@@ -92,32 +92,45 @@ async def update_product(db: AsyncSession, product: Product, data: dict) -> Prod
 
 
 async def delete_product(db: AsyncSession, product: Product) -> bool:
-    """Удаляет товар. Если у него есть варианты в заказах — physically удалить нельзя,
-    тогда скрываем товар (is_active=False). Возвращает True если удалён, False если скрыт.
+    """Удаляет товар.
+
+    Если хотя бы один вариант товара уже присутствует в заказах,
+    товар физически не удаляется, а скрывается (is_active=False).
+
+    Возвращает:
+        True — если товар удалён.
+        False — если товар скрыт.
     """
+    from app.models.catalog import ProductVariant
     from app.models.order import OrderItem
     from app.models.review import Review
-    from sqlalchemy import delete as sa_delete
+    from sqlalchemy import delete as sa_delete, exists, select
 
-    # Есть ли варианты этого товара в заказах
-    variant_ids = [v.id for v in product.variants]
-    if variant_ids:
-        in_orders = await db.scalar(
-            select(func.count())
-            .select_from(OrderItem)
-            .where(OrderItem.variant_id.in_(variant_ids))
+    # Получаем ID всех вариантов товара
+    variant_ids = (
+        await db.scalars(
+            select(ProductVariant.id).where(ProductVariant.product_id == product.id)
         )
+    ).all()
+
+    if variant_ids:
+        # Проверяем наличие в заказах
+        in_orders = await db.scalar(
+            select(exists().where(OrderItem.variant_id.in_(variant_ids)))
+        )
+
         if in_orders:
-            # Нельзя удалить — скрываем
             product.is_active = False
             await db.flush()
             return False
 
-    # Удаляем отзывы на товар (FK без CASCADE — чистим вручную)
+    # Удаляем отзывы
     await db.execute(sa_delete(Review).where(Review.product_id == product.id))
 
+    # Удаляем товар
     await db.delete(product)
     await db.flush()
+
     return True
 
 

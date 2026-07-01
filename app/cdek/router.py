@@ -100,6 +100,15 @@ _CDEK_STATUS_MAP: dict[str, str] = {
     "4": "delivered",  # Вручён получателю
 }
 
+# Ранг статусов для защиты от понижения (delivered → shipped недопустимо)
+_STATUS_RANK: dict[str, int] = {
+    "pending": 0,
+    "paid": 1,
+    "shipped": 2,
+    "delivered": 3,
+    "cancelled": -1,
+}
+
 
 @router.post("/webhook")
 async def cdek_webhook(
@@ -188,13 +197,6 @@ async def cdek_webhook(
         )
 
     # Не понижаем статус (например не меняем delivered → shipped)
-    _STATUS_RANK = {
-        "pending": 0,
-        "paid": 1,
-        "shipped": 2,
-        "delivered": 3,
-        "cancelled": -1,
-    }
     current_rank = _STATUS_RANK.get(order.status, 0)
     new_rank = _STATUS_RANK.get(new_order_status, 0)
     if new_rank <= current_rank:
