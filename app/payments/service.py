@@ -34,7 +34,12 @@ def build_receipt(order_items, email: str, phone: str) -> dict:
         customer["email"] = email
     if phone:
         customer["phone"] = phone
-    return {"customer": customer, "items": items}
+    receipt = {"customer": customer, "items": items}
+    # Систему налогообложения передаём, только если она задана в настройках
+    # (нужно при нескольких СНО в ЛК YooKassa; при одной — YooKassa подставит сама)
+    if settings.RECEIPT_TAX_SYSTEM_CODE is not None:
+        receipt["tax_system_code"] = settings.RECEIPT_TAX_SYSTEM_CODE
+    return receipt
 
 
 async def create_payment(db: AsyncSession, *, order, return_url: str) -> str:

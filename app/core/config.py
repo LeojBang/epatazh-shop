@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     # Уточняется у заказчика по его системе налогообложения
     RECEIPT_VAT_CODE: int = 1
 
+    # Система налогообложения (СНО) в чеке по 54-ФЗ.
+    # Нужно указывать, ТОЛЬКО если в ЛК YooKassa настроено НЕСКОЛЬКО систем
+    # налогообложения. Если одна — оставить пустым (None), YooKassa подставит её.
+    # Коды: 1=ОСН, 2=УСН доход, 3=УСН доход-расход, 5=ЕСХН, 6=Патент.
+    RECEIPT_TAX_SYSTEM_CODE: int | None = None
+
     # Почта (SMTP) — письма покупателям через reg.ru (ящик epatajextra.ru)
     SMTP_HOST: str = "mail.hosting.reg.ru"
     SMTP_PORT: int = 465
