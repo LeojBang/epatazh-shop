@@ -338,8 +338,28 @@ async def get_order_detail(db: AsyncSession, order_id: uuid.UUID) -> Order | Non
     return result.scalar_one_or_none()
 
 
+class StatusTransitionError(Exception):
+    """Недопустимая смена статуса заказа (например из финального состояния)."""
+
+
+# Машина состояний заказа: из какого статуса в какие можно перейти.
+# «delivered» и «cancelled» — финальные (пустое множество), выйти из них нельзя.
+ALLOWED_TRANSITIONS: dict[str, set[str]] = {
+    "new": {"pending", "paid", "cancelled"},
+    "pending": {"paid", "cancelled"},
+    "paid": {"shipped", "delivered", "cancelled"},
+    "shipped": {"delivered", "cancelled"},
+    "delivered": set(),
+    "cancelled": set(),
+}
+
+
 async def update_order_status(db: AsyncSession, order: Order, new_status: str) -> str:
     """Меняет статус заказа и запускает реальные действия при отмене.
+
+    Смена статуса разрешена только по машине состояний ALLOWED_TRANSITIONS —
+    из финальных статусов («delivered», «cancelled») выйти нельзя. Это защищает
+    от повторной отмены (двойной возврат склада/денег) и нелогичных переходов.
 
     При переводе в «cancelled» (из не-отменённого статуса):
       1. отменяет заказ в СДЭК, если он был зарегистрирован;
@@ -347,11 +367,17 @@ async def update_order_status(db: AsyncSession, order: Order, new_status: str) -
       3. возвращает товары на склад.
 
     Возвращает ПРЕДЫДУЩИЙ статус — чтобы вызывающий код решил,
-    отправлять ли письмо покупателю.
+    отправлять ли письмо покупателю. При недопустимом переходе бросает
+    StatusTransitionError (побочные действия не выполняются).
     """
     old_status = order.status
     if new_status == old_status:
         return old_status
+
+    if new_status not in ALLOWED_TRANSITIONS.get(old_status, set()):
+        raise StatusTransitionError(
+            f"Нельзя сменить статус «{old_status}» → «{new_status}»"
+        )
 
     if new_status == "cancelled":
         # 1. Отмена заказа в СДЭК (best-effort, не роняет отмену)

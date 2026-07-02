@@ -11,6 +11,9 @@
 {% if request.query_params.get('success') %}
 <div class="alert alert-success"><i class="ti ti-check" aria-hidden="true"></i>Статус обновлён</div>
 {% endif %}
+{% if request.query_params.get('error') == 'status' %}
+<div class="alert alert-error"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Недопустимая смена статуса: заказ в финальном статусе или переход запрещён.</div>
+{% endif %}
 
 <div class="grid-main">
   <div style="display:flex;flex-direction:column;gap:16px">
@@ -80,6 +83,9 @@
       <div style="margin-bottom:14px">
         <span class="badge badge-{{ order.status }}" style="font-size:13px">{{ status_ru.get(order.status, order.status) }}</span>
       </div>
+      {% if order.status in ['cancelled', 'delivered'] %}
+      <p class="form-hint">Заказ в финальном статусе «{{ status_ru.get(order.status, order.status) }}» — смена статуса недоступна.</p>
+      {% else %}
       <form method="post" action="/admin/orders/{{ order.id }}/update"
             data-order-paid="{{ 'yes' if order.status in ['paid','shipped','delivered'] else 'no' }}"
             onsubmit="return confirmStatusChange(this);">
@@ -98,6 +104,7 @@
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Сохранить статус</button>
       </form>
+      {% endif %}
       <script>
         function confirmStatusChange(form) {
           var val = form.new_status.value;

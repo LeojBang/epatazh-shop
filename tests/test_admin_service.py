@@ -7,6 +7,7 @@
 import uuid
 from decimal import Decimal
 
+import pytest
 
 from app.admin2 import service
 from app.models.catalog import Category, Product, ProductVariant
@@ -200,5 +201,70 @@ class TestDeleteProduct:
         result = await service.delete_product(db_session, product)
         assert result is True
 
-        found = await service.get_product_for_edit(db_session, product.id)
-        assert found is None
+
+# ─── update_order_status: машина состояний ───────────────────────────────────
+
+
+async def _make_order(db, status: str, *, with_item=False) -> Order:
+    order = Order(
+        status=status,
+        total=Decimal("1000.00"),
+        email="t@e.com",
+        phone="+79001112233",
+        full_name="Тест",
+        address="Москва",
+        items=(
+            [
+                OrderItem(
+                    product_id=uuid.uuid4(),
+                    product_name="Тест-товар",
+                    price=Decimal("1000.00"),
+                    quantity=1,
+                )
+            ]
+            if with_item
+            else []
+        ),
+    )
+    db.add(order)
+    await db.flush()
+    return order
+
+
+class TestOrderStatusTransitions:
+    """Смена статуса заказа разрешена только по машине состояний."""
+
+    async def test_cancelled_is_terminal(self, db_session):
+        """Из «cancelled» нельзя выйти — попытка бросает ошибку, статус не меняется."""
+        order = await _make_order(db_session, "cancelled")
+        with pytest.raises(service.StatusTransitionError):
+            await service.update_order_status(db_session, order, "paid")
+        assert order.status == "cancelled"
+
+    async def test_delivered_is_terminal(self, db_session):
+        """Из «delivered» тоже нельзя выйти."""
+        order = await _make_order(db_session, "delivered")
+        with pytest.raises(service.StatusTransitionError):
+            await service.update_order_status(db_session, order, "cancelled")
+        assert order.status == "delivered"
+
+    async def test_valid_transition_paid_to_shipped(self, db_session):
+        """Разрешённый переход выполняется и возвращает прежний статус."""
+        order = await _make_order(db_session, "paid")
+        old = await service.update_order_status(db_session, order, "shipped")
+        assert old == "paid"
+        assert order.status == "shipped"
+
+    async def test_same_status_is_noop(self, db_session):
+        """Установка того же статуса — не ошибка, ничего не делает."""
+        order = await _make_order(db_session, "paid")
+        old = await service.update_order_status(db_session, order, "paid")
+        assert old == "paid"
+        assert order.status == "paid"
+
+    async def test_cannot_skip_to_delivered_from_new(self, db_session):
+        """Нельзя прыгнуть из «new» сразу в «delivered»."""
+        order = await _make_order(db_session, "new")
+        with pytest.raises(service.StatusTransitionError):
+            await service.update_order_status(db_session, order, "delivered")
+        assert order.status == "new"

@@ -457,7 +457,12 @@ async def order_update(
 ):
     order = await service.get_order_detail(db, order_id)
     if order:
-        old_status = await service.update_order_status(db, order, new_status)
+        try:
+            old_status = await service.update_order_status(db, order, new_status)
+        except service.StatusTransitionError:
+            return RedirectResponse(
+                f"/admin/orders/{order_id}?error=status", status_code=303
+            )
         await db.commit()
 
         # Письмо покупателю при ключевых сменах статуса
