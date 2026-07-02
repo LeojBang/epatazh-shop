@@ -771,6 +771,30 @@ img.gallery-slide { object-fit: cover; }
 }
 .info-lead em { color: #9aa8a0; font-style: italic; }
 
+/* Чекбокс согласия на обработку ПД в формах */
+.consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+    margin: 0.25rem 0 0.75rem;
+    cursor: pointer;
+}
+.consent input[type="checkbox"] {
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+.consent a { color: var(--green); font-weight: 600; }
+
+/* Дата вступления в силу на юридических страницах */
+.info-date {
+    color: #9aa8a0;
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
+}
+
 /* Карточка-секция на белом фоне (читается на тёмном) */
 .info-card {
     background: var(--surface);

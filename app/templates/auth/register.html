@@ -12,6 +12,10 @@
             <input type="email" id="email" name="email" required>
             <label for="password">Пароль</label>
             <input type="password" id="password" name="password" required minlength="8">
+            <label class="consent">
+                <input type="checkbox" name="consent" required>
+                <span>Я согласен с <a href="/info/privacy" target="_blank" rel="noopener">политикой конфиденциальности</a> и обработкой персональных данных</span>
+            </label>
             <button type="submit" class="btn-primary">Зарегистрироваться</button>
         </form>
         <p class="form-link">Уже есть аккаунт? <a href="/login">Войти</a></p>
