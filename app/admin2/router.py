@@ -449,6 +449,7 @@ async def order_detail(
 
 @router.post("/orders/{order_id}/update")
 async def order_update(
+    request: Request,
     order_id: uuid.UUID,
     new_status: str = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -456,8 +457,22 @@ async def order_update(
 ):
     order = await service.get_order_detail(db, order_id)
     if order:
-        await service.update_order_status(db, order, new_status)
-    await db.commit()
+        old_status = await service.update_order_status(db, order, new_status)
+        await db.commit()
+
+        # Письмо покупателю при ключевых сменах статуса
+        if new_status != old_status and order.email:
+            from app.core import email as email_mod
+
+            builder = {
+                "shipped": email_mod.order_shipped_email,
+                "cancelled": email_mod.order_cancelled_email,
+            }.get(new_status)
+            if builder:
+                subject, body = builder(order)
+                await request.app.state.arq_pool.enqueue_job(
+                    "send_email_task", to=order.email, subject=subject, body=body
+                )
     return RedirectResponse(f"/admin/orders/{order_id}?success=1", status_code=303)
 
 

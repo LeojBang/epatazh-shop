@@ -129,3 +129,53 @@ def order_paid_email(order) -> tuple[str, str]:
         "Спасибо, что выбрали «Эпатаж»!",
     ]
     return f"Заказ № {num} оплачен — Эпатаж", "\n".join(lines)
+
+
+def order_shipped_email(order) -> tuple[str, str]:
+    """Письмо «Заказ отправлен». Возвращает (тема, тело)."""
+    num = _short_id(order)
+    lines = [
+        f"Здравствуйте, {order.full_name}!",
+        "",
+        f"Ваш заказ № {num} передан в доставку.",
+    ]
+    if order.cdek_track_number:
+        lines += [
+            "",
+            f"Трек-номер СДЭК: {order.cdek_track_number}",
+        ]
+    if order.cdek_pvz_address:
+        lines += [
+            "",
+            "Пункт выдачи СДЭК:",
+        ]
+        if order.cdek_city_name:
+            lines.append(f"  Город: {order.cdek_city_name}")
+        lines.append(f"  Адрес: {order.cdek_pvz_address}")
+    lines += [
+        "",
+        "Когда посылка поступит в пункт выдачи, СДЭК пришлёт уведомление.",
+        "Отследить заказ можно на сайте в разделе «Отследить заказ»",
+        f"по номеру № {num} и вашему email.",
+        "",
+        "Спасибо, что выбрали «Эпатаж»!",
+    ]
+    return f"Заказ № {num} отправлен — Эпатаж", "\n".join(lines)
+
+
+def order_cancelled_email(order) -> tuple[str, str]:
+    """Письмо «Заказ отменён». Возвращает (тема, тело)."""
+    num = _short_id(order)
+    lines = [
+        f"Здравствуйте, {order.full_name}!",
+        "",
+        f"Ваш заказ № {num} отменён.",
+        "",
+        "Если заказ был оплачен, деньги вернутся на карту, которой",
+        "производилась оплата, в течение нескольких рабочих дней.",
+        "",
+        "Если у вас есть вопросы — напишите нам на info@epatajextra.ru.",
+        "",
+        "С уважением, команда «Эпатаж».",
+    ]
+    return f"Заказ № {num} отменён — Эпатаж", "\n".join(lines)

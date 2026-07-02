@@ -243,7 +243,7 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     # CSP базовый: разрешаем свой домен + inline-стили/скрипты (если используешь).
     # Если что-то перестанет грузиться — смотри консоль браузера и добавь источник.
-    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'" always;
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://yastatic.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://api-maps.yandex.ru https://yastatic.net; connect-src 'self' https://api-maps.yandex.ru https://*.maps.yandex.net https://*.yandex.ru; frame-ancestors 'none'" always;
 
     # SSL — certbot пропишет эти строки сам (шаг 9.3)
     # ssl_certificate     /etc/letsencrypt/live/shop.epatajextra.ru/fullchain.pem;

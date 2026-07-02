@@ -7,6 +7,10 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.cdek import service as cdek_service
+from app.core.logging_config import get_logger
+from app.models.payment import Payment
+from app.payments import service as payment_service
 from app.models.catalog import (
     Category,
     Product,
@@ -18,6 +22,8 @@ from app.models.catalog import (
 from app.models.order import Order, OrderItem
 from app.models.return_request import ReturnRequest
 from app.models.user import User
+
+logger = get_logger("admin")
 
 
 # ─── ТОВАРЫ ──────────────────────────────────────────────────────────────────
@@ -332,12 +338,46 @@ async def get_order_detail(db: AsyncSession, order_id: uuid.UUID) -> Order | Non
     return result.scalar_one_or_none()
 
 
-async def update_order_status(db: AsyncSession, order: Order, new_status: str) -> Order:
-    old_status = order.status
-    order.status = new_status
+async def update_order_status(db: AsyncSession, order: Order, new_status: str) -> str:
+    """Меняет статус заказа и запускает реальные действия при отмене.
 
-    # Возврат на склад при отмене
-    if new_status == "cancelled" and old_status != "cancelled":
+    При переводе в «cancelled» (из не-отменённого статуса):
+      1. отменяет заказ в СДЭК, если он был зарегистрирован;
+      2. возвращает деньги в YooKassa, если заказ был оплачен;
+      3. возвращает товары на склад.
+
+    Возвращает ПРЕДЫДУЩИЙ статус — чтобы вызывающий код решил,
+    отправлять ли письмо покупателю.
+    """
+    old_status = order.status
+    if new_status == old_status:
+        return old_status
+
+    if new_status == "cancelled":
+        # 1. Отмена заказа в СДЭК (best-effort, не роняет отмену)
+        if order.cdek_order_uuid:
+            await cdek_service.cancel_order_in_cdek(order)
+
+        # 2. Возврат денег, если заказ был оплачен
+        if old_status in ("paid", "shipped", "delivered"):
+            payment = await db.scalar(
+                select(Payment).where(
+                    Payment.order_id == order.id,
+                    Payment.status == "succeeded",
+                )
+            )
+            if payment and payment.external_id:
+                try:
+                    await payment_service.create_refund(
+                        payment.external_id, order.total
+                    )
+                    logger.info("Возврат по заказу %s инициирован", order.id)
+                except Exception as e:  # noqa: BLE001
+                    logger.error(
+                        "Не удалось вернуть деньги по заказу %s: %s", order.id, e
+                    )
+
+        # 3. Возврат товаров на склад
         for item in order.items:
             if item.variant_id:
                 await db.execute(
@@ -347,8 +387,9 @@ async def update_order_status(db: AsyncSession, order: Order, new_status: str) -
                     {"qty": item.quantity, "id": item.variant_id},
                 )
 
+    order.status = new_status
     await db.flush()
-    return order
+    return old_status
 
 
 # ─── ВОЗВРАТЫ ────────────────────────────────────────────────────────────────

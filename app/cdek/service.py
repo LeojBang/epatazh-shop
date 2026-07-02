@@ -88,6 +88,23 @@ async def send_order_to_cdek(order) -> dict | None:
     return None
 
 
+async def cancel_order_in_cdek(order) -> bool:
+    """Отменяет заказ в СДЭК, если он был зарегистрирован.
+
+    Возвращает True при успешной отмене. Не бросает исключение —
+    отмену заказа в магазине нельзя «уронить» из-за СДЭК.
+    """
+    if not order.cdek_order_uuid:
+        return False
+    try:
+        await cdek_client.delete_order(str(order.cdek_order_uuid))
+    except CdekError as e:
+        logger.error("Не удалось отменить заказ %s в СДЭК: %s", order.id, e)
+        return False
+    logger.info("Заказ %s отменён в СДЭК (uuid=%s)", order.id, order.cdek_order_uuid)
+    return True
+
+
 def _fmt_date(raw: str | None) -> str | None:
     """ISO-дату СДЭК (2026-06-28T12:50:02+0000) → '28.06.2026 15:50'."""
     if not raw:

@@ -168,6 +168,11 @@ class CdekClient:
         """Информация по заказу (включая статусы) для отслеживания."""
         return await self._request("GET", f"/v2/orders/{cdek_uuid}")
 
+    async def delete_order(self, cdek_uuid: str) -> dict[str, Any]:
+        """Отменяет (удаляет) заказ в СДЭК по uuid.
+        Возможно, пока заказ не принят на склад СДЭК."""
+        return await self._request("DELETE", f"/v2/orders/{cdek_uuid}")
+
     async def calculate_tariff(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Расчёт стоимости и срока доставки по коду тарифа."""
         return await self._request("POST", "/v2/calculator/tariff", json=payload)

@@ -80,7 +80,9 @@
       <div style="margin-bottom:14px">
         <span class="badge badge-{{ order.status }}" style="font-size:13px">{{ status_ru.get(order.status, order.status) }}</span>
       </div>
-      <form method="post" action="/admin/orders/{{ order.id }}/update">
+      <form method="post" action="/admin/orders/{{ order.id }}/update"
+            data-order-paid="{{ 'yes' if order.status in ['paid','shipped','delivered'] else 'no' }}"
+            onsubmit="return confirmStatusChange(this);">
         <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div class="form-group">
           <label class="form-label">Изменить статус</label>
@@ -92,10 +94,23 @@
             <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Доставлен</option>
             <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Отменён</option>
           </select>
-          <p class="form-hint">При отмене товары вернутся на склад</p>
+          <p class="form-hint">При отмене: товары вернутся на склад, заказ отменится в СДЭК, а оплаченные деньги вернутся покупателю.</p>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Сохранить статус</button>
       </form>
+      <script>
+        function confirmStatusChange(form) {
+          var val = form.new_status.value;
+          if (val === 'cancelled') {
+            var paid = form.getAttribute('data-order-paid') === 'yes';
+            var msg = paid
+              ? 'Отменить заказ? Деньги будут возвращены покупателю через YooKassa, заказ отменится в СДЭК, товары вернутся на склад. Действие необратимо.'
+              : 'Отменить заказ? Заказ отменится в СДЭК, товары вернутся на склад.';
+            return confirm(msg);
+          }
+          return true;
+        }
+      </script>
     </div>
 
     <div class="card">
