@@ -235,6 +235,15 @@ server {
 server {
     listen 443 ssl;
     server_name shop.epatajextra.ru;
+    
+        # --- Security-заголовки ---
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # CSP базовый: разрешаем свой домен + inline-стили/скрипты (если используешь).
+    # Если что-то перестанет грузиться — смотри консоль браузера и добавь источник.
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'" always;
 
     # SSL — certbot пропишет эти строки сам (шаг 9.3)
     # ssl_certificate     /etc/letsencrypt/live/shop.epatajextra.ru/fullchain.pem;
@@ -255,8 +264,19 @@ server {
 
     # Вебхук ЮKassa
     location /payments/webhook {
+        # --- Только официальные IP YooKassa, остальных отсекаем ---
+        allow 185.71.76.0/27;
+        allow 185.71.77.0/27;
+        allow 77.75.153.0/25;
+        allow 77.75.156.11;
+        allow 77.75.156.35;
+        allow 77.75.154.128/25;
+        allow 2a02:5180::/32;
+        deny all;
+        
         limit_req zone=webhooks burst=10 nodelay;
         limit_req_status 429;
+        
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

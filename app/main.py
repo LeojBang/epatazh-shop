@@ -3,8 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.core.redis import redis_pool
-import redis.asyncio as redis_lib
+from app.core.redis import redis_client
 from fastapi import Request, status
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -100,6 +99,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                 cookie_token,
                 httponly=False,
                 samesite="lax",
+                secure=settings.ENVIRONMENT != "local",
                 max_age=60 * 60 * 24 * 7,
             )
 
@@ -121,7 +121,7 @@ class CartCountMiddleware(BaseHTTPMiddleware):
             from app.core.security import decode_token
             from app.cart import service as cart_service
 
-            r = redis_lib.Redis(connection_pool=redis_pool)
+            r = redis_client
             cart_id = None
 
             access_token = request.cookies.get("access_token")
@@ -147,7 +147,6 @@ class CartCountMiddleware(BaseHTTPMiddleware):
 
             if cart_id:
                 request.state.cart_count = await cart_service.get_cart_count(r, cart_id)
-            await r.aclose()
         except Exception:
             request.state.cart_count = 0
 
