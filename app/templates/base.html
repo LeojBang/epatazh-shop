@@ -10,6 +10,10 @@
     <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
     <link rel="canonical" href="{% block canonical %}{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}{% endblock %}">
 
+    {# --- Подтверждение владения для поисковиков (SEO), если коды заданы --- #}
+    {% if request.state.yandex_verification %}<meta name="yandex-verification" content="{{ request.state.yandex_verification }}">{% endif %}
+    {% if request.state.google_verification %}<meta name="google-site-verification" content="{{ request.state.google_verification }}">{% endif %}
+
     {# --- Open Graph (превью в соцсетях: VK, Telegram) --- #}
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="Эпатаж">

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Поиск: {{ query }} — Эпатаж{% endblock %}
+{# Страницы результатов поиска не индексируем — они бесконечны и дублируют каталог #}
+{% block meta_robots %}noindex, follow{% endblock %}
 {% block content %}
     {% import "_macros.html" as m %}
     <h1>Поиск{% if query %}: «{{ query }}»{% endif %}</h1>

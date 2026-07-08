@@ -115,6 +115,9 @@ class CartCountMiddleware(BaseHTTPMiddleware):
         request.state.cart_count = 0
         request.state.favorites_count = 0
         request.state.footer_pages = {"information": [], "company": [], "legal": []}
+        # Коды подтверждения для поисковых вебмастер-панелей (SEO)
+        request.state.yandex_verification = settings.YANDEX_VERIFICATION
+        request.state.google_verification = settings.GOOGLE_SITE_VERIFICATION
 
         # --- Счётчик корзины ---
         try:

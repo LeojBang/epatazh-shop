@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "local"
     DEBUG: bool = True
 
+    # Коды подтверждения владения сайтом для вебмастер-панелей (SEO).
+    # Пустые по умолчанию; заполняются в .env после регистрации сайта
+    # в Яндекс.Вебмастере и Google Search Console.
+    YANDEX_VERIFICATION: str = ""
+    GOOGLE_SITE_VERIFICATION: str = ""
+
     DATABASE_URL: str
 
     SECRET_KEY: str
