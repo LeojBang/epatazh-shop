@@ -7,7 +7,7 @@ sitemap.xml — карта сайта (список страниц для быс
 """
 
 from fastapi import APIRouter, Request, Depends
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +15,18 @@ from app.core.database import get_db
 from app.models.catalog import Product, Category
 
 router = APIRouter(tags=["seo"])
+
+
+# Favicon в корне — поисковики и браузеры запрашивают /favicon.ico по умолчанию.
+# Статика примонтирована на /static, поэтому корневые пути отдаём явными роутами.
+@router.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico() -> FileResponse:
+    return FileResponse("app/static/favicon.ico", media_type="image/x-icon")
+
+
+@router.get("/apple-touch-icon.png", include_in_schema=False)
+async def apple_touch_icon() -> FileResponse:
+    return FileResponse("app/static/apple-touch-icon.png", media_type="image/png")
 
 
 @router.get("/robots.txt")
